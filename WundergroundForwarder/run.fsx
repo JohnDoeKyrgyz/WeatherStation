@@ -1,3 +1,17 @@
+#if INTERACTIVE
+#I @"..\node_modules\azure-functions-core-tools\bin"
+
+#r "Microsoft.Azure.Webjobs.Host.dll"
+open Microsoft.Azure.WebJobs.Host
+open System
+
+#r "System.Net.Http.dll"
+#r "System.Net.Http.Formatting.dll"
+#r "System.Web.Http.dll"
+#r "Newtonsoft.Json.dll"
+
+#endif
+
 #r "System.Net.Http"
 #r "Newtonsoft.Json"
 
@@ -11,7 +25,9 @@ type Named = {
 
 let Run(req: HttpRequestMessage, log: TraceWriter) =
     async {
-        log.Info(sprintf "%A" req.Content)
+        
+        let! content = req.Content.ReadAsStringAsync() |> Async.AwaitTask
+        log.Info(sprintf "%A" content)
         
         // Set name to query string
         let name =
