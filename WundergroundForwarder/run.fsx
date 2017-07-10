@@ -11,8 +11,8 @@ type Named = {
 
 let Run(req: HttpRequestMessage, log: TraceWriter) =
     async {
-        log.Info(sprintf "F# HTTP trigger function processed a request.")
-
+        log.Info(sprintf "%A" req.Content)
+        
         // Set name to query string
         let name =
             req.GetQueryNameValuePairs()
