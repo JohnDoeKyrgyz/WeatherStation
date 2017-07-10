@@ -1,0 +1,19 @@
+{
+  "name": "weatherstations",
+  "version": "1.0.0",
+  "description": "Software for remote weatherstations",
+  "main": "index.js",
+  "dependencies": {
+    "azure-functions-core-tools": "^1.0.0-beta.100"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://JohnDoeKyrgyz@weatherstations.scm.azurewebsites.net:443/WeatherStations.git"
+  },
+  "author": "",
+  "license": "ISC"
+}
