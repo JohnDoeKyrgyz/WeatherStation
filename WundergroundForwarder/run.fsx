@@ -9,13 +9,15 @@ open System
 #r "System.Net.Http.Formatting.dll"
 #r "System.Web.Http.dll"
 #r "Newtonsoft.Json.dll"
-
+#r @"..\packages\FSharp.Data\lib\net40\FSharp.Data.dll"
+#else
+#r "FSharp.Data.dll"
 #endif
 
 #r "System.Net.Http"
 #r "Newtonsoft.Json"
 
-#r @"..\packages\FSharp.Data\lib\net40\FSharp.Data.dll"
+
 
 open System.Net
 open System.Net.Http
