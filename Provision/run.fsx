@@ -14,21 +14,19 @@ open Database
 
 let Run(req: HttpRequestMessage, weatherStationsTable: ICollector<WeatherStation>, log: TraceWriter) =
     async {
-        if not (req.Content.IsFormData()) then
-            return req.CreateErrorResponse(HttpStatusCode.BadRequest, "No form data")
-        else
-            let! formData = req.Content.ReadAsFormDataAsync() |> Async.AwaitTask
+        let! formData = req.Content.ReadAsFormDataAsync() |> Async.AwaitTask
 
-            let device = {
-                PartitionKey = "Devices"
-                RowKey = formData.["DeviceSerialNumber"]
-                WundergroundStationId = formData.["WundergroundStationId"]
-                WundergroundPassword = formData.["WundergroundPassword"]
-            }
+        let device = {
+            PartitionKey = "Devices"
+            RowKey = formData.["DeviceSerialNumber"]
+            WundergroundStationId = formData.["WundergroundStationId"]
+            WundergroundPassword = formData.["WundergroundPassword"]
+        }
+        
+        weatherStationsTable.Add( device )
+
+        log.Info( sprintf "Added record: %A" device )
+
+        return req.CreateResponse(HttpStatusCode.OK)
             
-            weatherStationsTable.Add( device )
-
-            log.Info( sprintf "Added record: %A" device )
-
-            return req.CreateResponse(HttpStatusCode.OK)
     } |> Async.StartAsTask
