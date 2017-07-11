@@ -26,8 +26,10 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
             let payload = Payload.Parse content        
 
             let weatherStation = 
-                weatherStationsTable.Single( 
-                    fun station -> station.PartitionKey = DefaultPartition && station.RowKey = string payload.SourceDevice)
+                weatherStationsTable
+                    .Where( fun station -> station.PartitionKey = DefaultPartition && station.RowKey = string payload.SourceDevice )
+                    .ToArray()
+                    .Single()
 
             let reading = payload.Body
             let dateUtc = reading.Time.ToUniversalTime().ToString("yyyy-mm-dd hh:mm:ss")
