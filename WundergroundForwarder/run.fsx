@@ -22,7 +22,9 @@ open System.Net.Http
 open Newtonsoft.Json
 open FSharp.Data
 
-type Payload = JsonProvider<"StatusUpdate.json", SampleIsList = true>
+[<Literal>]
+let Sample = __SOURCE_DIRECTORY__ + "/StatusUpdate.json"
+type Payload = JsonProvider<Sample, SampleIsList = true>
 
 let Run(req: HttpRequestMessage, log: TraceWriter) =
     async {
