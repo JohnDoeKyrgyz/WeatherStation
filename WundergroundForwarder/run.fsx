@@ -14,12 +14,8 @@ open System
 
 #r "System.Net.Http"
 #r "Newtonsoft.Json"
-#r "System.Globalization"
-#r "System.IO"
-#r "System.Net.Primitives"
-#r "System.Net.Requests"
 
-#r @"..\packages\FSharp.Data\lib\portable-net45+netcore45\FSharp.Data.dll"
+#r @"..\packages\FSharp.Data\lib\net40\FSharp.Data.dll"
 
 open System.Net
 open System.Net.Http
