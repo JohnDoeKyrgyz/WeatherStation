@@ -20,13 +20,13 @@ let Run(req: HttpRequestMessage, weatherStationsTable: ICollector<WeatherStation
         let! formData = req.Content.ReadAsFormDataAsync() |> Async.AwaitTask
 
         let device = {
-            PartitionKey = "Devices"
+            PartitionKey = DefaultPartition
             RowKey = formData.["DeviceSerialNumber"]
             WundergroundStationId = formData.["WundergroundStationId"]
             WundergroundPassword = formData.["WundergroundPassword"]
         }
 
-        if isValid device.PartitionKey && isValid device.RowKey && isValid device.WundergroundStationId && isValid device.WundergroundPassword then        
+        if isValid device.PartitionKey && isValid device.RowKey && isValid device.WundergroundStationId && isValid device.WundergroundPassword then
             weatherStationsTable.Add( device )
             log.Info( sprintf "Added record: %A" device )
             return req.CreateResponse(HttpStatusCode.OK)

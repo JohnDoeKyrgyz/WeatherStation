@@ -1,5 +1,6 @@
 #I __SOURCE_DIRECTORY__
 #load "../Preamble.fsx"
+#load "../Database.fsx"
 #r "../packages/FSharp.Data/lib/net40/FSharp.Data.dll"
 
 open System
@@ -8,18 +9,26 @@ open System.Net.Http
 open Newtonsoft.Json
 open FSharp.Data
 open Microsoft.Azure.WebJobs.Host
+open System.Linq
+
+open Database
 
 [<Literal>]
 let Sample = __SOURCE_DIRECTORY__ + "/StatusUpdate.json"
 type Payload = JsonProvider<Sample, SampleIsList = true>
 
-let Run(req: HttpRequestMessage, log: TraceWriter) =
+let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation>, log: TraceWriter) =
     async {
         let! content = req.Content.ReadAsStringAsync() |> Async.AwaitTask
         if String.IsNullOrWhiteSpace(content) then
             return req.CreateErrorResponse(HttpStatusCode.BadRequest, "Expected request data")
         else
             let payload = Payload.Parse content        
+
+            let weatherStation = 
+                weatherStationsTable.Single( 
+                    fun station -> station.PartitionKey = DefaultPartition && station.RowKey = string payload.SourceDevice)
+
             let reading = payload.Body
             let dateUtc = reading.Time.ToUniversalTime().ToString("yyyy-mm-dd hh:mm:ss")
             let windSpeed = (defaultArg reading.SpeedMetersPerSecond 0.0m) * 2.23694m
@@ -29,8 +38,8 @@ let Run(req: HttpRequestMessage, log: TraceWriter) =
 
             let url = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php"
             let queryParameters = [ 
-                "ID", payload.Body.StationId
-                "PASSWORD", payload.Body.Password
+                "ID", weatherStation.WundergroundStationId
+                "PASSWORD", weatherStation.WundergroundPassword
                 "action", "updateraw"
                 "dateutc", dateUtc
                 "realtime", "1"

@@ -2,6 +2,8 @@
 
 #r "Microsoft.Azure.WebJobs.dll"
 
+let DefaultPartition = "Devices"
+
 [<CLIMutable>]
 type WeatherStation = {
     PartitionKey: string

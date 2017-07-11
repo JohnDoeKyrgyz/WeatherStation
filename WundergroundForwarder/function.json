@@ -8,6 +8,13 @@
       "direction": "in"
     },
     {
+      "tableName": "WeatherStations",
+      "connection": "WeatherStationsStorage",
+      "name": "weatherStationsTable",
+      "type": "table",
+      "direction": "in"
+    },
+    {
       "name": "res",
       "type": "http",
       "direction": "out"
