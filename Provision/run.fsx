@@ -20,7 +20,8 @@ let Run(req: HttpRequestMessage, tableBinding: ICollector<WeatherStation>, log: 
             let! formData = req.Content.ReadAsFormDataAsync() |> Async.AwaitTask
 
             let device = {
-                DeviceSerialNumber = formData.["DeviceSerialNumber"]
+                PartitionKey = "Devices"
+                RowKey = formData.["DeviceSerialNumber"]
                 WundergroundStationId = formData.["WundergroundStationId"]
                 WundergroundPassword = formData.["WundergroundPassword"]
             }

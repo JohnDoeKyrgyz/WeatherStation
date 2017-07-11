@@ -4,7 +4,8 @@
 
 [<CLIMutable>]
 type WeatherStation = {
-    DeviceSerialNumber: string
+    PartitionKey: string
+    RowKey: string
     WundergroundStationId: string
     WundergroundPassword: string
 }
