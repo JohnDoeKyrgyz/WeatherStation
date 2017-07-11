@@ -29,7 +29,7 @@ let Run(req: HttpRequestMessage, tableBinding: IAsyncCollector<WeatherStation>, 
                 tableBinding.AddAsync( device ) 
                 |> Async.AwaitTask
 
-            log.Info( sprintf "Added record: %A" result )
+            log.Info( sprintf "Added record: %A, Result: %A" device result )
 
             return req.CreateResponse(HttpStatusCode.OK)
     } |> Async.StartAsTask
