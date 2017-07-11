@@ -15,34 +15,47 @@ open System
 #r "System.Net.Http"
 #r "Newtonsoft.Json"
 
+#r @"..\packages\FSharp.Data\lib\net40\FSharp.Data.dll"
+
 open System.Net
 open System.Net.Http
 open Newtonsoft.Json
+open FSharp.Data
 
-type Named = {
-    name: string
-}
+type Payload = JsonProvider<"StatusUpdate.json", SampleIsList = true>
 
 let Run(req: HttpRequestMessage, log: TraceWriter) =
     async {
-        
+        log.Info("Function invoked")
+
         let! content = req.Content.ReadAsStringAsync() |> Async.AwaitTask
-        log.Info(sprintf "%A" content)
-        
-        // Set name to query string
-        let name =
-            req.GetQueryNameValuePairs()
-            |> Seq.tryFind (fun q -> q.Key = "name")
 
-        match name with
-        | Some x ->
-            return req.CreateResponse(HttpStatusCode.OK, "Hello " + x.Value);
-        | None ->
-            let! data = req.Content.ReadAsStringAsync() |> Async.AwaitTask
+        let payload = Payload.Parse content        
+        let reading = payload.Body
+        let dateUtc = reading.Time.ToUniversalTime().ToString("yyyy-mm-dd hh:mm:ss")
+        let windSpeed = (defaultArg reading.SpeedMetersPerSecond 0.0m) * 2.23694m
+        let windDirection = (defaultArg reading.DirectionSixteenths 0.0m) * (360.0m / 16.0m)
+        let temperature = (defaultArg reading.TemperatureCelciusHydrometer 0.0m) * 9.0m/5.0m  + 32.0m
+        let barometer = (defaultArg reading.PressurePascal 0.0m) * 0.0002953m
 
-            if not (String.IsNullOrEmpty(data)) then
-                let named = JsonConvert.DeserializeObject<Named>(data)
-                return req.CreateResponse(HttpStatusCode.OK, "Hello " + named.name);
-            else
-                return req.CreateResponse(HttpStatusCode.BadRequest, "Specify a Name value");
+        let url = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php"
+        let queryParameters = [ 
+            "ID", payload.Body.StationId
+            "PASSWORD", payload.Body.Password
+            "action", "updateraw"
+            "dateutc", dateUtc
+            "realtime", "1"
+            "windspeedmph", string windSpeed
+            "winddir", string windDirection
+            "tempf", string temperature
+            "humidity", defaultArg reading.HumidityPercent 0.0m |> string
+            "baromin", string barometer]
+
+        log.Info( sprintf "Wunderground Request: %A" queryParameters )
+
+        let! wundergroundResponse = Http.AsyncRequest( url, queryParameters )
+
+        log.Info( sprintf "Wunderground Response: %A" wundergroundResponse )
+
+        return req.CreateResponse(wundergroundResponse)
     } |> Async.RunSynchronously
