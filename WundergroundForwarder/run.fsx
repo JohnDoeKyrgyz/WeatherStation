@@ -39,6 +39,7 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
             let temperature = (defaultArg reading.TemperatureCelciusHydrometer 0.0m) * 9.0m/5.0m  + 32.0m
             let barometer = (defaultArg reading.PressurePascal 0.0m) * 0.0002953m
 
+            //http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
             let url = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php"
             let queryParameters = [ 
                 "ID", weatherStation.WundergroundStationId
@@ -50,7 +51,8 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
                 "winddir", string windDirection
                 "tempf", string temperature
                 "humidity", defaultArg reading.HumidityPercent 0.0m |> string
-                "baromin", string barometer]
+                "baromin", string barometer
+                "rtfreq", string reading.RefreshIntervalSeconds]
 
             log.Info( sprintf "Wunderground Request: %A" queryParameters )
 

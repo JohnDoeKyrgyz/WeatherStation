@@ -1,5 +1,6 @@
 [{
     "body": {
+        "refreshIntervalSeconds": 100,
         "time": "2017-7-10 17:40:10",
         "supplyVoltage": 95,
         "batteryVoltage": 210,
@@ -16,6 +17,7 @@
 },
 {
     "body": {
+        "refreshIntervalSeconds": 100,
         "time": "2017-7-10 17:40:10",
         "stationId": "KVTWESTR7",
         "password": "gnmu2lex"
