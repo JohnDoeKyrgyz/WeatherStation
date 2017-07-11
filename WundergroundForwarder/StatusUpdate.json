@@ -1,0 +1,27 @@
+[{
+    "body": {
+        "time": "2017-7-10 17:40:10",
+        "stationId": "KVTWESTR7",
+        "password": "gnmu2lex",
+        "supplyVoltage": 95,
+        "batteryVoltage": 210,
+        "chargeVoltage": 140,
+        "temperatureCelciusHydrometer": 1.25,
+        "humidityPercent": 1.25,
+        "temperatureCelciusBarometer": 1.25,
+        "pressurePascal": 1.25,
+        "speedMetersPerSecond": 1.25,
+        "directionSixteenths": 1.25
+    },
+    "source_device": "101303",
+    "datetime": "2017-07-10T22:44:06+00:00"
+},
+{
+    "body": {
+        "time": "2017-7-10 17:40:10",
+        "stationId": "KVTWESTR7",
+        "password": "gnmu2lex"
+    },
+    "source_device": "101303",
+    "datetime": "2017-07-10T22:44:06+00:00"
+}]
