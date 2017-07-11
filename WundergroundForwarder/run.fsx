@@ -15,6 +15,7 @@ open System
 #r "System.Net.Http"
 #r "Newtonsoft.Json"
 #r "System.Globalization"
+#r "System.IO"
 
 #r @"..\packages\FSharp.Data\lib\portable-net45+netcore45\FSharp.Data.dll"
 
