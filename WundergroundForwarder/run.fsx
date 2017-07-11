@@ -1,27 +1,13 @@
-#if INTERACTIVE
-#I @"..\node_modules\azure-functions-core-tools\bin"
-
-#r "Microsoft.Azure.Webjobs.Host.dll"
-open Microsoft.Azure.WebJobs.Host
-open System
-
-#r "System.Net.Http.dll"
-#r "System.Net.Http.Formatting.dll"
-#r "System.Web.Http.dll"
-#r "Newtonsoft.Json.dll"
-
-#endif
-
 #I __SOURCE_DIRECTORY__
+#load "../Preamble.fsx"
 #r "../packages/FSharp.Data/lib/net40/FSharp.Data.dll"
 
-#r "System.Net.Http"
-#r "Newtonsoft.Json"
-
+open System
 open System.Net
 open System.Net.Http
 open Newtonsoft.Json
 open FSharp.Data
+open Microsoft.Azure.WebJobs.Host
 
 [<Literal>]
 let Sample = __SOURCE_DIRECTORY__ + "/StatusUpdate.json"
