@@ -1,7 +1,7 @@
 #load "Preamble.fsx"
 
-#r "Microsoft.Azure.WebJobs.dll"
-#r "Microsoft.WindowsAzure.Storage.dll"
+#r "Microsoft.Azure.WebJobs"
+#r "Microsoft.WindowsAzure.Storage"
 open Microsoft.WindowsAzure.Storage.Table;
 
 let DefaultPartition = "Devices"
