@@ -12,7 +12,7 @@ open Microsoft.Azure.WebJobs
 
 open Database
 
-let Run(req: HttpRequestMessage, tableBinding: ICollector<WeatherStation>, log: TraceWriter) =
+let Run(req: HttpRequestMessage, weatherStationsTable: ICollector<WeatherStation>, log: TraceWriter) =
     async {
         if not (req.Content.IsFormData()) then
             return req.CreateErrorResponse(HttpStatusCode.BadRequest, "No form data")
@@ -26,7 +26,7 @@ let Run(req: HttpRequestMessage, tableBinding: ICollector<WeatherStation>, log: 
                 WundergroundPassword = formData.["WundergroundPassword"]
             }
             
-            tableBinding.Add( device )
+            weatherStationsTable.Add( device )
 
             log.Info( sprintf "Added record: %A" device )
 
