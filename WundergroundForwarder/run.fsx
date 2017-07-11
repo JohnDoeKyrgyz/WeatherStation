@@ -14,7 +14,8 @@ open System
 
 #r "System.Net.Http"
 #r "Newtonsoft.Json"
-#r @"..\packages\FSharp.Data\lib\net40\FSharp.Data.dll"
+
+#r "../packages/FSharp.Data/lib/net40/FSharp.Data.dll"
 
 open System.Net
 open System.Net.Http
@@ -22,7 +23,7 @@ open Newtonsoft.Json
 open FSharp.Data
 
 [<Literal>]
-let Sample = __SOURCE_DIRECTORY__ + @"\StatusUpdate.json"
+let Sample = __SOURCE_DIRECTORY__ + "/StatusUpdate.json"
 type Payload = JsonProvider<Sample, SampleIsList = true>
 
 let Run(req: HttpRequestMessage, log: TraceWriter) =
