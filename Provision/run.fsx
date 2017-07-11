@@ -25,10 +25,11 @@ let Run(req: HttpRequestMessage, tableBinding: IAsyncCollector<WeatherStation>, 
                 WundergroundPassword = formData.["WundergroundPassword"]
             }
             
-            do! 
+            let! result =
                 tableBinding.AddAsync( device ) 
                 |> Async.AwaitTask
-                |> Async.Ignore
+
+            log.Info( sprintf "Added record: %A" result )
 
             return req.CreateResponse(HttpStatusCode.OK)
     } |> Async.StartAsTask
