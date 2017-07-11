@@ -23,11 +23,12 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
         if String.IsNullOrWhiteSpace(content) then
             return req.CreateErrorResponse(HttpStatusCode.BadRequest, "Expected request data")
         else
-            let payload = Payload.Parse content        
+            let payload = Payload.Parse content
+            let deviceSerialNumber = string payload.SourceDevice        
 
             let weatherStation = 
                 weatherStationsTable
-                    .Where( fun station -> station.PartitionKey = DefaultPartition && station.RowKey = string payload.SourceDevice )
+                    .Where( fun station -> station.PartitionKey = DefaultPartition && station.RowKey = deviceSerialNumber )
                     .ToArray()
                     .Single()
 
