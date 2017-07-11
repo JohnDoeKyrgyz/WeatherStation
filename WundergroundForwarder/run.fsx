@@ -15,8 +15,6 @@ type Payload = JsonProvider<Sample, SampleIsList = true>
 
 let Run(req: HttpRequestMessage, log: TraceWriter) =
     async {
-        log.Info("Function invoked")
-
         let! content = req.Content.ReadAsStringAsync() |> Async.AwaitTask
         if String.IsNullOrWhiteSpace(content) then
             return req.CreateErrorResponse(HttpStatusCode.BadRequest, "Expected request data")
@@ -49,4 +47,4 @@ let Run(req: HttpRequestMessage, log: TraceWriter) =
             log.Info( sprintf "Wunderground Response: %A" wundergroundResponse )
 
             return req.CreateResponse(wundergroundResponse)
-    } |> Async.RunSynchronously
+    } |> Async.StartAsTask

@@ -1,5 +1,6 @@
 #I __SOURCE_DIRECTORY__
 #load "../Preamble.fsx"
+#load "../Database.fsx"
 
 open System
 open System.Net
@@ -7,30 +8,24 @@ open System.Net.Http
 open Newtonsoft.Json
 open FSharp.Data
 open Microsoft.Azure.WebJobs.Host
+open Microsoft.Azure.WebJobs
 
-type Named = {
-    name: string
-}
+open Database
 
-let Run(req: HttpRequestMessage, log: TraceWriter) =
+let Run(req: HttpRequestMessage, tableBinding: IAsyncCollector<WeatherStation>, log: TraceWriter) =
     async {
-        log.Info(sprintf 
-            "F# HTTP trigger function processed a request.")
+        if not (req.Content.IsFormData()) then
+            return req.CreateErrorResponse(HttpStatusCode.BadRequest, "No form data")
+        else
+            let! formData = req.Content.ReadAsFormDataAsync() |> Async.AwaitTask
 
-        // Set name to query string
-        let name =
-            req.GetQueryNameValuePairs()
-            |> Seq.tryFind (fun q -> q.Key = "name")
+            let device = {
+                DeviceSerialNumber = formData.["DeviceSerialNumber"]
+                WundergroundStationId = formData.["WundergroundStationId"]
+                WundergroundPassword = formData.["WundergroundPassword"]
+            }
+            
+            do! tableBinding.AddAsync( device ) |> Async.AwaitTask
 
-        match name with
-        | Some x ->
-            return req.CreateResponse(HttpStatusCode.OK, "Hello " + x.Value);
-        | None ->
-            let! data = req.Content.ReadAsStringAsync() |> Async.AwaitTask
-
-            if not (String.IsNullOrEmpty(data)) then
-                let named = JsonConvert.DeserializeObject<Named>(data)
-                return req.CreateResponse(HttpStatusCode.OK, "Hello " + named.name);
-            else
-                return req.CreateResponse(HttpStatusCode.BadRequest, "Specify a Name value");
-    } |> Async.RunSynchronously
+            return req.CreateResponse(HttpStatusCode.OK)
+    } |> Async.StartAsTask
