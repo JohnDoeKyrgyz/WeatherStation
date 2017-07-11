@@ -15,7 +15,7 @@ open Database
 let Run(req: HttpRequestMessage, weatherStationsTable: ICollector<WeatherStation>, log: TraceWriter) =
     async {
 
-        log.Info( sprintf "%A" req.Content )
+        log.Info( sprintf "%A" (req.Content.ReadAsStringAsync() |> Async.AwaitTask |> Async.RunSynchronously) )
 
         let! formData = req.Content.ReadAsFormDataAsync() |> Async.AwaitTask
 
