@@ -12,10 +12,10 @@ open Microsoft.Azure.WebJobs
 
 open Database
 
+let isValid v = String.IsNullOrWhiteSpace v |> not
+
 let Run(req: HttpRequestMessage, weatherStationsTable: ICollector<WeatherStation>, log: TraceWriter) =
     async {
-
-        log.Info( sprintf "%A" (req.Content.ReadAsStringAsync() |> Async.AwaitTask |> Async.RunSynchronously) )
 
         let! formData = req.Content.ReadAsFormDataAsync() |> Async.AwaitTask
 
@@ -25,11 +25,12 @@ let Run(req: HttpRequestMessage, weatherStationsTable: ICollector<WeatherStation
             WundergroundStationId = formData.["WundergroundStationId"]
             WundergroundPassword = formData.["WundergroundPassword"]
         }
-        
-        weatherStationsTable.Add( device )
 
-        log.Info( sprintf "Added record: %A" device )
-
-        return req.CreateResponse(HttpStatusCode.OK)
+        if isValid device.PartitionKey && isValid device.RowKey && isValid device.WundergroundStationId && isValid device.WundergroundPassword then        
+            weatherStationsTable.Add( device )
+            log.Info( sprintf "Added record: %A" device )
+            return req.CreateResponse(HttpStatusCode.OK)
+        else
+            return req.CreateErrorResponse(HttpStatusCode.BadRequest, "Invalid data")
             
     } |> Async.StartAsTask
