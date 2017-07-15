@@ -53,7 +53,7 @@ let buildReading (payload : Payload.Root) =
     let reading = payload.Body
     Reading(
         PartitionKey = string payload.SourceDevice,
-        RowKey = string payload.Datetime,
+        RowKey = string (payload.Datetime.ToFileTimeUtc()),
         BatteryVoltage = reading.BatteryVoltage,
         RefreshIntervalSeconds = reading.RefreshIntervalSeconds,
         DeviceTime = payload.Datetime,
