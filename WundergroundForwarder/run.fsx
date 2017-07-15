@@ -92,5 +92,7 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
             } 
             |> Async.RunSynchronously
 
-    if readingResponse.IsSome then storedReading <- readingResponse.Value
+    if readingResponse.IsSome then 
+        storedReading <- readingResponse.Value
+        log.Info( sprintf "%A" storedReading )
     httpResponse
