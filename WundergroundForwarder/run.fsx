@@ -17,7 +17,8 @@ open Database
 let Sample = __SOURCE_DIRECTORY__ + "/StatusUpdate.json"
 type Payload = JsonProvider<Sample, SampleIsList = true>
 
-let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation>, log: TraceWriter) =
+let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation>, storedReading : byref<Reading>, log: TraceWriter) =
+    let outputReading = ref storedReading
     async {
         let! content = req.Content.ReadAsStringAsync() |> Async.AwaitTask
         if String.IsNullOrWhiteSpace(content) then
@@ -59,6 +60,24 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
             let! wundergroundResponse = Http.AsyncRequest( url, queryParameters )
 
             log.Info( sprintf "Wunderground Response: %A" wundergroundResponse )
+
+            //load up the reading for storage
+            let storedReading = !outputReading
+            storedReading.PartitionKey <- string payload.SourceDevice
+            storedReading.RowKey <- string payload.Datetime
+            storedReading.BatteryVoltage <- reading.BatteryVoltage
+            storedReading.RefreshIntervalSeconds <- reading.RefreshIntervalSeconds
+            storedReading.DeviceTime <- payload.Datetime
+            storedReading.ReadingTime <- reading.Time
+            storedReading.SupplyVoltage <- reading.SupplyVoltage
+            storedReading.ChargeVoltage <- reading.ChargeVoltage
+            storedReading.TemperatureCelciusHydrometer <- reading.TemperatureCelciusHydrometer
+            storedReading.TemperatureCelciusBarometer <- reading.TemperatureCelciusBarometer
+            storedReading.HumidityPercent <- reading.HumidityPercent
+            storedReading.PressurePascal <- reading.PressurePascal
+            storedReading.SpeedMetersPerSecond <- reading.SpeedMetersPerSecond
+            storedReading.DirectionSixteenths <- reading.DirectionSixteenths
+            storedReading.SourceDevice <- string payload.SourceDevice
 
             return req.CreateResponse(wundergroundResponse)
     } |> Async.StartAsTask
