@@ -17,67 +17,80 @@ open Database
 let Sample = __SOURCE_DIRECTORY__ + "/StatusUpdate.json"
 type Payload = JsonProvider<Sample, SampleIsList = true>
 
-let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation>, storedReading : byref<Reading>, log: TraceWriter) =
-    let outputReading = ref storedReading
+let postToWunderground wundergroundId wundergroundPassword (payload : Payload.Root) (log : TraceWriter) =
     async {
-        let! content = req.Content.ReadAsStringAsync() |> Async.AwaitTask
-        if String.IsNullOrWhiteSpace(content) then
-            return req.CreateErrorResponse(HttpStatusCode.BadRequest, "Expected request data")
-        else
-            let payload = Payload.Parse content
-            let deviceSerialNumber = string payload.SourceDevice        
+        let reading = payload.Body
+        let dateUtc = reading.Time.ToUniversalTime().ToString("yyyy-mm-dd hh:mm:ss")
+        let windSpeed = (defaultArg reading.SpeedMetersPerSecond 0.0m) * 2.23694m
+        let windDirection = (defaultArg reading.DirectionSixteenths 0.0m) * (360.0m / 16.0m)
+        let temperature = (defaultArg reading.TemperatureCelciusBarometer 0.0m) * 9.0m/5.0m  + 32.0m
+        let barometer = (defaultArg reading.PressurePascal 0.0m) * 0.0002953m
 
-            let weatherStation = 
-                weatherStationsTable
-                    .Where( fun station -> station.PartitionKey = DefaultPartition && station.RowKey = deviceSerialNumber )
-                    .ToArray()
-                    .Single()
+        //http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
+        let url = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php"
+        let queryParameters = [ 
+            "ID", wundergroundId
+            "PASSWORD", wundergroundPassword
+            "action", "updateraw"
+            "dateutc", dateUtc
+            "realtime", "1"
+            "windspeedmph", string windSpeed
+            "winddir", string windDirection
+            "tempf", string temperature
+            "humidity", defaultArg reading.HumidityPercent 0.0m |> string
+            "baromin", string barometer
+            "rtfreq", string reading.RefreshIntervalSeconds]
 
-            let reading = payload.Body
-            let dateUtc = reading.Time.ToUniversalTime().ToString("yyyy-mm-dd hh:mm:ss")
-            let windSpeed = (defaultArg reading.SpeedMetersPerSecond 0.0m) * 2.23694m
-            let windDirection = (defaultArg reading.DirectionSixteenths 0.0m) * (360.0m / 16.0m)
-            let temperature = (defaultArg reading.TemperatureCelciusBarometer 0.0m) * 9.0m/5.0m  + 32.0m
-            let barometer = (defaultArg reading.PressurePascal 0.0m) * 0.0002953m
+        log.Info( sprintf "Wunderground Request: %A" queryParameters )
+    
+        let! wundergroundResponse = Http.AsyncRequest( url, queryParameters )
+        log.Info( sprintf "Wunderground Response: %A" wundergroundResponse )
 
-            //http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
-            let url = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php"
-            let queryParameters = [ 
-                "ID", weatherStation.WundergroundStationId
-                "PASSWORD", weatherStation.WundergroundPassword
-                "action", "updateraw"
-                "dateutc", dateUtc
-                "realtime", "1"
-                "windspeedmph", string windSpeed
-                "winddir", string windDirection
-                "tempf", string temperature
-                "humidity", defaultArg reading.HumidityPercent 0.0m |> string
-                "baromin", string barometer
-                "rtfreq", string reading.RefreshIntervalSeconds]
+        return wundergroundResponse
+    }
 
-            log.Info( sprintf "Wunderground Request: %A" queryParameters )
+let buildReading (payload : Payload.Root) =
+    let reading = payload.Body
+    Reading(
+        PartitionKey = string payload.SourceDevice,
+        RowKey = string payload.Datetime,
+        BatteryVoltage = reading.BatteryVoltage,
+        RefreshIntervalSeconds = reading.RefreshIntervalSeconds,
+        DeviceTime = payload.Datetime,
+        ReadingTime = reading.Time,
+        SupplyVoltage = reading.SupplyVoltage,
+        ChargeVoltage = reading.ChargeVoltage,
+        TemperatureCelciusHydrometer = reading.TemperatureCelciusHydrometer,
+        TemperatureCelciusBarometer = reading.TemperatureCelciusBarometer,
+        HumidityPercent = reading.HumidityPercent,
+        PressurePascal = reading.PressurePascal,
+        SpeedMetersPerSecond = reading.SpeedMetersPerSecond,
+        DirectionSixteenths = reading.DirectionSixteenths,
+        SourceDevice = string payload.SourceDevice)
 
-            let! wundergroundResponse = Http.AsyncRequest( url, queryParameters )
+let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation>, storedReading : byref<Reading>, log: TraceWriter) =
+    let readingResponse, httpResponse =
+        async {
+            let! content = req.Content.ReadAsStringAsync() |> Async.AwaitTask
+            if String.IsNullOrWhiteSpace(content) then
+                return None, req.CreateErrorResponse(HttpStatusCode.BadRequest, "Expected request data")
+            else
+                let payload = Payload.Parse content
+                let deviceSerialNumber = string payload.SourceDevice        
 
-            log.Info( sprintf "Wunderground Response: %A" wundergroundResponse )
+                let weatherStation = 
+                    weatherStationsTable
+                        .Where( fun station -> station.PartitionKey = DefaultPartition && station.RowKey = deviceSerialNumber )
+                        .ToArray()
+                        .Single()
 
-            //load up the reading for storage
-            let storedReading = !outputReading
-            storedReading.PartitionKey <- string payload.SourceDevice
-            storedReading.RowKey <- string payload.Datetime
-            storedReading.BatteryVoltage <- reading.BatteryVoltage
-            storedReading.RefreshIntervalSeconds <- reading.RefreshIntervalSeconds
-            storedReading.DeviceTime <- payload.Datetime
-            storedReading.ReadingTime <- reading.Time
-            storedReading.SupplyVoltage <- reading.SupplyVoltage
-            storedReading.ChargeVoltage <- reading.ChargeVoltage
-            storedReading.TemperatureCelciusHydrometer <- reading.TemperatureCelciusHydrometer
-            storedReading.TemperatureCelciusBarometer <- reading.TemperatureCelciusBarometer
-            storedReading.HumidityPercent <- reading.HumidityPercent
-            storedReading.PressurePascal <- reading.PressurePascal
-            storedReading.SpeedMetersPerSecond <- reading.SpeedMetersPerSecond
-            storedReading.DirectionSixteenths <- reading.DirectionSixteenths
-            storedReading.SourceDevice <- string payload.SourceDevice
+                let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword payload log
 
-            return req.CreateResponse(wundergroundResponse)
-    } |> Async.StartAsTask
+                let reading = buildReading payload
+
+                return (Some reading, req.CreateResponse(wundergroundResponse))
+            } 
+            |> Async.RunSynchronously
+
+    if readingResponse.IsSome then storedReading <- readingResponse.Value
+    httpResponse
