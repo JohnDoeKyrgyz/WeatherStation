@@ -94,5 +94,5 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
 
     if readingResponse.IsSome then 
         storedReading <- readingResponse.Value
-        log.Info( sprintf "%A" storedReading )
+        log.Info( sprintf "%A" [storedReading.BatteryVoltage; storedReading.SupplyVoltage; storedReading.ChargeVoltage] )
     httpResponse
