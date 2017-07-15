@@ -36,7 +36,7 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
             let dateUtc = reading.Time.ToUniversalTime().ToString("yyyy-mm-dd hh:mm:ss")
             let windSpeed = (defaultArg reading.SpeedMetersPerSecond 0.0m) * 2.23694m
             let windDirection = (defaultArg reading.DirectionSixteenths 0.0m) * (360.0m / 16.0m)
-            let temperature = (defaultArg reading.TemperatureCelciusHydrometer 0.0m) * 9.0m/5.0m  + 32.0m
+            let temperature = (defaultArg reading.TemperatureCelciusBarometer 0.0m) * 9.0m/5.0m  + 32.0m
             let barometer = (defaultArg reading.PressurePascal 0.0m) * 0.0002953m
 
             //http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
