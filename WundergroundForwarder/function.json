@@ -9,7 +9,7 @@
     },
     {
       "tableName": "WeatherStations",
-      "connection": "WeatherStationsStorage",
+      "connection": "WeatherStationStorage",
       "name": "weatherStationsTable",
       "type": "table",
       "direction": "in"
