@@ -24,7 +24,7 @@
       "type": "table",
       "direction": "out",
       "tableName": "Readings",
-      "connection": "WeatherStationsStorage"
+      "connection": "WeatherStationStorage"
     }
   ]
 }
