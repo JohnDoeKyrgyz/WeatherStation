@@ -13,18 +13,23 @@ type WeatherStation() =
     member val WundergroundStationId = "" with get, set
     member val WundergroundPassword = "" with get, set
 
+let nullable v =
+    match v with
+    | Some v -> new Nullable<'T>(v)
+    | None -> new Nullable<'T>()
+
 type Reading() =
     inherit TableEntity()
     member val RefreshIntervalSeconds = 0 with get, set
     member val DeviceTime = DateTime.MinValue with get, set
     member val ReadingTime = DateTime.MinValue with get, set
-    member val SupplyVoltage = Option<int>.None with get, set
-    member val BatteryVoltage = Option<int>.None with get, set
-    member val ChargeVoltage = Option<int>.None with get, set
-    member val TemperatureCelciusHydrometer = Option<decimal>.None with get, set
-    member val TemperatureCelciusBarometer = Option<decimal>.None with get, set
-    member val HumidityPercent = Option<decimal>.None with get, set
-    member val PressurePascal = Option<decimal>.None with get, set
-    member val SpeedMetersPerSecond = Option<decimal>.None with get, set
-    member val DirectionSixteenths = Option<decimal>.None with get, set
+    member val SupplyVoltage = new Nullable<int>() with get, set
+    member val BatteryVoltage = new Nullable<int>() with get, set
+    member val ChargeVoltage = new Nullable<int>() with get, set
+    member val TemperatureCelciusHydrometer = new Nullable<decimal>() with get, set
+    member val TemperatureCelciusBarometer = new Nullable<decimal>() with get, set
+    member val HumidityPercent = new Nullable<decimal>() with get, set
+    member val PressurePascal = new Nullable<decimal>() with get, set
+    member val SpeedMetersPerSecond = new Nullable<decimal>() with get, set
+    member val DirectionSixteenths = new Nullable<decimal>() with get, set
     member val SourceDevice = "" with get, set
