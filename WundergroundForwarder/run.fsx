@@ -60,12 +60,12 @@ let buildReading (payload : Payload.Root) =
         ReadingTime = reading.Time,
         SupplyVoltage = nullable reading.SupplyVoltage,
         ChargeVoltage = nullable reading.ChargeVoltage,
-        TemperatureCelciusHydrometer = nullable reading.TemperatureCelciusHydrometer,
-        TemperatureCelciusBarometer = nullable reading.TemperatureCelciusBarometer,
-        HumidityPercent = nullable reading.HumidityPercent,
-        PressurePascal = nullable reading.PressurePascal,
-        SpeedMetersPerSecond = nullable reading.SpeedMetersPerSecond,
-        DirectionSixteenths = nullable reading.DirectionSixteenths,
+        TemperatureCelciusHydrometer = nullable (reading.TemperatureCelciusHydrometer |> Option.map double),
+        TemperatureCelciusBarometer = nullable (reading.TemperatureCelciusBarometer |> Option.map double),
+        HumidityPercent = nullable (reading.HumidityPercent |> Option.map double),
+        PressurePascal = nullable (reading.PressurePascal |> Option.map double),
+        SpeedMetersPerSecond = nullable (reading.SpeedMetersPerSecond |> Option.map double),
+        DirectionSixteenths = nullable (reading.DirectionSixteenths |> Option.map double),
         SourceDevice = string payload.SourceDevice)
 
 let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation>, storedReading : byref<Reading>, log: TraceWriter) =
@@ -94,5 +94,4 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
 
     if readingResponse.IsSome then 
         storedReading <- readingResponse.Value
-        log.Info( sprintf "%A" [storedReading.BatteryVoltage; storedReading.SupplyVoltage; storedReading.ChargeVoltage] )
     httpResponse

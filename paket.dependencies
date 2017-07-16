@@ -2,4 +2,3 @@ source https://nuget.org/api/v2
 framework: net46
 nuget FSharp.Data
 nuget Newtonsoft.Json
-nuget FSharp.Azure.StorageTypeProvider
