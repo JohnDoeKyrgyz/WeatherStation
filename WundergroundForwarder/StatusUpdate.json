@@ -1,16 +1,16 @@
 [{
     "body": {
-        "refreshIntervalSeconds": 100,
-        "time": "2017-7-10 17:40:10",
-        "supplyVoltage": 95,
-        "batteryVoltage": 210,
-        "chargeVoltage": 140,
-        "temperatureCelciusHydrometer": 1.25,
-        "humidityPercent": 1.25,
-        "temperatureCelciusBarometer": 1.25,
-        "pressurePascal": 1.25,
-        "speedMetersPerSecond": 1.25,
-        "directionSixteenths": 1.25
+        "refreshIntervalSeconds":"60",
+        "temperatureCelciusHydrometer":57.1,
+        "humidityPercent":26.79999,
+        "temperatureCelciusBarometer":28.09,
+        "pressurePascal":99089.77,
+        "supplyVoltage":369,
+        "batteryVoltage":216,
+        "chargeVoltage":420,
+        "speedMetersPerSecond":0.13,
+        "directionSixteenths":7.0,
+        "time":"2017-7-20 21:28:0"
     },
     "source_device": "101303",
     "datetime": "2017-07-10T22:44:06+00:00"
@@ -18,10 +18,13 @@
 {
     "body": {
         "refreshIntervalSeconds": 100,
-        "time": "2017-7-10 17:40:10",
-        "stationId": "KVTWESTR7",
-        "password": "gnmu2lex"
+        "time": "2017-7-10 17:40:10"
     },
+    "source_device": "101303",
+    "datetime": "2017-07-10T22:44:06+00:00"
+},
+{
+    "body": "asdfasd",
     "source_device": "101303",
     "datetime": "2017-07-10T22:44:06+00:00"
 }]

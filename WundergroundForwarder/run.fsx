@@ -17,9 +17,48 @@ open Database
 let Sample = __SOURCE_DIRECTORY__ + "/StatusUpdate.json"
 type Payload = JsonProvider<Sample, SampleIsList = true>
 
+let parseRaw body =
+    let data = Convert.FromBase64String body
+
+    (*
+        {"refreshIntervalSeconds":"60","temperatureCelciusHydrometer":57,"humidityPercent":26.79999,"temperatureCelciusBarometer":28.09,
+        "pressurePascal":99089.77,"supplyVoltage":369,"batteryVoltage":216,"chargeVoltage":420,"speedMetersPerSecond":0,"directionSixteenths":7,"time":"2017-7-20 21:28:0"}
+        uint16_t year;    /*!< Range from 1970 to 2099.*/
+    *)
+
+    let readOptionalDecimal i = Some( decimal (Convert.ToSingle(data.[i]) ) )
+    let readInt i = int (Convert.ToInt16(data.[i]) )
+    let readOptionalInt i = Some( readInt i )
+
+    let year = readInt 10
+    let month = readInt 12
+    let day = readInt 13
+    let hour = readInt 13
+    let minute = readInt 14
+    let second = readInt 15
+
+    let time = DateTime(int year, int month, int day, int hour, int minute, int second)
+    Payload.Body(
+        readInt 0,
+        readOptionalDecimal 1,
+        readOptionalDecimal 2,
+        readOptionalDecimal 3,
+        readOptionalDecimal 4,
+        readOptionalInt 5,
+        readOptionalInt 6,
+        readOptionalInt 7,
+        readOptionalDecimal 8,
+        readOptionalInt 9,
+        time )
+
+let parseBody (payload : Payload.Root) =
+    match payload.Body.Record with
+    | Some v -> v
+    | None -> parseRaw payload.Body.String.Value
+
 let postToWunderground wundergroundId wundergroundPassword (payload : Payload.Root) (log : TraceWriter) =
     async {
-        let reading = payload.Body
+        let reading = parseBody payload
         let dateUtc = reading.Time.ToUniversalTime().ToString("yyyy-mm-dd hh:mm:ss")
         let windSpeed = (defaultArg reading.SpeedMetersPerSecond 0.0m) * 2.23694m
         let windDirection = (defaultArg reading.DirectionSixteenths 0.0m) * (360.0m / 16.0m)
@@ -50,7 +89,7 @@ let postToWunderground wundergroundId wundergroundPassword (payload : Payload.Ro
     }
 
 let buildReading (payload : Payload.Root) =
-    let reading = payload.Body
+    let reading = parseBody payload
     Reading(
         PartitionKey = string payload.SourceDevice,
         RowKey = string (payload.Datetime.ToFileTimeUtc()),
@@ -76,6 +115,9 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
                 return None, req.CreateErrorResponse(HttpStatusCode.BadRequest, "Expected request data")
             else
                 let payload = Payload.Parse content
+                let body = Payload.StringOrBody( parseBody payload )
+                let payload = Payload.Root(body, payload.SourceDevice, payload.Datetime)
+
                 let deviceSerialNumber = string payload.SourceDevice        
 
                 let weatherStation = 
