@@ -129,6 +129,8 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
                 let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword payload log
 
                 let reading = buildReading payload
+                
+                log.Info(sprintf "%A" reading)
 
                 return (Some reading, req.CreateResponse(wundergroundResponse))
             } 
