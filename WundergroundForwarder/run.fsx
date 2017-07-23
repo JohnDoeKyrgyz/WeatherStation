@@ -6,10 +6,13 @@
 open System
 open System.Net
 open System.Net.Http
+open System.Linq
+open System.Text
+
 open Newtonsoft.Json
 open FSharp.Data
+
 open Microsoft.Azure.WebJobs.Host
-open System.Linq
 
 open Database
 
@@ -18,7 +21,11 @@ let Sample = __SOURCE_DIRECTORY__ + "/StatusUpdate.json"
 type Payload = JsonProvider<Sample, SampleIsList = true>
 
 let parseRaw body =
-    let data = Convert.FromBase64String body
+    let data = 
+        Convert.FromBase64String body
+        |> Encoding.UTF8.GetString
+
+    let data = data.Split([|":"|], StringSplitOptions.None)
 
     (*
         {"refreshIntervalSeconds":"60","temperatureCelciusHydrometer":57,"humidityPercent":26.79999,"temperatureCelciusBarometer":28.09,
@@ -26,9 +33,12 @@ let parseRaw body =
         uint16_t year;    /*!< Range from 1970 to 2099.*/
     *)
 
-    let readOptionalDecimal i = Some( decimal (Convert.ToSingle(data.[i]) ) )
-    let readInt i = int (Convert.ToInt16(data.[i]) )
-    let readOptionalInt i = Some( readInt i )
+    let readOptional reader i =
+        let value = data.[i]
+        if String.IsNullOrWhiteSpace( value ) |> not then Some (reader value) else None
+    let readOptionalDecimal = readOptional Convert.ToDecimal
+    let readInt i = int (Convert.ToInt32(data.[i]) )
+    let readOptionalInt = readOptional Convert.ToInt32
 
     let year = readInt 10
     let month = readInt 12
