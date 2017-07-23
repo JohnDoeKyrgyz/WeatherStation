@@ -9,7 +9,7 @@
         "batteryVoltage":216,
         "chargeVoltage":420,
         "speedMetersPerSecond":0.13,
-        "directionSixteenths":7.0,
+        "directionSixteenths":7,
         "time":"2017-7-20 21:28:0"
     },
     "source_device": "101303",
