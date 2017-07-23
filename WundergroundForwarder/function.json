@@ -15,16 +15,16 @@
       "direction": "in"
     },
     {
-      "name": "res",
-      "type": "http",
-      "direction": "out"
-    },
-    {
       "name": "storedReading",
       "type": "table",
       "direction": "out",
       "tableName": "Readings",
       "connection": "WeatherStationStorage"
-    }
+    },
+    {
+      "name": "res",
+      "type": "http",
+      "direction": "out"
+    }    
   ]
 }
