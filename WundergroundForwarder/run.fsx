@@ -52,6 +52,9 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
         let second = readInt 15
 
         let time = DateTime(int year, int month, int day, int hour, int minute, int second)
+        
+        log.Info( sprintf "Parsed time %A" time )
+
         Payload.Body(
             readInt 0,
             readOptionalDecimal 1,
