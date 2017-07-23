@@ -27,9 +27,9 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
             Convert.FromBase64String body
             |> Encoding.UTF8.GetString
 
-        let data = data.Split([|":"|], StringSplitOptions.None)
+        log.Info( sprintf "Parsing reading %s" data )
 
-        log.Info( (sprintf "%A" data) )
+        let data = data.Split([|":"|], StringSplitOptions.None)
 
         (*
             {"refreshIntervalSeconds":"60","temperatureCelciusHydrometer":57,"humidityPercent":26.79999,"temperatureCelciusBarometer":28.09,
@@ -45,8 +45,8 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
         let readOptionalInt = readOptional Convert.ToInt32
 
         let year = readInt 10
-        let month = readInt 12
-        let day = readInt 13
+        let month = readInt 11
+        let day = readInt 12
         let hour = readInt 13
         let minute = readInt 14
         let second = readInt 15
