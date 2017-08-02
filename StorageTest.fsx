@@ -3,6 +3,8 @@
 open Database
 open System
 open System.IO
+open System.Collections.Generic
+
 open Microsoft.Azure // Namespace for CloudConfigurationManager
 open Microsoft.WindowsAzure.Storage // Namespace for CloudStorageAccount
 open Microsoft.WindowsAzure.Storage.Table // Namespace for Table storage types
@@ -12,6 +14,20 @@ let WeatherStationStorageConnection = "DefaultEndpointsProtocol=https;AccountNam
 let storageAccount = CloudStorageAccount.Parse(WeatherStationStorageConnection)
 let tableClient = storageAccount.CreateCloudTableClient()
 
+
+let readings = tableClient.GetTableReference("Readings")
+let query = readings.CreateQuery<Reading>()
+query.SelectColumns <- new List<string>(["ReadingTime"; "BatteryVoltage"])
+let results =
+    query.Execute()
+    |> Seq.toList
+    |> List.sortByDescending (fun reading -> reading.ReadingTime )
+    |> List.take 20
+
+for result in results do
+    printfn "%A %d" result.ReadingTime (result.BatteryVoltage.GetValueOrDefault(-1))
+
+(*
 let reading = 
     Reading(
         PartitionKey = "TEST",
@@ -37,26 +53,4 @@ let insert = TableOperation.Insert(reading)
 let result = table.Execute(insert)
 
 printfn "%A" result
-(*
-type Foo() = 
-    inherit TableEntity()
-    member val Value = Option<int>.None with get, set
-
-let foos = [
-    Foo(RowKey = "1", PartitionKey = "1", Value = None)
-    Foo(RowKey = "2", PartitionKey = "1", Value = Some(1))]
-
-let testTable = tableClient.GetTableReference("Test")
-testTable.DeleteIfExists()
-testTable.Create()
-
-for foo in foos do
-    let insertResult = testTable.Execute(TableOperation.Insert(foo))
-    printfn "%A" insertResult.Result
-
-let query = testTable.CreateQuery<Foo>()
-let results = query.Execute()
-
-for foo in results do
-    printfn "%s %s %A" foo.RowKey foo.PartitionKey foo.Value
-    *)
+*)
