@@ -5,7 +5,6 @@ open System
 open System.IO
 open System.Collections.Generic
 
-open Microsoft.Azure // Namespace for CloudConfigurationManager
 open Microsoft.WindowsAzure.Storage // Namespace for CloudStorageAccount
 open Microsoft.WindowsAzure.Storage.Table // Namespace for Table storage types
 
