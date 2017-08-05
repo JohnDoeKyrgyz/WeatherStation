@@ -21,10 +21,15 @@ let results =
     query.Execute()
     |> Seq.toList
     |> List.sortByDescending (fun reading -> reading.ReadingTime )
-    |> List.take 20
+    |> List.take 5
 
 for result in results do
-    printfn "%A %d" result.ReadingTime (result.BatteryVoltage.GetValueOrDefault(-1))
+    printfn 
+        "%A %d %d %d" 
+        result.ReadingTime
+        (result.SupplyVoltage.GetValueOrDefault(-1))
+        (result.BatteryChargeVoltage.GetValueOrDefault(-1))
+        (result.PanelVoltage.GetValueOrDefault(-1))
 
 (*
 let reading = 
