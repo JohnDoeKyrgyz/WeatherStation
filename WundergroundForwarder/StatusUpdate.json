@@ -6,8 +6,8 @@
         "temperatureCelciusBarometer":28.09,
         "pressurePascal":99089.77,
         "supplyVoltage":369,
-        "batteryVoltage":216,
-        "chargeVoltage":420,
+        "batteryChargeVoltage":216,
+        "panelVoltage":420,
         "speedMetersPerSecond":0.13,
         "directionSixteenths":7,
         "time":"2017-7-20 21:28:0"

@@ -31,12 +31,6 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
 
         let data = data.Split([|":"|], StringSplitOptions.None)
 
-        (*
-            {"refreshIntervalSeconds":"60","temperatureCelciusHydrometer":57,"humidityPercent":26.79999,"temperatureCelciusBarometer":28.09,
-            "pressurePascal":99089.77,"supplyVoltage":369,"batteryVoltage":216,"chargeVoltage":420,"speedMetersPerSecond":0,"directionSixteenths":7,"time":"2017-7-20 21:28:0"}
-            uint16_t year;    /*!< Range from 1970 to 2099.*/
-        *)
-
         let readOptional reader i =
             let value = data.[i]
             if String.IsNullOrWhiteSpace( value ) |> not then Some (reader value) else None
@@ -110,12 +104,12 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
         Reading(
             PartitionKey = string payload.SourceDevice,
             RowKey = string (payload.Datetime.ToFileTimeUtc()),
-            BatteryVoltage = nullable reading.BatteryVoltage,
+            BatteryChargeVoltage = nullable reading.BatteryChargeVoltage,
             RefreshIntervalSeconds = reading.RefreshIntervalSeconds,
             DeviceTime = payload.Datetime,
             ReadingTime = reading.Time,
             SupplyVoltage = nullable reading.SupplyVoltage,
-            ChargeVoltage = nullable reading.ChargeVoltage,
+            PanelVoltage = nullable reading.PanelVoltage,
             TemperatureCelciusHydrometer = nullable (reading.TemperatureCelciusHydrometer |> Option.map double),
             TemperatureCelciusBarometer = nullable (reading.TemperatureCelciusBarometer |> Option.map double),
             HumidityPercent = nullable (reading.HumidityPercent |> Option.map double),
