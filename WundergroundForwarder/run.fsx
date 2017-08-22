@@ -103,7 +103,7 @@ let Run(req: HttpRequestMessage, weatherStationsTable: IQueryable<WeatherStation
         let reading = parseBody payload
         Reading(
             PartitionKey = string payload.SourceDevice,
-            RowKey = string (payload.Datetime.ToFileTimeUtc()),
+            RowKey = string (Int64.MaxValue - (reading.Time.ToFileTimeUtc())),
             BatteryChargeVoltage = nullable reading.BatteryChargeVoltage,
             RefreshIntervalSeconds = reading.RefreshIntervalSeconds,
             DeviceTime = payload.Datetime,

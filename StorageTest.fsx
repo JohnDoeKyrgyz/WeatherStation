@@ -25,11 +25,13 @@ let results =
 
 for result in results do
     printfn 
-        "%A %d %d %d" 
+        "%A %d %d %d %f %f" 
         result.ReadingTime
         (result.SupplyVoltage.GetValueOrDefault(-1))
         (result.BatteryChargeVoltage.GetValueOrDefault(-1))
         (result.PanelVoltage.GetValueOrDefault(-1))
+        (result.TemperatureCelciusBarometer.GetValueOrDefault(-1.0))        
+        (result.TemperatureCelciusHydrometer.GetValueOrDefault(-1.0))
 
 (*
 let reading = 
