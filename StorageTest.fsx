@@ -14,49 +14,38 @@ let storageAccount = CloudStorageAccount.Parse(WeatherStationStorageConnection)
 let tableClient = storageAccount.CreateCloudTableClient()
 
 
-let readings = tableClient.GetTableReference("Readings")
-let query = readings.CreateQuery<Reading>()
-query.SelectColumns <- new List<string>(["ReadingTime"; "BatteryVoltage"])
-let results =
-    query.Execute()
-    |> Seq.toList
-    |> List.sortByDescending (fun reading -> reading.ReadingTime )
-    |> List.take 5
+let reIndexTable sourceTableName destinationTableName =
 
-for result in results do
-    printfn 
-        "%A %d %d %d %f %f" 
-        result.ReadingTime
-        (result.SupplyVoltage.GetValueOrDefault(-1))
-        (result.BatteryChargeVoltage.GetValueOrDefault(-1))
-        (result.PanelVoltage.GetValueOrDefault(-1))
-        (result.TemperatureCelciusBarometer.GetValueOrDefault(-1.0))        
-        (result.TemperatureCelciusHydrometer.GetValueOrDefault(-1.0))
+    let sourceTable = tableClient.GetTableReference(sourceTableName)
+    let desitinationTable = tableClient.GetTableReference(destinationTableName)
+    
+    if desitinationTable.CreateIfNotExists() then printfn "Created table %s" sourceTableName
 
-(*
-let reading = 
-    Reading(
-        PartitionKey = "TEST",
-        RowKey = "2",
-        BatteryVoltage = nullable (Some 1),
-        RefreshIntervalSeconds = 1,
-        DeviceTime = DateTime.MaxValue,
-        ReadingTime = DateTime.MaxValue,
-        SupplyVoltage = nullable (Some 1),
-        ChargeVoltage = nullable (Some 1),
-        TemperatureCelciusHydrometer = nullable (Some (double 1.1m)),
-        TemperatureCelciusBarometer = nullable (Some (double 1.1m)),
-        HumidityPercent = nullable (Some (double 1.1m)),
-        PressurePascal = nullable (Some (double 1.1m)),
-        SpeedMetersPerSecond = nullable (Some (double 1.1m)),
-        DirectionSixteenths = nullable (Some (double 1.1m)),
-        SourceDevice = "source")
-let table = tableClient.GetTableReference("Readings")
-table.CreateIfNotExists()
+    let query = sourceTable.CreateQuery<Reading>()
 
-let insert = TableOperation.Insert(reading)
+    let rec loop (cont: TableContinuationToken) = async {
+        let! result = sourceTable.ExecuteQuerySegmentedAsync(query, cont) |> Async.AwaitTask
+        
+        let batches =
+            result.Results
+            |> Seq.chunkBySize 100
 
-let result = table.Execute(insert)
+        for batch in batches do
+            let batchOperation = TableBatchOperation()
+            for reading in batch do
+                let newRowKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - reading.DeviceTime.Ticks)
+                printfn "%s %d %s" (string reading.Timestamp) reading.Timestamp.Ticks newRowKey
+                reading.RowKey <- newRowKey
+                batchOperation.Insert(reading)
+        
+            let! insertResults = desitinationTable.ExecuteBatchAsync( batchOperation ) |> Async.AwaitTask
+            for insertResult in insertResults do printfn "%A" insertResult
 
-printfn "%A" result
-*)
+        if (isNull >> not) result.ContinuationToken then
+            printfn "Next page."
+            do! loop result.ContinuationToken
+    }
+
+    loop null
+
+reIndexTable "EndOfOctoberReadings" "Readings" |> Async.RunSynchronously  
