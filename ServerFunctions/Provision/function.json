@@ -1,0 +1,23 @@
+{
+  "disabled": false,
+  "bindings": [
+    {
+      "authLevel": "function",
+      "name": "req",
+      "type": "httpTrigger",
+      "direction": "in"
+    },
+    {
+      "tableName": "WeatherStations",
+      "connection": "WeatherStationStorage",
+      "name": "weatherStationsTable",
+      "type": "table",
+      "direction": "out"
+    },
+    {
+      "name": "res",
+      "type": "http",
+      "direction": "out"
+    }
+  ]
+}
