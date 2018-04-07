@@ -1,9 +1,0 @@
-[submodule "DeviceFirmware"]
-	path = DeviceFirmware
-	url = ./DeviceFirmware
-[submodule "ServerFunctions"]
-	path = ServerFunctions
-	url = ./ServerFunctions
-[submodule "WebInterface"]
-	path = WebInterface
-	url = ./WebInterface
