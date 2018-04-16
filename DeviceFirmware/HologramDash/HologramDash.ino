@@ -15,6 +15,7 @@
 #define CHARGE_VOLTAGE L03
 
 /* Brownout voltage level */
+#define ENABLE_BROWNOUT 1
 #define BROWNOUT_MILLIVOLTS 4750
 #define BROWNOUT_MINUTES 180.0 //3 hours
 
@@ -193,7 +194,9 @@ void checkBrownout(){
 
 void setup() {
   Serial.begin(115200);
-  checkBrownout();
+  #if ENABLE_BROWNOUT
+    checkBrownout();
+  #endif
 
   Dash.setLED(true);
 

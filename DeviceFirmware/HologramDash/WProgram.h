@@ -1,0 +1,3 @@
+/*
+Placeholder file to get intellisense to work. This was removed in a recent version of Arduino.
+*/
