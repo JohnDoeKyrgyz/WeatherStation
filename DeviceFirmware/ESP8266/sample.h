@@ -4,11 +4,17 @@
 #ifndef SAMPLE_H
 #define SAMPLE_H
 
+#include "model.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-    void sample_run(void);
+    IOTHUB_CLIENT_LL_HANDLE initializeAzureIot();
+    Anemometer *initializeAnemometer(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle);
+    void destroyAnemometer(Anemometer *instance);
+    void sendUpdate(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, Anemometer *myWeather);
+    void doWork(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle);
+    void destroyAzureIoT(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle);
 
 #ifdef __cplusplus
 }
