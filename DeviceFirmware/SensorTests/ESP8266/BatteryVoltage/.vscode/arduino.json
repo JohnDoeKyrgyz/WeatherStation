@@ -1,0 +1,7 @@
+{
+    "sketch": "BatteryVoltage.ino",
+    "board": "esp8266:esp8266:esp8285",
+    "configuration": "CpuFrequency=80,ResetMethod=ck,CrystalFreq=26,FlashSize=1M512,led=2,LwIPVariant=v2mss536,Debug=Disabled,DebugLevel=None____,FlashErase=none,UploadSpeed=115200",
+    "output": "/build",
+    "port": "COM6"
+}
