@@ -15,7 +15,7 @@
  * String containing Hostname, Device Id & Device Key in the format:
  *  "HostName=<host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"    
  */
-#define IOT_CONFIG_CONNECTION_STRING    "HostName=AtwoodIoT.azure-devices.net;DeviceId=TemperatureMonitor;SharedAccessKey=9HdpnA2Irjpp0/TnbyLj2KPz+l16YlTRsha+hP+Z8O8=;GatewayHostName=ssl://AtwoodIot:8883"
+#define IOT_CONFIG_CONNECTION_STRING    "HostName=AtwoodIoT.azure-devices.net;DeviceId=TemperatureMonitor;SharedAccessKey=9HdpnA2Irjpp0/TnbyLj2KPz+l16YlTRsha+hP+Z8O8="
 
 /** 
  * Choose the transport protocol
