@@ -17,7 +17,7 @@ static const char* connectionString = IOT_CONFIG_CONNECTION_STRING;
 // Define the Model
 BEGIN_NAMESPACE(WeatherStation);
 
-DECLARE_MODEL(ContosoAnemometer,
+DECLARE_MODEL(Anemometer,
     WITH_DATA(ascii_char_ptr, DeviceId),
     WITH_DATA(int, WindSpeed),
     WITH_DATA(float, Temperature),
@@ -31,21 +31,21 @@ END_NAMESPACE(WeatherStation);
 
 static char propText[1024];
 
-EXECUTE_COMMAND_RESULT TurnFanOn(ContosoAnemometer* device)
+EXECUTE_COMMAND_RESULT TurnFanOn(Anemometer* device)
 {
     (void)device;
     (void)printf("Turning fan on.\r\n");
     return EXECUTE_COMMAND_SUCCESS;
 }
 
-EXECUTE_COMMAND_RESULT TurnFanOff(ContosoAnemometer* device)
+EXECUTE_COMMAND_RESULT TurnFanOff(Anemometer* device)
 {
     (void)device;
     (void)printf("Turning fan off.\r\n");
     return EXECUTE_COMMAND_SUCCESS;
 }
 
-EXECUTE_COMMAND_RESULT SetAirResistance(ContosoAnemometer* device, int Position)
+EXECUTE_COMMAND_RESULT SetAirResistance(Anemometer* device, int Position)
 {
     (void)device;
     (void)printf("Setting Air Resistance Position to %d.\r\n", Position);
@@ -61,7 +61,7 @@ void sendCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void* userContextCal
     (void)printf("Result Call Back Called! Result is: %s \r\n", ENUM_TO_STRING(IOTHUB_CLIENT_CONFIRMATION_RESULT, result));
 }
 
-static void sendMessage(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, const unsigned char* buffer, size_t size, ContosoAnemometer *myWeather)
+static void sendMessage(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, const unsigned char* buffer, size_t size, Anemometer *myWeather)
 {
     static unsigned int messageTrackingId;
     IOTHUB_MESSAGE_HANDLE messageHandle = IoTHubMessage_CreateFromByteArray(buffer, size);
@@ -161,7 +161,7 @@ void simplesample_mqtt_run(void)
 #endif // SET_TRUSTED_CERT_IN_SAMPLES
 
 
-                ContosoAnemometer* myWeather = CREATE_MODEL_INSTANCE(WeatherStation, ContosoAnemometer);
+                Anemometer* myWeather = CREATE_MODEL_INSTANCE(WeatherStation, Anemometer);
                 if (myWeather == NULL)
                 {
                     (void)printf("Failed on CREATE_MODEL_INSTANCE\r\n");
@@ -174,30 +174,32 @@ void simplesample_mqtt_run(void)
                     }
                     else
                     {
-                        myWeather->DeviceId = "myFirstDevice";
-                        myWeather->WindSpeed = avgWindSpeed + (rand() % 4 + 2);
-                        myWeather->Temperature = minTemperature + (rand() % 10);
-                        myWeather->Humidity = minHumidity + (rand() % 20);
+                        while(true)
                         {
-                            unsigned char* destination;
-                            size_t destinationSize;
-                            if (SERIALIZE(&destination, &destinationSize, myWeather->DeviceId, myWeather->WindSpeed, myWeather->Temperature, myWeather->Humidity) != CODEFIRST_OK)
+                            myWeather->DeviceId = IOT_CONFIG_DEVICE_ID;
+                            myWeather->WindSpeed = avgWindSpeed + (rand() % 4 + 2);
+                            myWeather->Temperature = minTemperature + (rand() % 10);
+                            myWeather->Humidity = minHumidity + (rand() % 20);
                             {
-                                (void)printf("Failed to serialize\r\n");
+                                unsigned char* destination;
+                                size_t destinationSize;
+                                if (SERIALIZE(&destination, &destinationSize, myWeather->DeviceId, myWeather->WindSpeed, myWeather->Temperature, myWeather->Humidity) != CODEFIRST_OK)
+                                {
+                                    (void)printf("Failed to serialize\r\n");
+                                }
+                                else
+                                {
+                                    sendMessage(iotHubClientHandle, destination, destinationSize, myWeather);
+                                    free(destination);
+                                }
                             }
-                            else
-                            {
-                                sendMessage(iotHubClientHandle, destination, destinationSize, myWeather);
-                                free(destination);
-                            }
-                        }
 
-                        /* wait for commands */
-                        while (1)
-                        {
+                            /* wait for commands */
                             IoTHubClient_LL_DoWork(iotHubClientHandle);
                             ThreadAPI_Sleep(100);
                         }
+
+                        delay(10000);
                     }
 
                     DESTROY_MODEL_INSTANCE(myWeather);

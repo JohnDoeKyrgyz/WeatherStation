@@ -4,18 +4,19 @@
 #ifndef IOT_CONFIGS_H
 #define IOT_CONFIGS_H
 
+#define IOT_CONFIG_DEVICE_ID        "[DEVICE ID]"
 /**
  * WiFi setup
  */
-#define IOT_CONFIG_WIFI_SSID            "Atwood.Net"
-#define IOT_CONFIG_WIFI_PASSWORD        "RileyEmmett"
+#define IOT_CONFIG_WIFI_SSID            "[SSID]"
+#define IOT_CONFIG_WIFI_PASSWORD        "[PASSWORD]"
 
 /**
  * Find under Microsoft Azure IoT Suite -> DEVICES -> <your device> -> Device Details and Authentication Keys
  * String containing Hostname, Device Id & Device Key in the format:
  *  "HostName=<host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"    
  */
-#define IOT_CONFIG_CONNECTION_STRING    "HostName=AtwoodIoT.azure-devices.net;DeviceId=TemperatureMonitor;SharedAccessKey=9HdpnA2Irjpp0/TnbyLj2KPz+l16YlTRsha+hP+Z8O8="
+#define IOT_CONFIG_CONNECTION_STRING    "[Connection String]"
 
 /** 
  * Choose the transport protocol
