@@ -46,8 +46,6 @@ void shutdown()
 
 void loop()
 {
-    printf("Loop!");
-
     srand((unsigned int)time(NULL));
     int avgWindSpeed = 10;
     float minTemperature = 20.0;
