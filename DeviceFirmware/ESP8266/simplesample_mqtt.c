@@ -197,9 +197,9 @@ void simplesample_mqtt_run(void)
                             /* wait for commands */
                             IoTHubClient_LL_DoWork(iotHubClientHandle);
                             ThreadAPI_Sleep(100);
-                        }
 
-                        delay(10000);
+                            delay(10000);
+                        }
                     }
 
                     DESTROY_MODEL_INSTANCE(myWeather);
