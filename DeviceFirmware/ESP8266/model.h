@@ -11,9 +11,9 @@ DECLARE_MODEL(Anemometer,
     WITH_DATA(int, WindSpeed),
     WITH_DATA(float, Temperature),
     WITH_DATA(float, Humidity),
-    WITH_ACTION(TurnFanOn),
-    WITH_ACTION(TurnFanOff),
-    WITH_ACTION(SetAirResistance, int, Position));
+    WITH_DATA(float, BatteryVoltage),
+    WITH_ACTION(FirmwareUpdate),
+    WITH_ACTION(SetInterval, int, Position));
 
 END_NAMESPACE(WeatherStation);
 

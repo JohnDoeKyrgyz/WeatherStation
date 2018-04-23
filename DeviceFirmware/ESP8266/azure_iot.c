@@ -16,24 +16,17 @@ static const char *connectionString = IOT_CONFIG_CONNECTION_STRING;
 
 static char propText[1024];
 
-EXECUTE_COMMAND_RESULT TurnFanOn(Anemometer *device)
+EXECUTE_COMMAND_RESULT FirmwareUpdate(Anemometer *device)
 {
     (void)device;
-    (void)printf("Turning fan on.\r\n");
+    (void)printf("Initiating FirmwareUpdate.\r\n");
     return EXECUTE_COMMAND_SUCCESS;
 }
 
-EXECUTE_COMMAND_RESULT TurnFanOff(Anemometer *device)
+EXECUTE_COMMAND_RESULT SetInterval(Anemometer *device, int Position)
 {
     (void)device;
-    (void)printf("Turning fan off.\r\n");
-    return EXECUTE_COMMAND_SUCCESS;
-}
-
-EXECUTE_COMMAND_RESULT SetAirResistance(Anemometer *device, int Position)
-{
-    (void)device;
-    (void)printf("Setting Air Resistance Position to %d.\r\n", Position);
+    (void)printf("Setting measurement interval to %d.\r\n", Position);
     return EXECUTE_COMMAND_SUCCESS;
 }
 
