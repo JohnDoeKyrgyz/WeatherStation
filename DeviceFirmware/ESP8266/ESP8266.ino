@@ -17,11 +17,27 @@
 #include "sample.h"
 #include "esp8266/sample_init.h"
 
+
+#include "DHT.h"
+#define DHTPIN 2
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
 static char ssid[] = IOT_CONFIG_WIFI_SSID;
 static char pass[] = IOT_CONFIG_WIFI_PASSWORD;
 
 IOTHUB_CLIENT_LL_HANDLE azureIot;
 Anemometer *anemometer;
+
+void onSettingsChanged(void* argument)
+{
+    // Note: The argument is NOT a pointer to desired_maxSpeed, but instead a pointer to the MODEL 
+    //       that contains desired_maxSpeed as one of its arguments.  In this case, it
+    //       is CarSettings*.
+
+    Settings* car = argument;
+    printf("received a new desired_maxSpeed = %" PRIu8 "\n", car->interval);
+}
 
 void setup()
 {
@@ -36,6 +52,8 @@ void setup()
     {
         anemometer = initializeAnemometer(azureIot);
     }
+
+    dht.begin();
 }
 
 void shutdown()
@@ -52,8 +70,8 @@ void loop()
     float minHumidity = 60.0;
 
     anemometer->WindSpeed = avgWindSpeed + (rand() % 4 + 2);
-    anemometer->Temperature = minTemperature + (rand() % 10);
-    anemometer->Humidity = minHumidity + (rand() % 20);
+    anemometer->DhtTemperature = dht.readTemperature();;
+    anemometer->DhtHumidity = dht.readHumidity();
 
     sendUpdate(azureIot, anemometer);
 

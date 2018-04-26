@@ -30,6 +30,13 @@ EXECUTE_COMMAND_RESULT SetInterval(Anemometer *device, int Position)
     return EXECUTE_COMMAND_SUCCESS;
 }
 
+EXECUTE_COMMAND_RESULT SetDiagnosticMode(Anemometer *device, bool Diagnostic)
+{
+    (void)device;
+    (void)printf("Setting diagnostic mode to %d.\r\n", Diagnostic);
+    return EXECUTE_COMMAND_SUCCESS;
+}
+
 void sendCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void *userContextCallback)
 {
     unsigned int messageTrackingId = (unsigned int)(uintptr_t)userContextCallback;
@@ -49,13 +56,6 @@ static void sendMessage(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, const unsign
     }
     else
     {
-        MAP_HANDLE propMap = IoTHubMessage_Properties(messageHandle);
-        (void)sprintf_s(propText, sizeof(propText), myWeather->Temperature > 28 ? "true" : "false");
-        if (Map_AddOrUpdate(propMap, "temperatureAlert", propText) != MAP_OK)
-        {
-            (void)printf("ERROR: Map_AddOrUpdate Failed!\r\n");
-        }
-
         if (IoTHubClient_LL_SendEventAsync(iotHubClientHandle, messageHandle, sendCallback, (void *)(uintptr_t)messageTrackingId) != IOTHUB_CLIENT_OK)
         {
             printf("failed to hand over the message to IoTHubClient");
@@ -162,15 +162,9 @@ void destroyAnemometer(Anemometer *instance)
 
 void sendUpdate(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, Anemometer *myWeather)
 {
-    /*
-    myWeather->DeviceId = IOT_CONFIG_DEVICE_ID;
-    myWeather->WindSpeed = avgWindSpeed + (rand() % 4 + 2);
-    myWeather->Temperature = minTemperature + (rand() % 10);
-    myWeather->Humidity = minHumidity + (rand() % 20);
-    */
     unsigned char *destination;
     size_t destinationSize;
-    if (SERIALIZE(&destination, &destinationSize, myWeather->DeviceId, myWeather->WindSpeed, myWeather->Temperature, myWeather->Humidity) != CODEFIRST_OK)
+    if (SERIALIZE(&destination, &destinationSize, myWeather->DeviceId, myWeather->WindSpeed, myWeather->DhtTemperature, myWeather->DhtHumidity) != CODEFIRST_OK)
     {
         (void)printf("Failed to serialize\r\n");
     }

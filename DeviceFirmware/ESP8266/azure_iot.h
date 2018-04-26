@@ -1,8 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-#ifndef SAMPLE_H
-#define SAMPLE_H
+#ifndef AZURE_IOT_H
+#define AZURE_IOT_H
 
 #include "model.h"
 
@@ -20,4 +17,4 @@ extern "C" {
 }
 #endif
 
-#endif /* SAMPLE_H */
+#endif /* AZURE_IOT_H */
