@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION 1.0
+#define FIRMWARE_VERSION "1.0"
 
 #include <AzureIoTHub.h>
 #if defined(IOT_CONFIG_MQTT)
@@ -25,10 +25,15 @@ Anemometer *anemometer;
 
 void setup()
 {
+    Serial.begin(115200);
+    delay(10);
+    
     settings = getSettings();
-    printf("%s Firmware %d\r\n", settings->IotHub.DeviceId, FIRMWARE_VERSION);    
-
+    
+    printf("\r\n\r\nDeviceId %s\r\n", settings->IotHub.DeviceId);
+    printf("Firmware Version %s\r\n", FIRMWARE_VERSION);
     printf("Initializing WIFI %s\r\n", settings->Wifi.SSID);
+
     sample_init(settings->Wifi.SSID, settings->Wifi.Password);
 
     azureIot = initializeAzureIot();
