@@ -100,7 +100,7 @@ void loop()
         printf("Sending update: Windspeed = %d, DhtTemperature = %d, DhtHumidity = %d\r\n", anemometer->WindSpeed, anemometer->DhtTemperature, anemometer->DhtHumidity);
         sendUpdate(azureIot, anemometer);
 
-        while(!deviceTwinUpdateComplete() && getSendState() != COMPLETE)
+        while(!deviceTwinUpdateComplete() || getSendState() == SENDING)
         {
             doWork(azureIot);
         }        

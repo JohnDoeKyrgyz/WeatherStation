@@ -52,8 +52,6 @@ void sendCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void *userContextCal
 
 static void sendMessage(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, const unsigned char *buffer, size_t size, Anemometer *myWeather)
 {
-    sendState = SENDING;
-
     static unsigned int messageTrackingId;
     IOTHUB_MESSAGE_HANDLE messageHandle = IoTHubMessage_CreateFromByteArray(buffer, size);
     if (messageHandle == NULL)
@@ -168,11 +166,14 @@ void destroyAnemometer(Anemometer *instance)
 
 void sendUpdate(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, Anemometer *myWeather)
 {
+    sendState = SENDING;
+
     unsigned char *destination;
     size_t destinationSize;
     if (SERIALIZE(&destination, &destinationSize, myWeather->DeviceId, myWeather->WindSpeed, myWeather->DhtTemperature, myWeather->DhtHumidity) != CODEFIRST_OK)
     {
         (void)printf("Failed to serialize\r\n");
+        sendState = NONE;
     }
     else
     {
