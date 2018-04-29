@@ -1,0 +1,70 @@
+{
+    "deviceId": "TemperatureMonitor",
+    "etag": "AAAAAAAAAAI=",
+    "deviceEtag": "MjY1Mjg3Mzc4",
+    "status": "enabled",
+    "statusUpdateTime": "0001-01-01T00:00:00",
+    "connectionState": "Disconnected",
+    "lastActivityTime": "2018-04-29T14:24:52.1030381",
+    "cloudToDeviceMessageCount": 0,
+    "authenticationType": "sas",
+    "x509Thumbprint": {
+        "primaryThumbprint": null,
+        "secondaryThumbprint": null
+    },
+    "version": 137,
+    "properties": {
+        "desired": {
+            "SleepInterval": 20000000,
+            "$metadata": {
+                "$lastUpdated": "2018-04-22T12:48:08.7404025Z",
+                "$lastUpdatedVersion": 2,
+                "interval": {
+                    "$lastUpdated": "2018-04-22T12:48:08.7404025Z",
+                    "$lastUpdatedVersion": 2
+                }
+            },
+            "$version": 2
+        },
+        "reported": {
+            "SleepInterval": 10000000,
+            "Wifi": {
+                "SSID": "Atwood.Net",
+                "Password": "RileyEmmett"
+            },
+            "IoTHub": {
+                "ConnectionString": "HostName=AtwoodIoT.azure-devices.net;DeviceId=TemperatureMonitor;SharedAccessKey=9HdpnA2Irjpp0/TnbyLj2KPz+l16YlTRsha+hP+Z8O8=",
+                "DeviceId": "TemperatureMonitor"
+            },
+            "$metadata": {
+                "$lastUpdated": "2018-04-29T14:24:52.0092824Z",
+                "device_property": {
+                    "$lastUpdated": "2018-04-29T13:59:27.257097Z"
+                },
+                "SleepInterval": {
+                    "$lastUpdated": "2018-04-29T14:24:52.0092824Z"
+                },
+                "Wifi": {
+                    "$lastUpdated": "2018-04-29T14:24:52.0092824Z",
+                    "SSID": {
+                        "$lastUpdated": "2018-04-29T14:24:52.0092824Z"
+                    },
+                    "Password": {
+                        "$lastUpdated": "2018-04-29T14:24:52.0092824Z"
+                    }
+                },
+                "IoTHub": {
+                    "$lastUpdated": "2018-04-29T14:24:52.0092824Z",
+                    "ConnectionString": {
+                        "$lastUpdated": "2018-04-29T14:24:52.0092824Z"
+                    },
+                    "DeviceId": {
+                        "$lastUpdated": "2018-04-29T14:24:52.0092824Z"
+                    }
+                }
+            },
+            "$version": 135
+        }
+    },
+    "tags": {}
+}

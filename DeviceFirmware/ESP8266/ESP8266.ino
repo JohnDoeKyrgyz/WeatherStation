@@ -13,7 +13,7 @@
 #include "device_twin.h"
 #include "settings.h"
 
-SETTINGS_HANDLE settings;
+static SETTINGS_HANDLE settings;
 
 #include "DHT.h"
 #define DHTPIN 2
@@ -23,12 +23,25 @@ DHT dht(DHTPIN, DHTTYPE);
 IOTHUB_CLIENT_LL_HANDLE azureIot;
 Anemometer *anemometer;
 
+void onSettingsUpdate(JSON_Value *settingsJson)
+{
+    SETTINGS_HANDLE newSettings = deserialize(settingsJson);
+
+    if(newSettings->SleepInterval != settings->SleepInterval)
+    {
+        settings->SleepInterval = newSettings->SleepInterval;
+        printf("Updating SleepInterval to %d\r\n", newSettings->SleepInterval);
+    }
+    free(newSettings);
+}
+
 void setup()
 {
     Serial.begin(115200);
     delay(10);
     
     settings = getSettings();
+    settings->FirmwareVersion = FIRMWARE_VERSION;
     
     printf("\r\n\r\nDeviceId %s\r\n", settings->IotHub.DeviceId);
     printf("Firmware Version %s\r\n", FIRMWARE_VERSION);
@@ -59,7 +72,11 @@ bool traceOn = false;
 
 void loop()
 {
-    if(beginDeviceTwinSync(azureIot) != IOTHUB_CLIENT_OK)
+    JSON_Value* settingsJson = serialize(settings);
+    bool syncSettingsResult = beginDeviceTwinSync(azureIot, settingsJson, &onSettingsUpdate) != IOTHUB_CLIENT_OK;
+    json_value_free(settingsJson);
+
+    if(syncSettingsResult)
     {
         printf("Cannot sync device twin");
         //TODO: Blink LED in Error.

@@ -3,6 +3,7 @@
 
 #include <AzureIoTHub.h>
 #include <AzureIoTProtocol_MQTT.h>
+#include "sdk\parson.h"
 
 DEFINE_ENUM_STRINGS(DEVICE_TWIN_UPDATE_STATE, DEVICE_TWIN_UPDATE_STATE_VALUES);
 
@@ -10,13 +11,24 @@ static char msgText[1024];
 static char propText[1024];
 static bool stateReported;
 
-static void deviceTwinCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsigned char* payLoad, size_t size, void* userContextCallback)
+static void deviceTwinCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsigned char* payload, size_t size, void* userContextCallback)
 {
-    (void)userContextCallback;
+    if(userContextCallback != NULL)
+    {
+        void(*callback)(JSON_Value*) = userContextCallback;
+
+        JSON_Value *deviceUpdateJson = json_parse_string(payload);
+        JSON_Object *jsonSettings = json_value_get_object(deviceUpdateJson);
+        jsonSettings = json_object_get_object(jsonSettings, "desired");
+
+        callback(jsonSettings);
+        json_value_free(deviceUpdateJson);
+    }
+    
     printf("Device Twin update received (state=%s, size=%u): \r\n", ENUM_TO_STRING(DEVICE_TWIN_UPDATE_STATE, update_state), size);
     for (size_t n = 0; n < size; n++)
     {
-        printf("%c", payLoad[n]);
+        printf("%c", payload[n]);
     }
     printf("\r\n");
 }
@@ -33,13 +45,11 @@ bool deviceTwinUpdateComplete()
     return stateReported;
 }
 
-IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle)
+IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, JSON_Value* settings, void(*onSettingsReceived)(JSON_Value *jsonValue))
 {
     stateReported = false;
-    
-    // This json-format reportedState is created as a string for simplicity. In a real application
-    // this would likely be done with parson (which the Azure IoT SDK uses) or a similar tool.
-    const char* reportedState = "{ 'device_property': 'new_value'}";
+
+    const char* reportedState = json_serialize_to_string(settings);
     size_t reportedStateSize = strlen(reportedState);
 
     IOTHUB_CLIENT_RESULT result;
