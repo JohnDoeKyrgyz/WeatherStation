@@ -1,62 +1,64 @@
+#include <stdio.h>
 #include <stdlib.h>
 
-#include <stdio.h>
-#include <stdint.h>
+#include <AzureIoTHub.h>
+#include <AzureIoTProtocol_MQTT.h>
 
-#include "AzureIoTHub.h"
+DEFINE_ENUM_STRINGS(DEVICE_TWIN_UPDATE_STATE, DEVICE_TWIN_UPDATE_STATE_VALUES);
 
+static char msgText[1024];
+static char propText[1024];
+static bool stateReported;
 
-void deviceTwinReportStateCallback(int status_code, void* userContextCallback)
-{
-    (void)(userContextCallback);
-    printf("IoTHub: reported properties delivered with status_code = %d\n", status_code);
-}
-
-static void deviceTwinGetStateCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsigned char* payLoad, size_t size, void* userContextCallback)
+static void deviceTwinCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsigned char* payLoad, size_t size, void* userContextCallback)
 {
     (void)userContextCallback;
-    printf("Device Twin properties received: update=%s payload=%s, size=%zu\n", ENUM_TO_STRING(DEVICE_TWIN_UPDATE_STATE, update_state), payLoad, size);
+    printf("Device Twin update received (state=%s, size=%u): \r\n", ENUM_TO_STRING(DEVICE_TWIN_UPDATE_STATE, update_state), size);
+    for (size_t n = 0; n < size; n++)
+    {
+        printf("%c", payLoad[n]);
+    }
+    printf("\r\n");
 }
 
-void manageDeviceTwin(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle)
-{    
-    Settings* car = IoTHubDeviceTwin_CreateSettings(iotHubClientHandle);
-    if (car == NULL)
-    {
-        printf("Failure in IoTHubDeviceTwin_CreateCar");
-    }
-    else
-    {
-        /*setting values for reported properties*/
-        /*
-        car->lastOilChangeDate = "2016";
-        car->maker.makerName = "Fabrikam";
-        car->maker.style = "sedan";
-        car->maker.year = 2014;
-        car->state.reported_maxSpeed = 100;
-        car->state.softwareVersion = 1;
-        car->state.vanityPlate = "1I1";
-        */
+static void reportedStateCallback(int status_code, void* userContextCallback)
+{
+    (void)userContextCallback;
+    printf("Device Twin reported properties update completed with result: %d\r\n", status_code);
+    stateReported = false;
+}
 
-        // IoTHubDeviceTwin_SendReportedStateCar sends the reported status back to IoT Hub
-        // to the associated device twin.
-        //
-        // IoTHubDeviceTwin_SendReportedStateCar is an auto-generated function, created 
-        // via the macro DECLARE_DEVICETWIN_MODEL(Car,...).  It resolves to the underlying function
-        // IoTHubDeviceTwin_SendReportedState_Impl().
-        if (IoTHubDeviceTwin_SendReportedStateSettings(car, deviceTwinReportStateCallback, NULL) != IOTHUB_CLIENT_OK)
-        {
-            (void)printf("Failed sending serialized reported state\n");
-        }
-        else
-        {
-            printf("Reported state will be send to IoTHub\n");
+static void deviceTwinUpdateComplete()
+{
+    return stateReported;
+}
 
-            // Comment out the following three lines if you want to enable callback(s) for updates of the existing model (example: onDesiredMaxSpeed)
-            if (IoTHubClient_SetDeviceTwinCallback(iotHubClientHandle, deviceTwinGetStateCallback, NULL) != IOTHUB_CLIENT_OK)
-            {
-                (void)printf("Failed subscribing for device twin properties\n");
-            }
-        }
+void beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle)
+{
+    bool traceOn = true;
+    // This json-format reportedState is created as a string for simplicity. In a real application
+    // this would likely be done with parson (which the Azure IoT SDK uses) or a similar tool.
+    const char* reportedState = "{ 'device_property': 'new_value'}";
+    size_t reportedStateSize = strlen(reportedState);
+
+    if(IoTHubClient_LL_SetOption(iotHubClientHandle, OPTION_LOG_TRACE, &traceOn) != IOTHUB_CLIENT_OK)
+    {
+        printf("Could not initialize logging.\r\n");
     }
+
+    if(IoTHubClient_LL_SetDeviceTwinCallback(iotHubClientHandle, deviceTwinCallback, iotHubClientHandle) != IOTHUB_CLIENT_OK)
+    {
+        printf("Could not set device twin callback.\r\n");
+    }
+    
+    if(IoTHubClient_LL_SendReportedState(iotHubClientHandle, (const unsigned char*)reportedState, reportedStateSize, reportedStateCallback, iotHubClientHandle) != IOTHUB_CLIENT_OK)
+    {
+        printf("Could not send report state.\r\n");
+    }
+
+    do
+    {
+        IoTHubClient_LL_DoWork(iotHubClientHandle);
+        ThreadAPI_Sleep(100);
+    } while (stateReported);
 }

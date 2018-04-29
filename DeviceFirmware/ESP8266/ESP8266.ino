@@ -1,6 +1,3 @@
-// Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 // Please use an Arduino IDE 1.6.8 or greater
 
 // You must set the device id, device key, IoT Hub name and IotHub suffix in
@@ -17,7 +14,6 @@
 #include "sample.h"
 #include "esp8266/sample_init.h"
 
-
 #include "DHT.h"
 #define DHTPIN 2
 #define DHTTYPE DHT22
@@ -28,16 +24,6 @@ static char pass[] = IOT_CONFIG_WIFI_PASSWORD;
 
 IOTHUB_CLIENT_LL_HANDLE azureIot;
 Anemometer *anemometer;
-
-void onSettingsChanged(void* argument)
-{
-    // Note: The argument is NOT a pointer to desired_maxSpeed, but instead a pointer to the MODEL 
-    //       that contains desired_maxSpeed as one of its arguments.  In this case, it
-    //       is CarSettings*.
-
-    Settings* car = argument;
-    printf("received a new desired_maxSpeed = %" PRIu8 "\n", car->interval);
-}
 
 void setup()
 {
