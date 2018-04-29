@@ -3,8 +3,8 @@
         {
             "name": "Win32",
             "includePath": [
-                "C:\\Users\\JohnD\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.21\\cores\\arduino",
-                "C:\\Users\\JohnD\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.1\\cores\\esp8266",
+                "C:\\Users\\jatwood\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.21\\cores\\arduino",
+                "C:\\Users\\jatwood\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.1\\cores\\esp8266",
                 "C:\\working\\Arduino\\libraries\\AzureIoTHub\\src",
                 "C:\\working\\Arduino\\libraries\\AzureIoTProtocol_MQTT\\src",
                 "C:\\working\\Arduino\\libraries\\AzureIoTUtility\\src",
@@ -13,8 +13,8 @@
             "browse": {
                 "limitSymbolsToIncludedHeaders": false,
                 "path": [
-                    "C:\\Users\\JohnD\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.21\\cores\\arduino",
-                    "C:\\Users\\JohnD\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.1\\cores\\esp8266",
+                    "C:\\Users\\jatwood\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.21\\cores\\arduino",
+                    "C:\\Users\\jatwood\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.1\\cores\\esp8266",
                     "C:\\working\\Arduino\\libraries\\AzureIoTHub\\src",
                     "C:\\working\\Arduino\\libraries\\AzureIoTProtocol_MQTT\\src",
                     "C:\\working\\Arduino\\libraries\\AzureIoTUtility\\src",

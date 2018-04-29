@@ -15,6 +15,9 @@
 #include "esp8266/sample_init.h"
 
 #include "device_twin.h"
+#include "settings.h"
+
+SETTINGS_HANDLE settings;
 
 #include "DHT.h"
 #define DHTPIN 2
@@ -29,6 +32,8 @@ Anemometer *anemometer;
 
 void setup()
 {
+    settings = getSettings();
+
     sample_init(ssid, pass);
 
     azureIot = initializeAzureIot();
@@ -84,6 +89,7 @@ void loop()
         printf("Sleep...\r\n");
 
         shutdown();
-        ESP.deepSleep(10e6);
+        
+        ESP.deepSleep(settings->SleepInterval);
     }    
 }
