@@ -50,12 +50,18 @@ void shutdown()
     destroyAzureIoT(azureIot);
 }
 
+bool traceOn = false;
+
 void loop()
 {
     if(beginDeviceTwinSync(azureIot) != IOTHUB_CLIENT_OK)
     {
         printf("Cannot sync device twin");
         //TODO: Blink LED in Error.
+    }
+    else if(IoTHubClient_LL_SetOption(azureIot, OPTION_LOG_TRACE, &traceOn) != IOTHUB_CLIENT_OK)
+    {
+        printf("Could not initialize logging.\r\n");
     }
     else 
     {
@@ -68,10 +74,15 @@ void loop()
         anemometer->DhtTemperature = dht.readTemperature();;
         anemometer->DhtHumidity = dht.readHumidity();
 
+        printf("Sending update: Windspeed = %d, DhtTemperature = %d, DhtHumidity = %d\r\n", anemometer->WindSpeed, anemometer->DhtTemperature, anemometer->DhtHumidity);
         sendUpdate(azureIot, anemometer);
 
-        doWork(azureIot);
+        while(!deviceTwinUpdateComplete())
+        {
+            doWork(azureIot);
+        }        
+        printf("Sleep...\r\n");
 
-        delay(10000);
+        //ESP.deepSleep(10e6);
     }    
 }

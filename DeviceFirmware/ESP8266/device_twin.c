@@ -28,25 +28,20 @@ static void reportedStateCallback(int status_code, void* userContextCallback)
     stateReported = false;
 }
 
-static bool deviceTwinUpdateComplete()
+bool deviceTwinUpdateComplete()
 {
     return stateReported;
 }
 
 IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle)
 {
-    bool traceOn = true;
     // This json-format reportedState is created as a string for simplicity. In a real application
     // this would likely be done with parson (which the Azure IoT SDK uses) or a similar tool.
     const char* reportedState = "{ 'device_property': 'new_value'}";
     size_t reportedStateSize = strlen(reportedState);
 
     IOTHUB_CLIENT_RESULT result;
-    if((result = IoTHubClient_LL_SetOption(iotHubClientHandle, OPTION_LOG_TRACE, &traceOn)) != IOTHUB_CLIENT_OK)
-    {
-        printf("Could not initialize logging.\r\n");
-    }
-    else if((result = IoTHubClient_LL_SetDeviceTwinCallback(iotHubClientHandle, deviceTwinCallback, iotHubClientHandle)) != IOTHUB_CLIENT_OK)
+    if((result = IoTHubClient_LL_SetDeviceTwinCallback(iotHubClientHandle, deviceTwinCallback, iotHubClientHandle)) != IOTHUB_CLIENT_OK)
     {
         printf("Could not set device twin callback.\r\n");
     } 
