@@ -6,7 +6,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    void manageDeviceTwin(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle);
+    bool deviceTwinUpdateComplete();
+    IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle);
 #ifdef __cplusplus
 }
 #endif

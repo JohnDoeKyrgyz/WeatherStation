@@ -28,12 +28,12 @@ static void reportedStateCallback(int status_code, void* userContextCallback)
     stateReported = false;
 }
 
-static void deviceTwinUpdateComplete()
+static bool deviceTwinUpdateComplete()
 {
     return stateReported;
 }
 
-void beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle)
+IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle)
 {
     bool traceOn = true;
     // This json-format reportedState is created as a string for simplicity. In a real application
@@ -41,24 +41,24 @@ void beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle)
     const char* reportedState = "{ 'device_property': 'new_value'}";
     size_t reportedStateSize = strlen(reportedState);
 
-    if(IoTHubClient_LL_SetOption(iotHubClientHandle, OPTION_LOG_TRACE, &traceOn) != IOTHUB_CLIENT_OK)
+    IOTHUB_CLIENT_RESULT result;
+    if((result = IoTHubClient_LL_SetOption(iotHubClientHandle, OPTION_LOG_TRACE, &traceOn)) != IOTHUB_CLIENT_OK)
     {
         printf("Could not initialize logging.\r\n");
     }
-
-    if(IoTHubClient_LL_SetDeviceTwinCallback(iotHubClientHandle, deviceTwinCallback, iotHubClientHandle) != IOTHUB_CLIENT_OK)
+    else if((result = IoTHubClient_LL_SetDeviceTwinCallback(iotHubClientHandle, deviceTwinCallback, iotHubClientHandle)) != IOTHUB_CLIENT_OK)
     {
         printf("Could not set device twin callback.\r\n");
-    }
-    
-    if(IoTHubClient_LL_SendReportedState(iotHubClientHandle, (const unsigned char*)reportedState, reportedStateSize, reportedStateCallback, iotHubClientHandle) != IOTHUB_CLIENT_OK)
+    } 
+    else if((result = 
+        IoTHubClient_LL_SendReportedState(
+            iotHubClientHandle, 
+            (const unsigned char*)reportedState, 
+            reportedStateSize, 
+            reportedStateCallback, 
+            iotHubClientHandle)) != IOTHUB_CLIENT_OK)
     {
         printf("Could not send report state.\r\n");
     }
-
-    do
-    {
-        IoTHubClient_LL_DoWork(iotHubClientHandle);
-        ThreadAPI_Sleep(100);
-    } while (stateReported);
+    return result;
 }
