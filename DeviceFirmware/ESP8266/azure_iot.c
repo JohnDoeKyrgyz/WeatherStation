@@ -7,12 +7,7 @@
 #include <stdint.h>
 
 #include "AzureIoTHub.h"
-#include "iot_configs.h"
-#include "sample.h"
-
-/*String containing Hostname, Device Id & Device Key in the format:             */
-/*  "HostName=<host_name>;DeviceId=<device_id>;SharedAccessKey=<device_key>"    */
-static const char *connectionString = IOT_CONFIG_CONNECTION_STRING;
+#include "azure_iot.h"
 
 static char propText[1024];
 
@@ -37,6 +32,13 @@ EXECUTE_COMMAND_RESULT SetDiagnosticMode(Anemometer *device, bool Diagnostic)
     return EXECUTE_COMMAND_SUCCESS;
 }
 
+static SEND_STATE sendState = NONE;
+
+SEND_STATE getSendState()
+{
+    return sendState;
+}
+
 void sendCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void *userContextCallback)
 {
     unsigned int messageTrackingId = (unsigned int)(uintptr_t)userContextCallback;
@@ -44,10 +46,14 @@ void sendCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void *userContextCal
     (void)printf("Message Id: %u Received.\r\n", messageTrackingId);
 
     (void)printf("Result Call Back Called! Result is: %s \r\n", ENUM_TO_STRING(IOTHUB_CLIENT_CONFIRMATION_RESULT, result));
+
+    sendState = COMPLETE;
 }
 
 static void sendMessage(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, const unsigned char *buffer, size_t size, Anemometer *myWeather)
 {
+    sendState = SENDING;
+
     static unsigned int messageTrackingId;
     IOTHUB_MESSAGE_HANDLE messageHandle = IoTHubMessage_CreateFromByteArray(buffer, size);
     if (messageHandle == NULL)
@@ -102,7 +108,7 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT IoTHubMessage(IOTHUB_MESSAGE_HANDLE mess
     return result;
 }
 
-IOTHUB_CLIENT_LL_HANDLE initializeAzureIot()
+IOTHUB_CLIENT_LL_HANDLE initializeAzureIot(const char* connectionString)
 {
     IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle;
     if (platform_init() != 0)
@@ -137,7 +143,7 @@ IOTHUB_CLIENT_LL_HANDLE initializeAzureIot()
     return iotHubClientHandle;
 }
 
-Anemometer *initializeAnemometer(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle)
+Anemometer *initializeAnemometer(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, const char* deviceId)
 {
     Anemometer *myWeather = CREATE_MODEL_INSTANCE(WeatherStation, Anemometer);
     if (myWeather == NULL)
@@ -151,7 +157,7 @@ Anemometer *initializeAnemometer(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle)
             printf("unable to IoTHubClient_SetMessageCallback\r\n");
         }
     }
-    myWeather->DeviceId = IOT_CONFIG_DEVICE_ID;
+    myWeather->DeviceId = deviceId;
     return myWeather;
 }
 

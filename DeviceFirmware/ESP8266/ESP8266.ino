@@ -49,14 +49,14 @@ void setup()
 
     sample_init(settings->Wifi.SSID, settings->Wifi.Password);
 
-    azureIot = initializeAzureIot();
+    azureIot = initializeAzureIot(settings->IotHub.ConnectionString);
     if (azureIot == NULL)
     {
         printf("Could not initialize AzureIot");
     }
     else
     {
-        anemometer = initializeAnemometer(azureIot);
+        anemometer = initializeAnemometer(azureIot, settings->IotHub.DeviceId);
     }
 
     dht.begin();
@@ -73,12 +73,13 @@ bool traceOn = false;
 void loop()
 {
     JSON_Value* settingsJson = serialize(settings);
-    bool syncSettingsResult = beginDeviceTwinSync(azureIot, settingsJson, &onSettingsUpdate) != IOTHUB_CLIENT_OK;
+    bool syncSettingsResult = false;
+    //bool syncSettingsResult = beginDeviceTwinSync(azureIot, settingsJson, &onSettingsUpdate) != IOTHUB_CLIENT_OK;
     json_value_free(settingsJson);
 
     if(syncSettingsResult)
     {
-        printf("Cannot sync device twin");
+        printf("Cannot sync device twin.\r\n");
         //TODO: Blink LED in Error.
     }
     else if(IoTHubClient_LL_SetOption(azureIot, OPTION_LOG_TRACE, &traceOn) != IOTHUB_CLIENT_OK)
@@ -99,7 +100,7 @@ void loop()
         printf("Sending update: Windspeed = %d, DhtTemperature = %d, DhtHumidity = %d\r\n", anemometer->WindSpeed, anemometer->DhtTemperature, anemometer->DhtHumidity);
         sendUpdate(azureIot, anemometer);
 
-        while(!deviceTwinUpdateComplete())
+        while(!deviceTwinUpdateComplete() && getSendState() != COMPLETE)
         {
             doWork(azureIot);
         }        

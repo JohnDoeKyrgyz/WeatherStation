@@ -9,7 +9,7 @@ DEFINE_ENUM_STRINGS(DEVICE_TWIN_UPDATE_STATE, DEVICE_TWIN_UPDATE_STATE_VALUES);
 
 static char msgText[1024];
 static char propText[1024];
-static bool stateReported;
+static bool stateReported = true;
 
 static void deviceTwinCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsigned char* payload, size_t size, void* userContextCallback)
 {
