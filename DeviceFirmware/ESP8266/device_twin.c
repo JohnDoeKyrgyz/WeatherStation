@@ -25,7 +25,7 @@ static void reportedStateCallback(int status_code, void* userContextCallback)
 {
     (void)userContextCallback;
     printf("Device Twin reported properties update completed with result: %d\r\n", status_code);
-    stateReported = false;
+    stateReported = true;
 }
 
 bool deviceTwinUpdateComplete()
@@ -35,6 +35,8 @@ bool deviceTwinUpdateComplete()
 
 IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle)
 {
+    stateReported = false;
+    
     // This json-format reportedState is created as a string for simplicity. In a real application
     // this would likely be done with parson (which the Azure IoT SDK uses) or a similar tool.
     const char* reportedState = "{ 'device_property': 'new_value'}";

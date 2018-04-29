@@ -83,6 +83,6 @@ void loop()
         }        
         printf("Sleep...\r\n");
 
-        //ESP.deepSleep(10e6);
+        ESP.deepSleep(10e6);
     }    
 }
