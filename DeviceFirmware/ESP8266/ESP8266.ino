@@ -1,8 +1,4 @@
-// Please use an Arduino IDE 1.6.8 or greater
-
-// You must set the device id, device key, IoT Hub name and IotHub suffix in
-// iot_configs.h
-#include "iot_configs.h"
+#define FIRMWARE_VERSION 1.0
 
 #include <AzureIoTHub.h>
 #if defined(IOT_CONFIG_MQTT)
@@ -24,17 +20,16 @@ SETTINGS_HANDLE settings;
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
-static char ssid[] = IOT_CONFIG_WIFI_SSID;
-static char pass[] = IOT_CONFIG_WIFI_PASSWORD;
-
 IOTHUB_CLIENT_LL_HANDLE azureIot;
 Anemometer *anemometer;
 
 void setup()
 {
     settings = getSettings();
+    printf("%s Firmware %d\r\n", settings->IotHub.DeviceId, FIRMWARE_VERSION);    
 
-    sample_init(ssid, pass);
+    printf("Initializing WIFI %s\r\n", settings->Wifi.SSID);
+    sample_init(settings->Wifi.SSID, settings->Wifi.Password);
 
     azureIot = initializeAzureIot();
     if (azureIot == NULL)
