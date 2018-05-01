@@ -5,6 +5,8 @@
 #include <AzureIoTProtocol_MQTT.h>
 #include "sdk\parson.h"
 
+#include <ArduinoJson.h>
+
 DEFINE_ENUM_STRINGS(DEVICE_TWIN_UPDATE_STATE, DEVICE_TWIN_UPDATE_STATE_VALUES);
 
 static bool stateReported = true;
@@ -35,6 +37,20 @@ static void deviceTwinCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsi
 
     if(settingsCallback != NULL)
     {
+        const int capacity = JSON_OBJECT_SIZE(100);
+        StaticJsonBuffer<capacity> jsonBuffer;
+
+        JsonObject& deviceUpdateJson = jsonBuffer.parseObject(payload);
+
+        if(deviceUpdateJson.success()){
+            JsonObject& desired = deviceUpdateJson["desired"];
+            printf("SleepInterval = %d\r\n", desired["SleepInterval"]);
+            //settingsCallback(deviceUpdateJson);
+        } else {
+            printf("Could not parse device twin json\r\n");
+        }
+
+        /*
         const JSON_Value *deviceUpdateJson = json_parse_string(payload);
         printJson(deviceUpdateJson);
 
@@ -46,6 +62,8 @@ static void deviceTwinCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsi
 
         settingsCallback(jsonSettings);
         json_value_free(deviceUpdateJson);
+
+        */
     }
 }
 
@@ -80,7 +98,7 @@ IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHan
             (const unsigned char*)reportedState, 
             reportedStateSize, 
             reportedStateCallback, 
-            onSettingsReceived)) != IOTHUB_CLIENT_OK)
+            (void*)onSettingsReceived)) != IOTHUB_CLIENT_OK)
     {
         printf("Could not send report state.\r\n");
     }
