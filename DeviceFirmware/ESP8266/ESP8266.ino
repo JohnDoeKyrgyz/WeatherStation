@@ -7,9 +7,9 @@
 #include <AzureIoTProtocol_HTTP.h>
 #endif
 
-#include "sample.h"
 #include "esp8266/sample_init.h"
 
+#include "azure_iot.h"
 #include "device_twin.h"
 #include "settings.h"
 
@@ -25,7 +25,11 @@ Anemometer *anemometer;
 
 void onSettingsUpdate(JSON_Value *settingsJson)
 {
+    printf("Handle Settings Update\r\n");
+
     SETTINGS_HANDLE newSettings = deserialize(settingsJson);
+    print(newSettings);
+    print(settings);
 
     if(newSettings->SleepInterval != settings->SleepInterval)
     {
@@ -73,8 +77,7 @@ bool traceOn = false;
 void loop()
 {
     JSON_Value* settingsJson = serialize(settings);
-    bool syncSettingsResult = false;
-    //bool syncSettingsResult = beginDeviceTwinSync(azureIot, settingsJson, &onSettingsUpdate) != IOTHUB_CLIENT_OK;
+    bool syncSettingsResult = beginDeviceTwinSync(azureIot, settingsJson, onSettingsUpdate) != IOTHUB_CLIENT_OK;
     json_value_free(settingsJson);
 
     if(syncSettingsResult)
@@ -97,11 +100,12 @@ void loop()
         anemometer->DhtTemperature = dht.readTemperature();;
         anemometer->DhtHumidity = dht.readHumidity();
 
-        printf("Sending update: Windspeed = %d, DhtTemperature = %d, DhtHumidity = %d\r\n", anemometer->WindSpeed, anemometer->DhtTemperature, anemometer->DhtHumidity);
+        printf("Sending update: Windspeed = %d, DhtTemperature = %f, DhtHumidity = %f\r\n", anemometer->WindSpeed, anemometer->DhtTemperature, anemometer->DhtHumidity);
         sendUpdate(azureIot, anemometer);
 
         while(!deviceTwinUpdateComplete() || getSendState() == SENDING)
         {
+            printf("Free heap size: %u\r\n", ESP.getFreeHeap());   
             doWork(azureIot);
         }        
         printf("Sleep...\r\n");

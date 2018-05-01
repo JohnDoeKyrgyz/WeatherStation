@@ -32,6 +32,7 @@ extern "C" {
 
     JSON_Value* serialize(SETTINGS_HANDLE settings);
     SETTINGS_HANDLE deserialize(JSON_Value *json);
+    void print(SETTINGS_HANDLE settings);
 
 #ifdef __cplusplus
 }

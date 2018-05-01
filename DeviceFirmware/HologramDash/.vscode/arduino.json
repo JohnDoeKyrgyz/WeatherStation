@@ -2,5 +2,6 @@
     "sketch": "HologramDash.ino",
     "board": "konekt:sam:dash",
     "configuration": "cpu_speed=speed120,check_update=check,spi_select=spi",
-    "port": "COM4"
+    "port": "COM4",
+    "output": "build"
 }

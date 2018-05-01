@@ -3,18 +3,14 @@
 
 SETTINGS_HANDLE getDefaults()
 {
-    IotHubSettings iotSettings;
-    iotSettings.DeviceId = IOT_CONFIG_DEVICE_ID;
-    iotSettings.ConnectionString = IOT_CONFIG_CONNECTION_STRING;
-
-    WifiSettings wifiSettings;
-    wifiSettings.SSID = IOT_CONFIG_WIFI_SSID;
-    wifiSettings.Password = IOT_CONFIG_WIFI_PASSWORD; 
-
     Settings *settings = malloc(sizeof(Settings));
+
+    settings->IotHub.DeviceId = IOT_CONFIG_DEVICE_ID;
+    settings->IotHub.ConnectionString = IOT_CONFIG_CONNECTION_STRING;
+    settings->Wifi.SSID = IOT_CONFIG_WIFI_SSID;
+    settings->Wifi.Password = IOT_CONFIG_WIFI_PASSWORD;
     settings->SleepInterval = 10e6;
-    settings->IotHub = iotSettings;
-    settings->Wifi = wifiSettings;
+    settings->FirmwareVersion = NULL;
 
     return settings;
 }
@@ -26,23 +22,52 @@ SETTINGS_HANDLE getSettings()
 
 SETTINGS_HANDLE deserialize(JSON_Value *json)
 {
+    Settings *settings = getDefaults();
+
+    print(settings);
+        
     JSON_Object *settingsJson = json_value_get_object(json);
 
-    IotHubSettings iotSettings;
-    iotSettings.DeviceId = json_object_dotget_string(settingsJson, "IotHub.DeviceId");
-    iotSettings.ConnectionString = json_object_dotget_string(settingsJson, "IoTHub.ConnectionString");
+    settings->IotHub.DeviceId = json_object_dotget_string(settingsJson, "IotHub.DeviceId");
+    printf("READ: 1\r\n");
+    print(settings);
 
-    WifiSettings wifiSettings;
-    wifiSettings.SSID = json_object_dotget_string(settingsJson, "Wifi.SSID");
-    wifiSettings.Password = json_object_dotget_string(settingsJson, "Wifi.Password"); 
+    settings->IotHub.ConnectionString = json_object_dotget_string(settingsJson, "IoTHub.ConnectionString");
+    printf("READ: 2\r\n");
+    print(settings);
 
-    Settings *settings = malloc(sizeof(Settings));
-    settings->SleepInterval = json_object_get_number(settingsJson, "SleepInterval");;
-    settings->FirmwareVersion = json_object_get_string(settingsJson, "FirmwareVersion");;
-    settings->IotHub = iotSettings;
-    settings->Wifi = wifiSettings;
+    settings->Wifi.SSID = json_object_dotget_string(settingsJson, "Wifi.SSID");
+    printf("READ: 3\r\n");
+    print(settings);
+
+    settings->Wifi.Password = json_object_dotget_string(settingsJson, "Wifi.Password");
+    printf("READ: 4\r\n");
+    print(settings);
+
+    settings->SleepInterval = json_object_get_number(settingsJson, "SleepInterval");
+    printf("READ: 5\r\n");
+    print(settings);
+
+    settings->FirmwareVersion = json_object_get_string(settingsJson, "FirmwareVersion");
+    printf("READ: 6\r\n");
+    print(settings);
 
     return settings;
+}
+
+static const char* nullSafe(const char* string)
+{
+    return string == NULL ? "<null>" : string;    
+}
+
+void print(SETTINGS_HANDLE settings)
+{
+    printf("SleepInterval: %d\r\n", settings->SleepInterval);
+    printf("FirmwareVersion: %s\r\n", nullSafe(settings->FirmwareVersion));
+    printf("Wifi.SSID: %s\r\n", nullSafe(settings->Wifi.SSID));
+    printf("Wifi.Password: %s\r\n", nullSafe(settings->Wifi.Password));
+    printf("IoTHub.DeviceId: %s\r\n", nullSafe(settings->IotHub.DeviceId));
+    printf("IoTHub.ConnectionString: %s\r\n", nullSafe(settings->IotHub.ConnectionString));
 }
 
 JSON_Value* serialize(SETTINGS_HANDLE settings)
