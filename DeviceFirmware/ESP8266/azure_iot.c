@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "AzureIoTHub.h"
+#include <AzureIoTHub.h>
 #include "azure_iot.h"
 
 static char propText[1024];
@@ -87,7 +87,7 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT IoTHubMessage(IOTHUB_MESSAGE_HANDLE mess
     else
     {
         /*buffer is not zero terminated*/
-        char *temp = malloc(size + 1);
+        char *temp = (char*)malloc(size + 1);
         if (temp == NULL)
         {
             printf("failed to malloc\r\n");

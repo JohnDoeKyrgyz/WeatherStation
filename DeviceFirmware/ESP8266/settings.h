@@ -1,7 +1,6 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -9,20 +8,20 @@ extern "C" {
     #include "sdk\parson.h"
 
     typedef struct WifiSettingsTag {
-        char* SSID;
-        char* Password;
+        const char* SSID;
+        const char* Password;
     } WifiSettings;
 
     typedef struct IotHubSettingsTag {
-        char* DeviceId;
-        char* ConnectionString;
+        const char* DeviceId;
+        const char* ConnectionString;
     } IotHubSettings;
 
     typedef struct SettingsTag {
         uint64_t SleepInterval;
         IotHubSettings IotHub;
         WifiSettings Wifi;
-        char* FirmwareVersion;
+        const char* FirmwareVersion;
     } Settings;
 
     typedef struct SettingsTag* SETTINGS_HANDLE;
