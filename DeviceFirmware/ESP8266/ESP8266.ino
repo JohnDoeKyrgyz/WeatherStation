@@ -23,7 +23,7 @@ DHT dht(DHTPIN, DHTTYPE);
 IOTHUB_CLIENT_LL_HANDLE azureIot;
 Anemometer *anemometer;
 
-void onSettingsUpdate(JSON_Value *settingsJson)
+void onSettingsUpdate(JsonObject &settingsJson)
 {
     printf("Handle Settings Update\r\n");
 
@@ -74,13 +74,15 @@ void shutdown()
 
 bool traceOn = false;
 
+bool syncDeviceTwin()
+{
+    JsonObject& settingsJson = serialize(settings);
+    return beginDeviceTwinSync(azureIot, settingsJson, onSettingsUpdate) == IOTHUB_CLIENT_OK;
+}
+
 void loop()
 {
-    JSON_Value* settingsJson = serialize(settings);
-    bool syncSettingsResult = beginDeviceTwinSync(azureIot, settingsJson, onSettingsUpdate) != IOTHUB_CLIENT_OK;
-    json_value_free(settingsJson);
-
-    if(syncSettingsResult)
+    if(!syncDeviceTwin())
     {
         printf("Cannot sync device twin.\r\n");
         //TODO: Blink LED in Error.

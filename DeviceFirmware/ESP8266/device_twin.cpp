@@ -3,31 +3,20 @@
 
 #include <AzureIoTHub.h>
 #include <AzureIoTProtocol_MQTT.h>
-#include "sdk\parson.h"
 
 #include <ArduinoJson.h>
 
 DEFINE_ENUM_STRINGS(DEVICE_TWIN_UPDATE_STATE, DEVICE_TWIN_UPDATE_STATE_VALUES);
 
-static bool stateReported = true;
+bool stateReported = true;
 
-static void(*settingsCallback)(JSON_Value *jsonValue);
+void(*settingsCallback)(JsonObject& jsonValue);
 
-static void printJson(JSON_Value *json)
+void deviceTwinCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsigned char* payload, size_t size, void* userContextCallback)
 {
-    printf("JSON\r\n");
-    printf("TYPE %d\r\n", json_value_get_type(json));
-    char* pretty = json_serialize_to_string_pretty(json);
-    int size = strlen(pretty);
-    for (size_t n = 0; n < size; n++)
-    {
-        printf("%c", pretty[n]);
-    }
-    printf("JSON\r\n");
-}
+    printf("deviceTwin Callback Address = %p\r\n", userContextCallback);
+    printf("settingsCallback Callback Address = %p\r\n", settingsCallback);
 
-static void deviceTwinCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsigned char* payload, size_t size, void* userContextCallback)
-{
     printf("Device Twin update received (state=%s, size=%u): \r\n", ENUM_TO_STRING(DEVICE_TWIN_UPDATE_STATE, update_state), size);
     for (size_t n = 0; n < size; n++)
     {
@@ -45,30 +34,16 @@ static void deviceTwinCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsi
         if(deviceUpdateJson.success()){
             JsonObject& desired = deviceUpdateJson["desired"];
             printf("SleepInterval = %d\r\n", desired["SleepInterval"]);
-            //settingsCallback(deviceUpdateJson);
+            settingsCallback(deviceUpdateJson);
         } else {
             printf("Could not parse device twin json\r\n");
         }
-
-        /*
-        const JSON_Value *deviceUpdateJson = json_parse_string(payload);
-        printJson(deviceUpdateJson);
-
-        const JSON_Object *jsonSettings = json_value_get_object(deviceUpdateJson);
-        printJson(jsonSettings);
-
-        jsonSettings = json_object_dotget_object(jsonSettings, "desired");
-        printJson(jsonSettings);
-
-        settingsCallback(jsonSettings);
-        json_value_free(deviceUpdateJson);
-
-        */
     }
 }
 
 static void reportedStateCallback(int status_code, void* userContextCallback)
 {
+    printf("reportedStateCallback Callback Address = %p\r\n", userContextCallback);
     printf("Device Twin reported properties update completed with result: %d\r\n", status_code);
     stateReported = true;
 }
@@ -78,15 +53,20 @@ bool deviceTwinUpdateComplete()
     return stateReported;
 }
 
-IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, JSON_Value* settings, void(*onSettingsReceived)(JSON_Value *jsonValue))
+IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, JsonObject& settings, void(*onSettingsReceived)(JsonObject& jsonValue))
 {
     stateReported = false;
 
     settingsCallback = onSettingsReceived;
+    printf("beginDeviceTwinSync Callback Address = %p\r\n", onSettingsReceived);
 
-    const char* reportedState = json_serialize_to_string(settings);
-    size_t reportedStateSize = strlen(reportedState);
+    String output;
+    settings.printTo(output);
 
+    printf("Reporting\r\n");
+    printf(output.c_str());
+    printf("\r\n");
+    
     IOTHUB_CLIENT_RESULT result;
     if((result = IoTHubClient_LL_SetDeviceTwinCallback(iotHubClientHandle, deviceTwinCallback, iotHubClientHandle)) != IOTHUB_CLIENT_OK)
     {
@@ -95,8 +75,8 @@ IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHan
     else if((result = 
         IoTHubClient_LL_SendReportedState(
             iotHubClientHandle, 
-            (const unsigned char*)reportedState, 
-            reportedStateSize, 
+            (const unsigned char*)output.c_str(), 
+            output.length(), 
             reportedStateCallback, 
             (void*)onSettingsReceived)) != IOTHUB_CLIENT_OK)
     {
