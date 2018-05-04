@@ -76,8 +76,8 @@ bool traceOn = false;
 
 bool syncDeviceTwin()
 {
-    JsonObject& settingsJson = serialize(settings);
-    return beginDeviceTwinSync(azureIot, settingsJson, onSettingsUpdate) == IOTHUB_CLIENT_OK;
+    SerializeSettingsResult settingsJson = serialize(settings);
+    return beginDeviceTwinSync(azureIot, settingsJson.json, onSettingsUpdate) == IOTHUB_CLIENT_OK;
 }
 
 void loop()

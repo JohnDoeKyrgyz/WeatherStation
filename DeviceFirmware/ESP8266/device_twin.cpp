@@ -12,18 +12,25 @@ bool stateReported = true;
 
 void(*settingsCallback)(JsonObject& jsonValue);
 
-void deviceTwinCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsigned char* payload, size_t size, void* userContextCallback)
+void printLargeString(const char* payload)
 {
-    printf("deviceTwin Callback Address = %p\r\n", userContextCallback);
-    printf("settingsCallback Callback Address = %p\r\n", settingsCallback);
-
-    printf("Device Twin update received (state=%s, size=%u): \r\n", ENUM_TO_STRING(DEVICE_TWIN_UPDATE_STATE, update_state), size);
+    int size = strlen(payload);
     for (size_t n = 0; n < size; n++)
     {
         printf("%c", payload[n]);
     }
     printf("\r\n");
+}
 
+void deviceTwinCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsigned char* payload, size_t size, void* userContextCallback)
+{
+    printf("deviceTwin Callback Address = %p\r\n", userContextCallback);
+    printf("settingsCallback Callback Address = %p\r\n", settingsCallback);
+    
+    printLargeString((const char*)payload);
+
+    printf("Device Twin update received (state=%s, size=%u): \r\n", ENUM_TO_STRING(DEVICE_TWIN_UPDATE_STATE, update_state), size);
+    
     if(settingsCallback != NULL)
     {
         const int capacity = JSON_OBJECT_SIZE(100);
@@ -53,20 +60,18 @@ bool deviceTwinUpdateComplete()
     return stateReported;
 }
 
-IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, JsonObject& settings, void(*onSettingsReceived)(JsonObject& jsonValue))
+IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, JsonObject* settingsRef, void(*onSettingsReceived)(JsonObject& jsonValue))
 {
     stateReported = false;
 
     settingsCallback = onSettingsReceived;
     printf("beginDeviceTwinSync Callback Address = %p\r\n", onSettingsReceived);
 
-    String output;
-    settings.printTo(output);
-
-    printf("Reporting\r\n");
-    printf(output.c_str());
-    printf("\r\n");
-    
+    JsonObject& settings = *settingsRef;
+    size_t outputBufferSize = settings.measureLength();
+    char output[outputBufferSize];
+    settings.printTo(output, outputBufferSize);
+   
     IOTHUB_CLIENT_RESULT result;
     if((result = IoTHubClient_LL_SetDeviceTwinCallback(iotHubClientHandle, deviceTwinCallback, iotHubClientHandle)) != IOTHUB_CLIENT_OK)
     {
@@ -75,8 +80,8 @@ IOTHUB_CLIENT_RESULT beginDeviceTwinSync(IOTHUB_CLIENT_LL_HANDLE iotHubClientHan
     else if((result = 
         IoTHubClient_LL_SendReportedState(
             iotHubClientHandle, 
-            (const unsigned char*)output.c_str(), 
-            output.length(), 
+            reinterpret_cast<const unsigned char*>(output), 
+            settings.measureLength() + 1, 
             reportedStateCallback, 
             (void*)onSettingsReceived)) != IOTHUB_CLIENT_OK)
     {

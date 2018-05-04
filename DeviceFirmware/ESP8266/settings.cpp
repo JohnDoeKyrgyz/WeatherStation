@@ -55,9 +55,12 @@ void print(SETTINGS_HANDLE settings)
     printf("IoTHub.ConnectionString: %s\r\n", nullSafe(settings->IotHub.ConnectionString));
 }
 
-JsonObject& serialize(SETTINGS_HANDLE settings)
+const size_t bufferSize = JSON_OBJECT_SIZE(2) + 2 * JSON_OBJECT_SIZE(2);
+
+SerializeSettingsResult<bufferSize> serialize(SETTINGS_HANDLE settings)
 {
-    DynamicJsonBuffer  jsonBuffer(1000);
+    StaticJsonBuffer<bufferSize> jsonBuffer;
+
     JsonObject& root = jsonBuffer.createObject();
     root["FirmwareVersion"] = settings->FirmwareVersion;
     root["SleepInterval"] = settings->SleepInterval;
@@ -70,5 +73,8 @@ JsonObject& serialize(SETTINGS_HANDLE settings)
     iotHub["IoTHub.ConnectionString"] = settings->IotHub.ConnectionString;
     iotHub["IoTHub.DeviceId"] = settings->IotHub.DeviceId;
 
-    return root;
+    SerializeSettingsResult result;
+    result.json = root;
+    result.buffer = &jsonBuffer;
+    return result;
 }

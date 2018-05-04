@@ -22,11 +22,18 @@
 
     typedef struct SettingsTag* SETTINGS_HANDLE;
 
+    
     SETTINGS_HANDLE getDefaults();
     SETTINGS_HANDLE getSettings();
-
-    JsonObject& serialize(SETTINGS_HANDLE settings);
     SETTINGS_HANDLE deserialize(JsonObject& json);
     void print(SETTINGS_HANDLE settings);
+
+    typedef struct SerializeSettingsResultTag
+    {
+        JsonObject* json;
+        JsonBuffer* buffer;
+    } SerializeSettingsResult;
+
+    SerializeSettingsResult serialize(SETTINGS_HANDLE settings);
     
 #endif
