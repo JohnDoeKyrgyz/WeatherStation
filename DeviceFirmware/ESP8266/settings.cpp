@@ -74,7 +74,7 @@ SerializeSettingsResult serialize(SETTINGS_HANDLE settings)
     iotHub["IoTHub.DeviceId"] = settings->IotHub.DeviceId;
 
     SerializeSettingsResult result;
-    result.json = *root;
+    result.json = &root;
     result.buffer = &jsonBuffer;
     return result;
 }
