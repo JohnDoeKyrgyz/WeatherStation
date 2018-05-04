@@ -22,6 +22,7 @@ DHT dht(DHTPIN, DHTTYPE);
 
 IOTHUB_CLIENT_LL_HANDLE azureIot;
 Anemometer *anemometer;
+SerializeSettingsResult settingsJsonSerialization;
 
 void onSettingsUpdate(JsonObject &settingsJson)
 {
@@ -76,8 +77,9 @@ bool traceOn = false;
 
 bool syncDeviceTwin()
 {
-    SerializeSettingsResult settingsJson = serialize(settings);
-    return beginDeviceTwinSync(azureIot, settingsJson.json, onSettingsUpdate) == IOTHUB_CLIENT_OK;
+    settingsJsonSerialization = serialize(settings);
+    JsonObject& json = *settingsJsonSerialization.json;
+    return beginDeviceTwinSync(azureIot, json, onSettingsUpdate) == IOTHUB_CLIENT_OK;
 }
 
 void loop()

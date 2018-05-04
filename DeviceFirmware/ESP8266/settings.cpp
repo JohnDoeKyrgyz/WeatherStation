@@ -3,16 +3,16 @@
 
 SETTINGS_HANDLE getDefaults()
 {
-    Settings *settings = (Settings*)malloc(sizeof(Settings));
+    Settings settings;
 
-    settings->IotHub.DeviceId = IOT_CONFIG_DEVICE_ID;
-    settings->IotHub.ConnectionString = IOT_CONFIG_CONNECTION_STRING;
-    settings->Wifi.SSID = IOT_CONFIG_WIFI_SSID;
-    settings->Wifi.Password = IOT_CONFIG_WIFI_PASSWORD;
-    settings->SleepInterval = 10e6;
-    settings->FirmwareVersion = NULL;
+    settings.IotHub.DeviceId = IOT_CONFIG_DEVICE_ID;
+    settings.IotHub.ConnectionString = IOT_CONFIG_CONNECTION_STRING;
+    settings.Wifi.SSID = IOT_CONFIG_WIFI_SSID;
+    settings.Wifi.Password = IOT_CONFIG_WIFI_PASSWORD;
+    settings.SleepInterval = 10e6;
+    settings.FirmwareVersion = NULL;
 
-    return settings;
+    return &settings;
 }
 
 SETTINGS_HANDLE getSettings()
@@ -59,6 +59,7 @@ SerializeSettingsResult serialize(SETTINGS_HANDLE settings)
 {
     const size_t bufferSize = JSON_OBJECT_SIZE(2) + 2 * JSON_OBJECT_SIZE(2);
     StaticJsonBuffer<bufferSize> jsonBuffer;
+    //DynamicJsonBuffer jsonBuffer = new DynamicJsonBuffer(bufferSize);
 
     JsonObject& root = jsonBuffer.createObject();
     root["FirmwareVersion"] = settings->FirmwareVersion;
@@ -73,7 +74,7 @@ SerializeSettingsResult serialize(SETTINGS_HANDLE settings)
     iotHub["IoTHub.DeviceId"] = settings->IotHub.DeviceId;
 
     SerializeSettingsResult result;
-    result.json = &root;
+    result.json = *root;
     result.buffer = &jsonBuffer;
     return result;
 }
