@@ -55,10 +55,9 @@ void print(SETTINGS_HANDLE settings)
     printf("IoTHub.ConnectionString: %s\r\n", nullSafe(settings->IotHub.ConnectionString));
 }
 
-const size_t bufferSize = JSON_OBJECT_SIZE(2) + 2 * JSON_OBJECT_SIZE(2);
-
-SerializeSettingsResult<bufferSize> serialize(SETTINGS_HANDLE settings)
+SerializeSettingsResult serialize(SETTINGS_HANDLE settings)
 {
+    const size_t bufferSize = JSON_OBJECT_SIZE(2) + 2 * JSON_OBJECT_SIZE(2);
     StaticJsonBuffer<bufferSize> jsonBuffer;
 
     JsonObject& root = jsonBuffer.createObject();
@@ -74,7 +73,7 @@ SerializeSettingsResult<bufferSize> serialize(SETTINGS_HANDLE settings)
     iotHub["IoTHub.DeviceId"] = settings->IotHub.DeviceId;
 
     SerializeSettingsResult result;
-    result.json = root;
+    result.json = &root;
     result.buffer = &jsonBuffer;
     return result;
 }
