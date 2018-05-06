@@ -23,9 +23,7 @@ SETTINGS_HANDLE getSettings()
 
 SETTINGS_HANDLE deserialize(JsonObject& json)
 {
-    Settings *settings = getDefaults();
-
-    print(settings);
+    SETTINGS_HANDLE settings = getDefaults();
         
     JsonObject& iotHub = json["IotHub"];
     settings->IotHub.DeviceId = iotHub["DeviceId"];
@@ -58,10 +56,6 @@ void print(SETTINGS_HANDLE settings)
 
 JsonObject& serialize(JsonBuffer& jsonBuffer, SETTINGS_HANDLE settings)
 {
-    //const size_t bufferSize = JSON_OBJECT_SIZE(2) + 2 * JSON_OBJECT_SIZE(2);
-    //StaticJsonBuffer<bufferSize> jsonBuffer;
-    //DynamicJsonBuffer jsonBuffer;
-
     JsonObject& root = jsonBuffer.createObject();
     root["FirmwareVersion"] = settings->FirmwareVersion;
     root["SleepInterval"] = settings->SleepInterval;

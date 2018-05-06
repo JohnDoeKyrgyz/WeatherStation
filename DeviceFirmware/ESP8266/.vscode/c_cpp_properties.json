@@ -8,7 +8,8 @@
                 "C:\\working\\Arduino\\libraries\\AzureIoTHub\\src",
                 "C:\\working\\Arduino\\libraries\\AzureIoTProtocol_MQTT\\src",
                 "C:\\working\\Arduino\\libraries\\AzureIoTUtility\\src",
-                "C:\\working\\Arduino\\libraries\\ArduinoJson\\src"
+                "C:\\working\\Arduino\\libraries\\ArduinoJson\\src",
+                "C:\\working\\Arduino\\hardware\\espressif\\esp32\\cores\\esp32"
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": false,
@@ -18,7 +19,9 @@
                     "C:\\working\\Arduino\\libraries\\AzureIoTHub\\src",
                     "C:\\working\\Arduino\\libraries\\AzureIoTProtocol_MQTT\\src",
                     "C:\\working\\Arduino\\libraries\\AzureIoTUtility\\src",
-                    "C:\\working\\Arduino\\libraries\\ArduinoJson\\src"
+                    "C:\\working\\Arduino\\libraries\\ArduinoJson\\src",
+                    "C:\\working\\Arduino\\hardware\\espressif\\esp32\\cores\\esp32",
+                    "C:\\working\\Arduino\\libraries\\DHT_sensor_library"
                 ]
             },
             "intelliSenseMode": "msvc-x64",
