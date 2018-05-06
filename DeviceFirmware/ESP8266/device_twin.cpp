@@ -13,8 +13,6 @@ void(*settingsCallback)(JsonObject& jsonValue);
 
 void deviceTwinCallback(DEVICE_TWIN_UPDATE_STATE update_state, const unsigned char* payload, size_t size, void* userContextCallback)
 {
-    printf("Device Twin update received (state=%s, size=%u): \r\n", ENUM_TO_STRING(DEVICE_TWIN_UPDATE_STATE, update_state), size);
-    
     if(settingsCallback != NULL)
     {
         DynamicJsonBuffer jsonBuffer;

@@ -1,3 +1,4 @@
 /iot_configs.h
 /build
+data/settings.json
 twin.json

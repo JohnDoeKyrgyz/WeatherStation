@@ -1,7 +1,7 @@
 {
-    "board": "esp8266:esp8266:esp8285",
-    "configuration": "CpuFrequency=80,ResetMethod=ck,CrystalFreq=26,FlashSize=1M512,led=2,LwIPVariant=v2mss536,Debug=Disabled,DebugLevel=None____,FlashErase=none,UploadSpeed=115200",
-    "port": "COM3",
+    "board": "espressif:esp32:esp32",
+    "configuration": "PartitionScheme=default,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none",
+    "port": "COM5",
     "sketch": "ESP8266.ino",
     "output": "build"
 }

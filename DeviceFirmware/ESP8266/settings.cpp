@@ -1,7 +1,4 @@
 #include "settings.h"
-#include "iot_configs.h"
-#include <Arduino.h>
-
 SETTINGS_HANDLE getDefaults()
 {
     auto settings = (SETTINGS_HANDLE)malloc(sizeof(Settings));
@@ -18,7 +15,33 @@ SETTINGS_HANDLE getDefaults()
 
 SETTINGS_HANDLE getSettings()
 {
-    return getDefaults();
+    SETTINGS_HANDLE result = NULL;    
+    File configFile = SPIFFS.open(SETTINGS_FILE, FILE_READ);
+    if (configFile)
+    {
+        DynamicJsonBuffer buffer;
+        JsonObject& json = buffer.parseObject(configFile);
+
+        Serial.println("Stored settings...");
+        json.printTo(Serial);
+        
+        result = deserialize(json);
+    }   
+    if(result == NULL || result->Wifi.SSID == NULL || result->Wifi.Password == NULL)
+    {
+        SETTINGS_HANDLE defaultSettings = getDefaults();
+        bool saveDefaults = updateSettings(result, defaultSettings);
+
+        Serial.print("Default settings [");
+        Serial.print(saveDefaults);
+        Serial.println("]...");
+        
+        free(result);
+        result = defaultSettings;        
+    }    
+
+    result->FirmwareVersion = FIRMWARE_VERSION;
+    return result;
 }
 
 SETTINGS_HANDLE deserialize(JsonObject& json)
@@ -37,6 +60,38 @@ SETTINGS_HANDLE deserialize(JsonObject& json)
     settings->FirmwareVersion = json["FirmwareVersion"];
 
     return settings;
+}
+
+bool updateSettings(SETTINGS_HANDLE currentSettings, SETTINGS_HANDLE newSettings)
+{    
+    bool result = true;
+    bool different =
+        currentSettings->SleepInterval != newSettings->SleepInterval
+        || !strcmp(currentSettings->FirmwareVersion, newSettings->FirmwareVersion)
+        || !strcmp(currentSettings->IotHub.DeviceId, newSettings->IotHub.DeviceId)
+        || !strcmp(currentSettings->IotHub.ConnectionString, newSettings->IotHub.ConnectionString)
+        || !strcmp(currentSettings->Wifi.SSID, newSettings->Wifi.SSID)
+        || !strcmp(currentSettings->Wifi.Password, newSettings->Wifi.Password);
+
+    if(different)
+    {
+        currentSettings->SleepInterval = newSettings->SleepInterval;
+        currentSettings->FirmwareVersion = newSettings->FirmwareVersion;
+        currentSettings->IotHub.DeviceId = newSettings->IotHub.DeviceId;
+        currentSettings->IotHub.ConnectionString = newSettings->IotHub.ConnectionString;
+        currentSettings->Wifi.SSID = newSettings->Wifi.SSID;
+        currentSettings->Wifi.Password = newSettings->Wifi.Password;
+
+        DynamicJsonBuffer jsonBuffer;
+        JsonObject& json = serialize(jsonBuffer, newSettings);
+        File configFile = SPIFFS.open(SETTINGS_FILE, FILE_WRITE);        
+        bool result = configFile;
+        if(result)
+        {
+            json.printTo(configFile);            
+        }
+    }
+    return result;
 }
 
 static const char* nullSafe(const char* string)
