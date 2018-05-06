@@ -28,12 +28,6 @@
     SETTINGS_HANDLE deserialize(JsonObject& json);
     void print(SETTINGS_HANDLE settings);
 
-    typedef struct SerializeSettingsResultTag
-    {
-        JsonObject* json;
-        JsonBuffer* buffer;
-    } SerializeSettingsResult;
-
-    SerializeSettingsResult serialize(SETTINGS_HANDLE settings);
+    JsonObject& serialize(JsonBuffer& jsonBuffer, SETTINGS_HANDLE settings);
     
 #endif
