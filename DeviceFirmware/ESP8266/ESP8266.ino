@@ -26,7 +26,7 @@
 #include "settings.h"
 
 #include "DHT.h"
-#define DHTPIN 2
+#define DHTPIN 13
 #define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -103,11 +103,13 @@ void setup()
         Serial.println();
         Serial.print("Firmware Version ");
         Serial.println(FIRMWARE_VERSION);
-        Serial.print("DeviceId");
+        Serial.print("DeviceId ");
         Serial.println(settings->IotHub.DeviceId);
 
         Serial.print("Initializing WIFI ");
         Serial.println(settings->Wifi.SSID);
+
+        print(settings);
 
         initWifi(settings->Wifi.SSID, settings->Wifi.Password);
 

@@ -24,6 +24,7 @@ SETTINGS_HANDLE getSettings()
 
         Serial.println("Stored settings...");
         json.printTo(Serial);
+        Serial.println();
         
         result = deserialize(json);
     }   
@@ -48,7 +49,7 @@ SETTINGS_HANDLE deserialize(JsonObject& json)
 {
     SETTINGS_HANDLE settings = getDefaults();
         
-    JsonObject& iotHub = json["IotHub"];
+    JsonObject& iotHub = json["IoTHub"];
     settings->IotHub.DeviceId = iotHub["DeviceId"];
     settings->IotHub.ConnectionString = iotHub["ConnectionString"];
 
@@ -60,6 +61,11 @@ SETTINGS_HANDLE deserialize(JsonObject& json)
     settings->FirmwareVersion = json["FirmwareVersion"];
 
     return settings;
+}
+
+const char* coalesce(const char* a, const char* b)
+{
+    return a == NULL ? b : a;
 }
 
 bool updateSettings(SETTINGS_HANDLE currentSettings, SETTINGS_HANDLE newSettings)
@@ -76,11 +82,11 @@ bool updateSettings(SETTINGS_HANDLE currentSettings, SETTINGS_HANDLE newSettings
     if(different)
     {
         currentSettings->SleepInterval = newSettings->SleepInterval;
-        currentSettings->FirmwareVersion = newSettings->FirmwareVersion;
-        currentSettings->IotHub.DeviceId = newSettings->IotHub.DeviceId;
-        currentSettings->IotHub.ConnectionString = newSettings->IotHub.ConnectionString;
-        currentSettings->Wifi.SSID = newSettings->Wifi.SSID;
-        currentSettings->Wifi.Password = newSettings->Wifi.Password;
+        currentSettings->FirmwareVersion = coalesce(newSettings->FirmwareVersion, currentSettings->FirmwareVersion);
+        currentSettings->IotHub.DeviceId = coalesce(newSettings->IotHub.DeviceId, currentSettings->IotHub.DeviceId);
+        currentSettings->IotHub.ConnectionString = coalesce(newSettings->IotHub.ConnectionString, currentSettings->IotHub.ConnectionString);
+        currentSettings->Wifi.SSID = coalesce(newSettings->Wifi.SSID, currentSettings->Wifi.SSID);
+        currentSettings->Wifi.Password = coalesce(newSettings->Wifi.Password, currentSettings->Wifi.Password);
 
         DynamicJsonBuffer jsonBuffer;
         JsonObject& json = serialize(jsonBuffer, newSettings);
@@ -88,7 +94,11 @@ bool updateSettings(SETTINGS_HANDLE currentSettings, SETTINGS_HANDLE newSettings
         bool result = configFile;
         if(result)
         {
-            json.printTo(configFile);            
+            json.printTo(configFile);
+
+            Serial.println("Updated config to...");
+            json.printTo(Serial);
+            Serial.println();            
         }
     }
     return result;
@@ -119,9 +129,9 @@ JsonObject& serialize(JsonBuffer& jsonBuffer, SETTINGS_HANDLE settings)
     wifi["SSID"] = settings->Wifi.SSID;
     wifi["Password"] = settings->Wifi.Password;
 
-    JsonObject& iotHub = root.createNestedObject("IotHub");
-    iotHub["IoTHub.ConnectionString"] = settings->IotHub.ConnectionString;
-    iotHub["IoTHub.DeviceId"] = settings->IotHub.DeviceId;
+    JsonObject& iotHub = root.createNestedObject("IoTHub");
+    iotHub["ConnectionString"] = settings->IotHub.ConnectionString;
+    iotHub["DeviceId"] = settings->IotHub.DeviceId;
 
     return root;
 }
