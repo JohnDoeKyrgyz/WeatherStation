@@ -48,23 +48,6 @@ void onSettingsUpdate(JsonObject &settingsJson)
     free(newSettings);
 }
 
-void initWifi(const char *ssid, const char *pass)
-{
-    // Attempt to connect to Wifi network:
-    Serial.print(F("\r\n\r\nAttempting to connect to SSID: "));
-    Serial.println(ssid);
-
-    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-    WiFi.begin(ssid, pass);
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
-        Serial.print(F("."));
-    }
-
-    Serial.println(F("\r\nConnected to wifi"));
-}
-
 // Times before 2010 (1970 + 40 years) are invalid
 #define MIN_EPOCH 40 * 365 * 24 * 3600
 void initTime()
@@ -91,6 +74,14 @@ void initTime()
     }
 }
 
+void printAsInt(const char* chars)
+{
+    for(int i = 0; i < strlen(chars); i++){
+        Serial.print((int)chars[i]);
+    }
+    Serial.println();
+}
+
 void setup()
 {
     Serial.begin(115200);
@@ -98,6 +89,19 @@ void setup()
     if (SPIFFS.begin())
     {
         settings = getSettings();
+        SETTINGS_HANDLE defaults = getDefaults();
+
+        Serial.println(settings->Wifi.Password);
+        printAsInt(settings->Wifi.Password);
+        Serial.println(settings->Wifi.SSID);
+        printAsInt(settings->Wifi.SSID);
+
+        Serial.println(defaults->Wifi.Password);
+        printAsInt(defaults->Wifi.Password);
+        Serial.println(defaults->Wifi.SSID);
+        printAsInt(defaults->Wifi.SSID);
+        Serial.println(strcmp(settings->Wifi.Password, defaults->Wifi.Password));
+        Serial.println(strcmp(settings->Wifi.SSID, defaults->Wifi.SSID));
 
         Serial.println();
         Serial.println();
@@ -107,11 +111,20 @@ void setup()
         Serial.println(settings->IotHub.DeviceId);
 
         Serial.print("Initializing WIFI ");
-        Serial.println(settings->Wifi.SSID);
+        Serial.print(settings->Wifi.SSID);
+        Serial.print(", ");
+        Serial.println(settings->Wifi.Password);
 
         print(settings);
 
-        initWifi(settings->Wifi.SSID, settings->Wifi.Password);
+        WiFi.begin(defaults->Wifi.SSID, defaults->Wifi.Password);
+        while (WiFi.status() != WL_CONNECTED)
+        {
+            delay(500);
+            Serial.print(F("."));
+        }
+
+        Serial.println(F("\r\nConnected to wifi"));
 
         initTime();
 
