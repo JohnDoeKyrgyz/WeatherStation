@@ -1,0 +1,70 @@
+{
+    "configurations": [
+        {
+            "name": "particle",
+            "includePath": [
+                "C:\\working\\Particle\\firmware\\communication\\src",
+				"C:\\working\\Particle\\firmware\\dynalib\\inc",
+				"C:\\working\\Particle\\firmware\\hal\\inc",
+				"C:\\working\\Particle\\firmware\\hal\\shared",
+				"C:\\working\\Particle\\firmware\\hal\\src\\electron",
+				"C:\\working\\Particle\\firmware\\hal\\src\\stm32",
+				"C:\\working\\Particle\\firmware\\hal\\src\\stm32f2xx",
+				"C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\CMSIS\\Device\\ST\\Include",
+				"C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\CMSIS\\Include",
+				"C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\SPARK_Firmware_Driver\\inc",
+				"C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\STM32_StdPeriph_Driver\\inc",
+				"C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\STM32_USB_Device_Driver\\inc",
+				"C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\STM32_USB_Host_Driver\\inc",
+				"C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\STM32_USB_OTG_Driver\\inc",
+				"C:\\working\\Particle\\firmware\\platform\\MCU\\shared\\STM32\\inc",
+				"C:\\working\\Particle\\firmware\\platform\\shared\\inc",
+				"C:\\working\\Particle\\firmware\\services\\inc",
+				"C:\\working\\Particle\\firmware\\system\\inc",
+				"C:\\working\\Particle\\firmware\\user\\inc",
+				"C:\\working\\Particle\\firmware\\wiring\\inc",
+				"C:\\working\\Particle\\gcc-arm\\arm-none-eabi\\include",
+				"C:\\working\\Particle\\gcc-arm\\arm-none-eabi\\include\\c++\\5.3.1",
+				"C:\\working\\Particle\\gcc-arm\\arm-none-eabi\\include\\c++\\5.3.1\\arm-none-eabi",
+				"C:\\working\\Particle\\gcc-arm\\arm-none-eabi\\include\\c++\\5.3.1\\arm-none-eabi\thumb",
+				"C:\\working\\Particle\\gcc-arm\\arm-none-eabi\\include\\c++\\5.3.1\\ext",
+				"C:\\working\\Particle\\gcc-arm\\lib\\gcc\\arm-none-eabi\\5.3.1\\include"
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": false,
+                "path": [
+                    "C:\\working\\Particle\\firmware\\communication\\src",
+                    "C:\\working\\Particle\\firmware\\dynalib\\inc",
+                    "C:\\working\\Particle\\firmware\\hal\\inc",
+                    "C:\\working\\Particle\\firmware\\hal\\shared",
+                    "C:\\working\\Particle\\firmware\\hal\\src\\electron",
+                    "C:\\working\\Particle\\firmware\\hal\\src\\stm32",
+                    "C:\\working\\Particle\\firmware\\hal\\src\\stm32f2xx",
+                    "C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\CMSIS\\Device\\ST\\Include",
+                    "C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\CMSIS\\Include",
+                    "C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\SPARK_Firmware_Driver\\inc",
+                    "C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\STM32_StdPeriph_Driver\\inc",
+                    "C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\STM32_USB_Device_Driver\\inc",
+                    "C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\STM32_USB_Host_Driver\\inc",
+                    "C:\\working\\Particle\\firmware\\platform\\MCU\\STM32F2xx\\STM32_USB_OTG_Driver\\inc",
+                    "C:\\working\\Particle\\firmware\\platform\\MCU\\shared\\STM32\\inc",
+                    "C:\\working\\Particle\\firmware\\platform\\shared\\inc",
+                    "C:\\working\\Particle\\firmware\\services\\inc",
+                    "C:\\working\\Particle\\firmware\\system\\inc",
+                    "C:\\working\\Particle\\firmware\\user\\inc",
+                    "C:\\working\\Particle\\firmware\\wiring\\inc",
+                    "C:\\working\\Particle\\gcc-arm\\arm-none-eabi\\include",
+                    "C:\\working\\Particle\\gcc-arm\\arm-none-eabi\\include\\c++\\5.3.1",
+                    "C:\\working\\Particle\\gcc-arm\\arm-none-eabi\\include\\c++\\5.3.1\\arm-none-eabi",
+                    "C:\\working\\Particle\\gcc-arm\\arm-none-eabi\\include\\c++\\5.3.1\\arm-none-eabi\thumb",
+                    "C:\\working\\Particle\\gcc-arm\\arm-none-eabi\\include\\c++\\5.3.1\\ext",
+                    "C:\\working\\Particle\\gcc-arm\\lib\\gcc\\arm-none-eabi\\5.3.1\\include"
+                ]
+            },
+            "intelliSenseMode": "msvc-x64",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
