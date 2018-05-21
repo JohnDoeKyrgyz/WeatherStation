@@ -41,6 +41,15 @@ FuelGauge gauge;
 Settings settings;
 #define diagnosticMode settings.diagnositicCycles
 
+char* serializeToJson(JsonObject& json)
+{
+    int length = json.measureLength() + 1;
+    char* jsonString = (char*)malloc(length);
+    jsonString[length] = NULL;
+    json.printTo(jsonString, length);
+    return jsonString;
+}
+
 void deviceSetup()
 {
     //Turn off the status LED to save power
@@ -68,8 +77,14 @@ STARTUP(deviceSetup());
 
 void setup()
 {
-    Serial.begin(115200);    
-    Serial.println("Setup");
+    Serial.begin(115200);
+
+    JsonObject& settingsJson = serialize(&settings);
+    char* settingsJsonString = serializeToJson(settingsJson);
+    Serial.print("SETTINGS: ");
+    Serial.println(settingsJsonString);
+    
+    Particle.variable("settings", settingsJsonString);
 }
 
 JsonObject &serialize(Reading *reading)
@@ -148,10 +163,7 @@ void loop()
 
     //serialize reading to json string
     JsonObject &jsonReading = serialize(&reading);
-    int publishedReadingLength = jsonReading.measureLength() + 1;
-    char* publishedReading = (char*)malloc(publishedReadingLength);
-    publishedReading[publishedReadingLength] = NULL;
-    jsonReading.printTo(publishedReading, publishedReadingLength);
+    char* publishedReading = serializeToJson(jsonReading);
 
     //send serialized reading to the cloud
     Serial.println(publishedReading);
