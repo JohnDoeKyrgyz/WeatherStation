@@ -48,11 +48,17 @@ FuelGauge gauge;
 Settings settings;
 #define diagnosticMode settings.diagnositicCycles
 
-void setup()
+void deviceSetup()
 {
-    Serial.begin(115200);
+    //Turn off the status LED to save power
+    RGB.control(true); 
+    RGB.color(0, 0, 0);
 
     //Load saved settings;
+    settings.brownout = false;
+    settings.brownoutMinutes = 180;
+    settings.sleepTime = 30;
+    settings.diagnositicCycles = 10;
 
     if(diagnosticMode)
     {
@@ -67,6 +73,13 @@ void setup()
 
     dht.begin();
     bmp280.begin();
+}
+STARTUP(deviceSetup());
+
+void setup()
+{
+    Serial.begin(115200);    
+    Serial.println("Setup");
 }
 
 JsonObject &serialize(Reading *reading)
@@ -137,22 +150,30 @@ void loop()
 {
     Reading reading;
 
+    //read data
     readAnemometer(&reading);
     readVoltage(&reading);
     readDht(&reading);
     readBmp280(&reading);
 
+    //serialize reading to json string
     JsonObject &jsonReading = serialize(&reading);
     int publishedReadingLength = jsonReading.measureLength() + 1;
     char* publishedReading = (char*)malloc(publishedReadingLength);
     publishedReading[publishedReadingLength] = NULL;
     jsonReading.printTo(publishedReading, publishedReadingLength);
 
+    //send serialized reading to the cloud
+    Serial.println(publishedReading);
     Particle.publish("Reading", publishedReading, 60, PRIVATE);
 
+    //Allow particle to process before going into deep sleep
+    Particle.process();
+    
     if(diagnosticMode)
     {
         digitalWrite(LED, LOW);
     }
-    System.sleep(settings.sleepTime);
+
+    System.sleep(SLEEP_MODE_SOFTPOWEROFF, settings.sleepTime);
 }
