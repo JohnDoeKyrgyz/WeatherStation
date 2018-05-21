@@ -1,5 +1,6 @@
 #include <ArduinoJson.h>
 #include <Arduino.h>
+#include "settings.h"
 
 #include <Adafruit_DHT.h>
 #include <LaCrosse_TX23.h>
@@ -7,14 +8,6 @@
 #include <Adafruit_BMP280.h>
 
 #define FIRMWARE_VERSION "1.0"
-
-struct Settings
-{
-    bool brownout;
-    int brownoutMinutes;
-    long sleepTime;
-    int diagnositicCycles;
-};
 
 struct Reading
 {
@@ -55,10 +48,7 @@ void deviceSetup()
     RGB.color(0, 0, 0);
 
     //Load saved settings;
-    settings.brownout = false;
-    settings.brownoutMinutes = 180;
-    settings.sleepTime = 30;
-    settings.diagnositicCycles = 10;
+    settings = *loadSettings();
 
     if(diagnosticMode)
     {
@@ -66,7 +56,7 @@ void deviceSetup()
         digitalWrite(LED, HIGH);
         settings.diagnositicCycles--;
 
-        //save settings;
+        saveSettings(&settings);
     }
 
     pinMode(PANEL_VOLTAGE, INPUT);
