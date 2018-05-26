@@ -3,5 +3,6 @@
     "brownout": true,
     "brownoutMinutes": 360,
     "sleepTime": 100,
-    "diagnositicCycles": 2
+    "diagnositicCycles": 2,
+    "useDeepSleep": true
 }

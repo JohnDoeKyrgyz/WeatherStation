@@ -9,7 +9,8 @@ Settings DefaultSettings = {
     false, //brownout
     0, //brownoutMinutes
     30, //sleepTime
-    1 //diagnositicCycles
+    1, //diagnositicCycles
+    false //useDeepSleep
 };
 
 JsonObject& serialize(Settings* settings)
@@ -22,6 +23,7 @@ JsonObject& serialize(Settings* settings)
     root["brownoutMinutes"] = settings->brownoutMinutes;
     root["sleepTime"] = settings->sleepTime;
     root["diagnositicCycles"] = settings->diagnositicCycles;
+    root["useDeepSleep"] = settings->useDeepSleep;
 
     return root;
 }
@@ -37,6 +39,7 @@ Settings* deserialize(const char* json)
     result->brownoutMinutes = root["brownoutMinutes"];
     result->sleepTime = root["sleepTime"];
     result->diagnositicCycles = root["diagnositicCycles"];
+    result->useDeepSleep = root["useDeepSleep"];
 
     return result;
 }
@@ -47,7 +50,7 @@ Settings* loadSettings()
     EEPROM.get(0,eepromSettings);
     Settings* result = &DefaultSettings;
 
-    if(eepromSettings.version != 0xFFFF)
+    if(eepromSettings.version != 0)
     {
         result = (Settings*)malloc(sizeof(Settings));
         *result = eepromSettings;
@@ -57,5 +60,6 @@ Settings* loadSettings()
 
 void saveSettings(Settings* settings)
 {
+    settings->version = 0;
     EEPROM.put(0,*settings);
 }

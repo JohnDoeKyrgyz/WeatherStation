@@ -10,6 +10,7 @@ typedef struct Settings
     int brownoutMinutes;
     long sleepTime;
     int diagnositicCycles;
+    bool useDeepSleep;
 } Settings;
 
 JsonObject& serialize(Settings* settings);

@@ -145,7 +145,8 @@ void readBmp280(Reading *reading)
     reading->bmpTemperature = bmp280.readTemperature();
     reading->pressure = bmp280.readPressure();
     digitalWrite(BAROMETER_CHIP_SELECT, LOW);
-    if(!(reading->bmpRead = !isnan(reading->bmpTemperature) && !isnan(reading->pressure)))
+
+    if(!(reading->bmpRead = !isnan(reading->bmpTemperature) && !isnan(reading->pressure) && reading->pressure > 0))
     {
         Serial.println("ERROR: BMP280 temp/pressure sensor");
     }
@@ -163,6 +164,8 @@ void loop()
 
     //serialize reading to json string
     JsonObject &jsonReading = serialize(&reading);
+    jsonReading.prettyPrintTo(Serial);
+    Serial.println();
     char* publishedReading = serializeToJson(jsonReading);
 
     //send serialized reading to the cloud
@@ -172,10 +175,25 @@ void loop()
     //Allow particle to process before going into deep sleep
     Particle.process();
     
+    Serial.print("DIAGNOSTIC MODE ");
+    Serial.println(diagnosticMode);
     if(diagnosticMode)
     {
         digitalWrite(LED, LOW);
     }
 
-    System.sleep(SLEEP_MODE_SOFTPOWEROFF, settings.sleepTime);
+    if(settings.useDeepSleep)
+    {
+        Serial.print("DEEP SLEEP ");
+        Serial.print(settings.sleepTime);
+        Serial.println();
+        System.sleep(SLEEP_MODE_SOFTPOWEROFF, settings.sleepTime);
+    }
+    else
+    {
+        Serial.print("LIGHT SLEEP ");
+        Serial.print(settings.sleepTime);
+        Serial.println();
+        delay(settings.sleepTime);
+    }
 }
