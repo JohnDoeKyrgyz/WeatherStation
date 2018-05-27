@@ -2,7 +2,7 @@
 #include <ArduinoJson.h>
 #include "Particle.h"
 
-#define SERIALIZED_SETTINGS_SIZE JSON_OBJECT_SIZE(5) + 90
+#define SERIALIZED_SETTINGS_SIZE JSON_OBJECT_SIZE(6) + 110
 
 Settings DefaultSettings = {
     0, //version
@@ -30,8 +30,10 @@ JsonObject& serialize(Settings* settings)
 
 Settings* deserialize(const char* json)
 {
-    StaticJsonBuffer<SERIALIZED_SETTINGS_SIZE> jsonBuffer;
-    JsonObject& root = jsonBuffer.parseObject(json);    
+    const size_t bufferSize = SERIALIZED_SETTINGS_SIZE;
+    DynamicJsonBuffer jsonBuffer(bufferSize);
+    JsonObject& root = jsonBuffer.parseObject(json);
+
     Settings* result = (Settings*)malloc(sizeof(Settings));
 
     result->version = root["version"];
@@ -50,7 +52,7 @@ Settings* loadSettings()
     EEPROM.get(0,eepromSettings);
     Settings* result = &DefaultSettings;
 
-    if(eepromSettings.version != 0)
+    if(eepromSettings.version >= 0)
     {
         result = (Settings*)malloc(sizeof(Settings));
         *result = eepromSettings;
@@ -60,6 +62,12 @@ Settings* loadSettings()
 
 void saveSettings(Settings* settings)
 {
-    settings->version = 0;
+    Settings* existingSettings = loadSettings();
+    
+    settings->version = existingSettings->version + 1;
+    Serial.print("SAVING SETTINGS ");
+    Serial.print(settings->version);
+    Serial.println();
+    
     EEPROM.put(0,*settings);
 }

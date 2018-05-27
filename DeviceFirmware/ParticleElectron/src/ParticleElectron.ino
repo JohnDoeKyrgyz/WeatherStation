@@ -9,8 +9,11 @@
 
 #define FIRMWARE_VERSION "1.0"
 
+SYSTEM_MODE(SEMI_AUTOMATIC);
+
 struct Reading
 {
+    int version;
     float batteryVoltage;
     float panelVoltage;
     bool anemometerRead;
@@ -40,6 +43,7 @@ FuelGauge gauge;
 
 Settings settings;
 #define diagnosticMode settings.diagnositicCycles
+unsigned long duration;
 
 char* serializeToJson(JsonObject& json)
 {
@@ -52,6 +56,8 @@ char* serializeToJson(JsonObject& json)
 
 void deviceSetup()
 {
+    duration = millis();
+
     //Turn off the status LED to save power
     RGB.control(true); 
     RGB.color(0, 0, 0);
@@ -75,24 +81,38 @@ void deviceSetup()
 }
 STARTUP(deviceSetup());
 
+void onSettingsUpdate(const char* event, const char* data)
+{
+    settings = *deserialize(data);
+    saveSettings(&settings);
+
+    JsonObject& settingsJson = serialize(&settings);
+    char* settingsEcho = serializeToJson(settingsJson);
+
+    Particle.publish("Settings", settingsEcho, 60, PRIVATE);
+    Serial.print("SETTINGS UPDATE: ");
+    Serial.println(settingsEcho);
+}
+
 void setup()
 {
     Serial.begin(115200);
 
     JsonObject& settingsJson = serialize(&settings);
-    char* settingsJsonString = serializeToJson(settingsJson);
     Serial.print("SETTINGS: ");
-    Serial.println(settingsJsonString);
-    
-    Particle.variable("settings", settingsJsonString);
+    settingsJson.printTo(Serial);
+
+    Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
+    Particle.connect();
 }
 
 JsonObject &serialize(Reading *reading)
 {
-    const size_t bufferSize = JSON_OBJECT_SIZE(8);
+    const size_t bufferSize = JSON_OBJECT_SIZE(9);
     DynamicJsonBuffer jsonBuffer(bufferSize);
 
     JsonObject &root = jsonBuffer.createObject();
+    root["v"] = reading->version;
     root["batt_v"] = reading->batteryVoltage;
     root["panel_v"] = reading->panelVoltage;
 
@@ -157,6 +177,7 @@ void loop()
     Reading reading;
 
     //read data
+    reading.version = settings.version;
     readAnemometer(&reading);
     readVoltage(&reading);
     readDht(&reading);
@@ -175,25 +196,38 @@ void loop()
     //Allow particle to process before going into deep sleep
     Particle.process();
     
-    Serial.print("DIAGNOSTIC MODE ");
-    Serial.println(diagnosticMode);
     if(diagnosticMode)
-    {
+    {        
+        Serial.print("DIAGNOSTIC COUNT ");
+        Serial.println(diagnosticMode);
         digitalWrite(LED, LOW);
     }
 
+    void (*sleepAction)();
+    const char* sleepMessage;
     if(settings.useDeepSleep)
     {
-        Serial.print("DEEP SLEEP ");
-        Serial.print(settings.sleepTime);
-        Serial.println();
-        System.sleep(SLEEP_MODE_SOFTPOWEROFF, settings.sleepTime);
+        sleepMessage = "DEEP";
+        sleepAction = []()
+        {
+            System.sleep(SLEEP_MODE_SOFTPOWEROFF, settings.sleepTime);
+        };
     }
     else
     {
-        Serial.print("LIGHT SLEEP ");
-        Serial.print(settings.sleepTime);
-        Serial.println();
-        delay(settings.sleepTime);
+        sleepMessage = "LIGHT";
+        sleepAction = []()
+        {
+            delay(settings.sleepTime);
+        };
     }
+
+    Serial.print(sleepMessage);
+    Serial.print(" SLEEP ");
+    Serial.println(settings.sleepTime);
+
+    Serial.print("DURATION ");
+    duration = millis() - duration;
+    Serial.println(duration);
+    sleepAction();
 }
