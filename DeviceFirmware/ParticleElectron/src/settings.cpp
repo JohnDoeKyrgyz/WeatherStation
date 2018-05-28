@@ -1,5 +1,4 @@
 #include "settings.h"
-#include <ArduinoJson.h>
 #include "Particle.h"
 
 #define SERIALIZED_SETTINGS_SIZE JSON_OBJECT_SIZE(6) + 110

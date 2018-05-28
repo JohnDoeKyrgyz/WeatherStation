@@ -29,14 +29,18 @@ struct Reading
 
 /* Connections */
 #define BAROMETER_CHIP_SELECT 1
-#define DHTPIN 1
 #define ANEMOMETER 1
 #define PANEL_VOLTAGE 1
 #define LED D7 //Builtin LED
 
+#define DHT_IN D6
+#define DHT_POWER C0
+
 /* Sensors */
 #define DHTTYPE DHT22 // DHT 22  (AM2302), AM2321
-DHT dht(DHTPIN, DHTTYPE);
+#define DHT_INIT 1000
+DHT dht(DHT_IN, DHTTYPE);
+
 Adafruit_BMP280 bmp280(BAROMETER_CHIP_SELECT);
 LaCrosse_TX23 laCrosseTX23(ANEMOMETER);
 FuelGauge gauge;
@@ -75,7 +79,9 @@ void deviceSetup()
     }
 
     pinMode(PANEL_VOLTAGE, INPUT);
+    pinMode(DHT_POWER, OUTPUT);
 
+    digitalWrite(DHT_POWER, HIGH);
     dht.begin();
     bmp280.begin();
 }
@@ -83,15 +89,20 @@ STARTUP(deviceSetup());
 
 void onSettingsUpdate(const char* event, const char* data)
 {
+    digitalWrite(LED, HIGH);
     settings = *deserialize(data);
     saveSettings(&settings);
 
     JsonObject& settingsJson = serialize(&settings);
     char* settingsEcho = serializeToJson(settingsJson);
 
-    Particle.publish("Settings", settingsEcho, 60, PRIVATE);
     Serial.print("SETTINGS UPDATE: ");
     Serial.println(settingsEcho);
+
+    Particle.publish("Settings", settingsEcho, 60, PRIVATE);
+    Particle.process();
+
+    digitalWrite(LED, LOW);
 }
 
 void setup()
@@ -106,33 +117,26 @@ void setup()
     Particle.connect();
 }
 
-JsonObject &serialize(Reading *reading)
+String serialize(Reading *reading)
 {
-    const size_t bufferSize = JSON_OBJECT_SIZE(9);
-    DynamicJsonBuffer jsonBuffer(bufferSize);
-
-    JsonObject &root = jsonBuffer.createObject();
-    root["v"] = reading->version;
-    root["batt_v"] = reading->batteryVoltage;
-    root["panel_v"] = reading->panelVoltage;
-
+    String result = String::format("%d:%f8.2:%f8.2|", reading->version, reading->batteryVoltage, reading->panelVoltage);
+    String serializedReading;
     if(reading->bmpRead)
     {
-        root["temp_bmp_c"] = reading->bmpTemperature;
-        root["press_pas"] = reading->pressure;
+        serializedReading = String::format("b%f8.2:%f8.2", reading->bmpTemperature, reading->pressure);
+        result.concat(serializedReading);
     }
     if(reading->dhtRead)
     {
-        root["temp_dht_c"] = reading->dhtTemperature;
-        root["humidity_perc"] = reading->humidity;
+        serializedReading = String::format("%sd%f8.2:%f8.2", reading->dhtTemperature, reading->humidity);
+        result.concat(serializedReading);
     }
     if(reading->anemometerRead)
     {
-        root["wspeed_mps"] = reading->windSpeed;
-        root["wdir_16ths"] = reading->windDirection;
+        serializedReading = String::format("%sa%f8.2:%d", reading->windSpeed, reading->windDirection);
+        result.concat(serializedReading);
     }
-
-    return root;
+    return result;
 }
 
 void readAnemometer(Reading *reading)
@@ -153,10 +157,12 @@ void readDht(Reading *reading)
 {
     reading->dhtTemperature = dht.getTempCelcius();
     reading->humidity = dht.getHumidity();
+    digitalWrite(DHT_POWER, LOW);
     if(!(reading->dhtRead = !isnan(reading->dhtTemperature) && !isnan(reading->humidity)))
     {
         Serial.println("ERROR: Could not read DHT temp/humidity sensor");
     }
+    //Serial.println(String::format("%d %f %f", reading->dhtRead, reading->dhtTemperature, reading->humidity));
 }
 
 void readBmp280(Reading *reading)
@@ -180,16 +186,17 @@ void loop()
     reading.version = settings.version;
     readAnemometer(&reading);
     readVoltage(&reading);
-    readDht(&reading);
     readBmp280(&reading);
 
-    //serialize reading to json string
-    JsonObject &jsonReading = serialize(&reading);
-    jsonReading.prettyPrintTo(Serial);
-    Serial.println();
-    char* publishedReading = serializeToJson(jsonReading);
+    unsigned long currentRuntime = millis() - duration;
+    if(currentRuntime < DHT_INIT)
+    {
+        delay(DHT_INIT - currentRuntime);
+    }
+    readDht(&reading);
 
-    //send serialized reading to the cloud
+    //send serialized reading to the cloud    
+    String publishedReading = serialize(&reading);    
     Serial.println(publishedReading);
     Particle.publish("Reading", publishedReading, 60, PRIVATE);
 
