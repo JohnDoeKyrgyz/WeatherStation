@@ -7,6 +7,9 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BMP280.h>
 
+#include <stdio.h>
+#include <stdarg.h>
+
 #define FIRMWARE_VERSION "1.0"
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
@@ -34,7 +37,9 @@ struct Reading
 #define LED D7 //Builtin LED
 
 #define DHT_IN D6
-#define DHT_POWER C0
+
+//This pin is switched high to drive a transistor that powers sensors
+#define SENSOR_POWER C0
 
 /* Sensors */
 #define DHTTYPE DHT22 // DHT 22  (AM2302), AM2321
@@ -79,9 +84,9 @@ void deviceSetup()
     }
 
     pinMode(PANEL_VOLTAGE, INPUT);
-    pinMode(DHT_POWER, OUTPUT);
+    pinMode(SENSOR_POWER, OUTPUT);
 
-    digitalWrite(DHT_POWER, HIGH);
+    digitalWrite(SENSOR_POWER, HIGH);
     dht.begin();
     bmp280.begin();
 }
@@ -117,86 +122,90 @@ void setup()
     Particle.connect();
 }
 
-String serialize(Reading *reading)
+char messageBuffer[255];
+char* serialize(Reading *reading)
 {
-    String result = String::format("%d:%f8.2:%f8.2|", reading->version, reading->batteryVoltage, reading->panelVoltage);
-    String serializedReading;
+    char* buffer = messageBuffer;
+    buffer += sprintf(buffer, "%d:%f:%f|", reading->version, reading->batteryVoltage, reading->panelVoltage);
     if(reading->bmpRead)
     {
-        serializedReading = String::format("b%f8.2:%f8.2", reading->bmpTemperature, reading->pressure);
-        result.concat(serializedReading);
+        buffer += sprintf(buffer, "b%f:%f", reading->bmpTemperature, reading->pressure);
     }
     if(reading->dhtRead)
     {
-        serializedReading = String::format("%sd%f8.2:%f8.2", reading->dhtTemperature, reading->humidity);
-        result.concat(serializedReading);
+        buffer += sprintf(buffer, "d%f:%f", reading->dhtTemperature, reading->humidity);
     }
     if(reading->anemometerRead)
     {
-        serializedReading = String::format("%sa%f8.2:%d", reading->windSpeed, reading->windDirection);
-        result.concat(serializedReading);
+        buffer += sprintf(buffer, "a%f:%d", reading->windSpeed, reading->windDirection);
     }
-    return result;
+    return messageBuffer;
 }
 
-void readAnemometer(Reading *reading)
+bool readAnemometer(Reading *reading)
 {
-    if(!(reading->anemometerRead = laCrosseTX23.read(reading->windSpeed, reading->windDirection)))
-    {
-        Serial.println("ERROR: Could not read anemometer");
-    }
+    return laCrosseTX23.read(reading->windSpeed, reading->windDirection);
 }
 
-void readVoltage(Reading *reading)
+bool readVoltage(Reading *reading)
 {
     reading->batteryVoltage = gauge.getVCell();
     reading->panelVoltage = 1023.0 / (float)analogRead(PANEL_VOLTAGE);
+    return true;
 }
 
-void readDht(Reading *reading)
+bool readDht(Reading *reading)
 {
     reading->dhtTemperature = dht.getTempCelcius();
     reading->humidity = dht.getHumidity();
-    digitalWrite(DHT_POWER, LOW);
-    if(!(reading->dhtRead = !isnan(reading->dhtTemperature) && !isnan(reading->humidity)))
-    {
-        Serial.println("ERROR: Could not read DHT temp/humidity sensor");
-    }
-    //Serial.println(String::format("%d %f %f", reading->dhtRead, reading->dhtTemperature, reading->humidity));
+    return !isnan(reading->dhtTemperature) && !isnan(reading->humidity);
 }
 
-void readBmp280(Reading *reading)
+bool readBmp280(Reading *reading)
 {
     digitalWrite(BAROMETER_CHIP_SELECT, HIGH);
     reading->bmpTemperature = bmp280.readTemperature();
     reading->pressure = bmp280.readPressure();
     digitalWrite(BAROMETER_CHIP_SELECT, LOW);
-
-    if(!(reading->bmpRead = !isnan(reading->bmpTemperature) && !isnan(reading->pressure) && reading->pressure > 0))
-    {
-        Serial.println("ERROR: BMP280 temp/pressure sensor");
-    }
+    return !isnan(reading->bmpTemperature) && !isnan(reading->pressure) && reading->pressure > 0;    
 }
 
 void loop()
 {
     Reading reading;
-
+   
     //read data
     reading.version = settings.version;
-    readAnemometer(&reading);
-    readVoltage(&reading);
-    readBmp280(&reading);
-
-    unsigned long currentRuntime = millis() - duration;
-    if(currentRuntime < DHT_INIT)
+    if(!(reading.anemometerRead = readAnemometer(&reading))) 
     {
-        delay(DHT_INIT - currentRuntime);
+        Serial.println("ERROR: Could not read anemometer");
     }
-    readDht(&reading);
+    readVoltage(&reading);
+    if(!(reading.bmpRead = readBmp280(&reading)))
+    {
+        Serial.println("ERROR: BMP280 temp/pressure sensor");
+    }
+    if(!(reading.dhtRead = readDht(&reading)))
+    {
+        Serial.println("ERROR: DHT22 temp/humidity sensor");
+    }
+
+    //If the DHT did not produce a value, keep trying it for a certain amount of time
+    if(!reading.dhtRead)
+    {
+        Serial.println("Retrying DHT22 ");
+        unsigned long currentRuntime = millis() - duration;
+        while(currentRuntime < DHT_INIT && !(reading.dhtRead = readDht(&reading)))
+        {
+            Serial.print(".");
+            delay(10);
+        }
+        Serial.println();
+    }
+    digitalWrite(SENSOR_POWER, LOW);    
 
     //send serialized reading to the cloud    
-    String publishedReading = serialize(&reading);    
+    char* publishedReading = serialize(&reading);    
     Serial.println(publishedReading);
     Particle.publish("Reading", publishedReading, 60, PRIVATE);
 
@@ -225,7 +234,8 @@ void loop()
         sleepMessage = "LIGHT";
         sleepAction = []()
         {
-            delay(settings.sleepTime);
+            delay(settings.sleepTime * 1000);
+            deviceSetup();
         };
     }
 

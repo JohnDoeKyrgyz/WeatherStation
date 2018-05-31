@@ -61,7 +61,6 @@
                     "C:\\working\\Particle\\gcc-arm\\lib\\gcc\\arm-none-eabi\\5.3.1\\include"
                 ]
             },
-            "intelliSenseMode": "msvc-x64",
             "cStandard": "c11",
             "cppStandard": "c++17"
         }
