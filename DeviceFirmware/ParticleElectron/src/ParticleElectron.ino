@@ -31,8 +31,7 @@ struct Reading
 };
 
 /* Connections */
-#define BAROMETER_CHIP_SELECT 1
-#define ANEMOMETER 1
+#define ANEMOMETER C1
 #define PANEL_VOLTAGE 1
 #define LED D7 //Builtin LED
 
@@ -44,9 +43,11 @@ struct Reading
 /* Sensors */
 #define DHTTYPE DHT22 // DHT 22  (AM2302), AM2321
 #define DHT_INIT 1000
+#define ANEMOMETER_TIME 1000
+
 DHT dht(DHT_IN, DHTTYPE);
 
-Adafruit_BMP280 bmp280(BAROMETER_CHIP_SELECT);
+//Adafruit_BMP280 bmp280;
 LaCrosse_TX23 laCrosseTX23(ANEMOMETER);
 FuelGauge gauge;
 
@@ -88,7 +89,7 @@ void deviceSetup()
 
     digitalWrite(SENSOR_POWER, HIGH);
     dht.begin();
-    bmp280.begin();
+    //bmp280.begin();
 }
 STARTUP(deviceSetup());
 
@@ -127,10 +128,12 @@ char* serialize(Reading *reading)
 {
     char* buffer = messageBuffer;
     buffer += sprintf(buffer, "%d:%f:%f|", reading->version, reading->batteryVoltage, reading->panelVoltage);
+    /*
     if(reading->bmpRead)
     {
         buffer += sprintf(buffer, "b%f:%f", reading->bmpTemperature, reading->pressure);
     }
+    */
     if(reading->dhtRead)
     {
         buffer += sprintf(buffer, "d%f:%f", reading->dhtTemperature, reading->humidity);
@@ -142,9 +145,28 @@ char* serialize(Reading *reading)
     return messageBuffer;
 }
 
+
+bool timeout(int timeout, std::function<bool()> opperation)
+{
+    unsigned long endTime = millis() + timeout;
+    bool result = false;
+    while(millis() < endTime && !(result = opperation()))
+    {
+        Serial.print(".");
+        delay(10);
+    }
+    return result;
+}
+
 bool readAnemometer(Reading *reading)
 {
-    return laCrosseTX23.read(reading->windSpeed, reading->windDirection);
+    Serial.print("ANEMOMETER ");
+    bool result = timeout(ANEMOMETER_TIME, [reading]()
+    {
+        return laCrosseTX23.read(reading->windSpeed, reading->windDirection);
+    });
+    Serial.println();
+    return result;
 }
 
 bool readVoltage(Reading *reading)
@@ -156,19 +178,26 @@ bool readVoltage(Reading *reading)
 
 bool readDht(Reading *reading)
 {
-    reading->dhtTemperature = dht.getTempCelcius();
-    reading->humidity = dht.getHumidity();
-    return !isnan(reading->dhtTemperature) && !isnan(reading->humidity);
+    Serial.print("DHT ");
+    bool result = timeout(DHT_INIT, [reading]()
+    {        
+        reading->dhtTemperature = dht.getTempCelcius();
+        reading->humidity = dht.getHumidity();
+        return !isnan(reading->dhtTemperature) && !isnan(reading->humidity);
+    });
+    Serial.println();
+    return result;    
 }
 
+/*
 bool readBmp280(Reading *reading)
 {
-    digitalWrite(BAROMETER_CHIP_SELECT, HIGH);
     reading->bmpTemperature = bmp280.readTemperature();
     reading->pressure = bmp280.readPressure();
-    digitalWrite(BAROMETER_CHIP_SELECT, LOW);
     return !isnan(reading->bmpTemperature) && !isnan(reading->pressure) && reading->pressure > 0;    
 }
+*/
+
 
 void loop()
 {
@@ -176,31 +205,20 @@ void loop()
    
     //read data
     reading.version = settings.version;
-    if(!(reading.anemometerRead = readAnemometer(&reading))) 
-    {
-        Serial.println("ERROR: Could not read anemometer");
-    }
     readVoltage(&reading);
+    /*
     if(!(reading.bmpRead = readBmp280(&reading)))
     {
         Serial.println("ERROR: BMP280 temp/pressure sensor");
     }
+    */
     if(!(reading.dhtRead = readDht(&reading)))
     {
         Serial.println("ERROR: DHT22 temp/humidity sensor");
     }
-
-    //If the DHT did not produce a value, keep trying it for a certain amount of time
-    if(!reading.dhtRead)
+    if(!(reading.anemometerRead = readAnemometer(&reading))) 
     {
-        Serial.println("Retrying DHT22 ");
-        unsigned long currentRuntime = millis() - duration;
-        while(currentRuntime < DHT_INIT && !(reading.dhtRead = readDht(&reading)))
-        {
-            Serial.print(".");
-            delay(10);
-        }
-        Serial.println();
+        Serial.println("ERROR: Could not read anemometer");
     }
     digitalWrite(SENSOR_POWER, LOW);    
 
