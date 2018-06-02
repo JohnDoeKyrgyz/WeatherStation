@@ -18,7 +18,7 @@ struct Reading
 {
     int version;
     float batteryVoltage;
-    float panelVoltage;
+    int panelVoltage;
     bool anemometerRead;
     float windSpeed;
     int windDirection;
@@ -32,7 +32,7 @@ struct Reading
 
 /* Connections */
 #define ANEMOMETER C1
-#define PANEL_VOLTAGE 1
+#define PANEL_VOLTAGE A0
 #define LED D7 //Builtin LED
 
 #define DHT_IN D6
@@ -127,7 +127,7 @@ char messageBuffer[255];
 char* serialize(Reading *reading)
 {
     char* buffer = messageBuffer;
-    buffer += sprintf(buffer, "%d:%f:%f|", reading->version, reading->batteryVoltage, reading->panelVoltage);
+    buffer += sprintf(buffer, "%d:%f:%d|", reading->version, reading->batteryVoltage, reading->panelVoltage);
     /*
     if(reading->bmpRead)
     {
@@ -172,7 +172,9 @@ bool readAnemometer(Reading *reading)
 bool readVoltage(Reading *reading)
 {
     reading->batteryVoltage = gauge.getVCell();
-    reading->panelVoltage = 1023.0 / (float)analogRead(PANEL_VOLTAGE);
+    int panelVoltage = analogRead(PANEL_VOLTAGE);
+    //Serial.println(panelVoltage);
+    reading->panelVoltage = panelVoltage;
     return true;
 }
 
