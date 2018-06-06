@@ -20,6 +20,18 @@
           "lib/net40/FSharp.Core.dll": {}
         }
       },
+      "FSharp.Data/2.4.6": {
+        "type": "package",
+        "frameworkAssemblies": [
+          "System.Xml.Linq"
+        ],
+        "compile": {
+          "lib/net45/FSharp.Data.dll": {}
+        },
+        "runtime": {
+          "lib/net45/FSharp.Data.dll": {}
+        }
+      },
       "FSharp.Interop.Dynamic/3.0.0": {
         "type": "package",
         "dependencies": {
@@ -87,6 +99,36 @@
         "lib/portable-net45+sl5+netcore45+MonoAndroid1+MonoTouch1/FSharp.Core.xml"
       ]
     },
+    "FSharp.Data/2.4.6": {
+      "sha512": "eAuuYTZiLPw8j4LlqnxEokvN+QBs9H/JuYNidpmXzYWopb9wkB/DGDFtbygUMkmDgWoCrUSgUQ6A0vCqcsxV0g==",
+      "type": "package",
+      "path": "fsharp.data/2.4.6",
+      "files": [
+        "fsharp.data.2.4.6.nupkg.sha512",
+        "fsharp.data.nuspec",
+        "lib/net45/FSharp.Data.DesignTime.dll",
+        "lib/net45/FSharp.Data.DesignTime.pdb",
+        "lib/net45/FSharp.Data.DesignTime.xml",
+        "lib/net45/FSharp.Data.dll",
+        "lib/net45/FSharp.Data.pdb",
+        "lib/net45/FSharp.Data.xml",
+        "lib/portable-net45+netcore45+wpa81+wp8/FSharp.Data.DesignTime.dll",
+        "lib/portable-net45+netcore45+wpa81+wp8/FSharp.Data.DesignTime.pdb",
+        "lib/portable-net45+netcore45+wpa81+wp8/FSharp.Data.DesignTime.xml",
+        "lib/portable-net45+netcore45+wpa81+wp8/FSharp.Data.dll",
+        "lib/portable-net45+netcore45+wpa81+wp8/FSharp.Data.pdb",
+        "lib/portable-net45+netcore45+wpa81+wp8/FSharp.Data.xml",
+        "lib/portable-net45+netcore45/FSharp.Data.DesignTime.dll",
+        "lib/portable-net45+netcore45/FSharp.Data.DesignTime.pdb",
+        "lib/portable-net45+netcore45/FSharp.Data.DesignTime.xml",
+        "lib/portable-net45+netcore45/FSharp.Data.dll",
+        "lib/portable-net45+netcore45/FSharp.Data.pdb",
+        "lib/portable-net45+netcore45/FSharp.Data.xml",
+        "linqpad-samples/GitHub.linq",
+        "linqpad-samples/Jira.linq",
+        "linqpad-samples/TypeInference.linq"
+      ]
+    },
     "FSharp.Interop.Dynamic/3.0.0": {
       "sha512": "NsH68VmEaBe4QXBkMip0nkJ0SamSHee2SeCSd6egxwlsOni5KFuB8wCpBFXhenwqMUz7uDFFxeZr9R3Wcic1OQ==",
       "type": "package",
@@ -101,12 +143,13 @@
   "projectFileDependencyGroups": {
     "": [],
     ".NETFramework,Version=v4.6": [
+      "FSharp.Data >= 2.4.6",
       "FSharp.Interop.Dynamic >= 3.0.0"
     ]
   },
   "tools": {},
   "projectFileToolGroups": {},
   "packageFolders": {
-    "D:\\home\\data\\Functions\\packages\\nuget": {}
+    "C:\\Users\\jatwood\\.nuget\\packages": {}
   }
 }

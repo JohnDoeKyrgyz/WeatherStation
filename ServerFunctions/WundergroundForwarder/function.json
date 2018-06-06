@@ -2,10 +2,11 @@
   "disabled": false,
   "bindings": [
     {
-      "authLevel": "function",
-      "name": "req",
-      "type": "httpTrigger",
-      "direction": "in"
+      "type": "eventHubTrigger",
+      "name": "eventHubMessage",
+      "direction": "in",
+      "path": "weatherstationsiot",
+      "connection": "WeatherStationsIoT"
     },
     {
       "tableName": "WeatherStations",
@@ -20,11 +21,6 @@
       "direction": "out",
       "tableName": "Readings",
       "connection": "WeatherStationStorage"
-    },
-    {
-      "name": "res",
-      "type": "http",
-      "direction": "out"
     }    
   ]
 }

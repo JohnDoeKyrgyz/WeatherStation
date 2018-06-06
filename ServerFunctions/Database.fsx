@@ -6,8 +6,6 @@
 open System
 open Microsoft.WindowsAzure.Storage.Table;
 
-let DefaultPartition = "Devices"
-
 type WeatherStation() =
     inherit TableEntity()
     member val WundergroundStationId = "" with get, set

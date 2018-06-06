@@ -1,8 +1,11 @@
 {
-  "IsEncrypted": true,
+  "IsEncrypted": false,
   "Values": {
+    "WeatherStationStorage": "DefaultEndpointsProtocol=https;AccountName=weatherstationsstorage;AccountKey=GQTMcwjw39JA7cY3wrdaRHdt6ApfafgiXrozLE27J5WpDiTEFs7yPlCtolWR6dEq3bfw4gccvwaeglzYOcpWmA==;EndpointSuffix=core.windows.net",
+    "WeatherStationsIoT": "Endpoint=sb://iothub-ns-weathersta-491252-6bb8e9780a.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=LjhTmH/cpXT/aBnTCbEHtT/Jb7Pz5EFXAzGCf59jQbY=",
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=weatherstationsstorage;AccountKey=GQTMcwjw39JA7cY3wrdaRHdt6ApfafgiXrozLE27J5WpDiTEFs7yPlCtolWR6dEq3bfw4gccvwaeglzYOcpWmA==;EndpointSuffix=core.windows.net"
   },
   "ConnectionStrings": {
-    "WeatherStationsStorage": "AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAlLOGNNrdw0i35CGhaCHYWgAAAAACAAAAAAAQZgAAAAEAACAAAAA0WiPoskiRfVvjb+I70mEAgpJBR+dO76YJkv8VXf4bhQAAAAAOgAAAAAIAACAAAADCsq+dlP41RF/wUgkwuAMjr1Zmi7Y6hLqjQ/R+7fmvUCAAAADHt3dgkSWUbcnmfckHwpgpZ0nGursdG7f778gkbMDa9UAAAAAUedfpBRy1cJ/3dTlDDRlQP7r00yuXvd2YFufYqWFMWLO9LMTLMtYdOMzTjeA9GbPn0ch1nllxWm91H9DGX6Uz"
+    "WeatherStationStorage": "DefaultEndpointsProtocol=https;AccountName=weatherstationsstorage;AccountKey=GQTMcwjw39JA7cY3wrdaRHdt6ApfafgiXrozLE27J5WpDiTEFs7yPlCtolWR6dEq3bfw4gccvwaeglzYOcpWmA==;EndpointSuffix=core.windows.net"
   }
 }
