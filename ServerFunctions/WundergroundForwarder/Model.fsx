@@ -39,7 +39,9 @@ let applyReading (reading : Reading) value =
     | PressurePascal perc -> reading.PressurePascal <- new Nullable<double>(perc)
     | SpeedMetersPerSecond speed -> reading.SpeedMetersPerSecond <- new Nullable<double>(speed)
     | DirectionSixteenths direction -> reading.DirectionSixteenths <- new Nullable<double>(double direction)
-    | DeviceId id -> reading.PartitionKey <- id
+    | DeviceId id -> 
+        reading.PartitionKey <- id
+        reading.SourceDevice <- id
 
 let createReading values = 
     let reading = new Reading(RowKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks))
