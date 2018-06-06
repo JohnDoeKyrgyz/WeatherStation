@@ -6,12 +6,17 @@ open Database
 type DevicePlatform =
     | Particle
     | Hologram
+    with
+        override this.ToString() =
+            match this with
+            | Particle -> "Particle"
+            | Hologram -> "Hologram"
 
 type ReadingValues =
     | ReadingTime of DateTime
-    | SupplyVoltage of int
-    | BatteryChargeVoltage of int
-    | PanelVoltage of int
+    | SupplyVoltage of double
+    | BatteryChargeVoltage of double
+    | PanelVoltage of double
     | TemperatureCelciusHydrometer of double
     | TemperatureCelciusBarometer of double
     | HumidityPercent of double
@@ -25,9 +30,9 @@ let applyReading (reading : Reading) value =
     match value with
     | RefreshInterval seconds -> reading.RefreshIntervalSeconds <- seconds
     | ReadingTime time -> reading.ReadingTime <- time
-    | SupplyVoltage voltage -> reading.SupplyVoltage <- new Nullable<int>(voltage)
-    | BatteryChargeVoltage voltage -> reading.BatteryChargeVoltage <- new Nullable<int>(voltage)
-    | PanelVoltage voltage -> reading.PanelVoltage <- new Nullable<int>(voltage)
+    | SupplyVoltage voltage -> reading.SupplyVoltage <- new Nullable<double>(voltage)
+    | BatteryChargeVoltage voltage -> reading.BatteryChargeVoltage <- new Nullable<double>(voltage)
+    | PanelVoltage voltage -> reading.PanelVoltage <- new Nullable<double>(voltage)
     | TemperatureCelciusBarometer temp -> reading.TemperatureCelciusBarometer <- new Nullable<double>(temp)
     | TemperatureCelciusHydrometer temp -> reading.TemperatureCelciusHydrometer <- new Nullable<double>(temp)
     | HumidityPercent perc -> reading.HumidityPercent <- new Nullable<double>(perc)

@@ -1,17 +1,18 @@
+#I __SOURCE_DIRECTORY__
 #load @"..\Preamble.fsx"
 #load "Model.fsx"
 
 open System
 
 open FSharp.Data
-
+open Microsoft.Azure.WebJobs.Host
 open Model
 
 [<Literal>]
 let HologramSample = __SOURCE_DIRECTORY__ + @"/HologramStatusUpdate.json"
 type HologramPayload = JsonProvider<HologramSample, SampleIsList = true>
 
-let parseValues content =
+let parseValues (log: TraceWriter) content =
 
     let parsePayload (data : string) =
 
@@ -39,9 +40,9 @@ let parseValues content =
             readOptionalDouble 2 HumidityPercent
             readOptionalDouble 3 TemperatureCelciusBarometer
             readOptionalDouble 4 PressurePascal
-            readOptionalInt 5 SupplyVoltage
-            readOptionalInt 6 BatteryChargeVoltage
-            readOptionalInt 7 PanelVoltage
+            readOptionalDouble 5 SupplyVoltage
+            readOptionalDouble 6 BatteryChargeVoltage
+            readOptionalDouble 7 PanelVoltage
             readOptionalDouble 8 SpeedMetersPerSecond
             readOptionalInt 9 DirectionSixteenths
             Some (ReadingTime time)
@@ -49,7 +50,9 @@ let parseValues content =
 
         [for value in possibleValues do
             match value with
-            | Some value -> yield value]
+            | Some value -> yield value
+            | None -> ()]
 
     let payload = HologramPayload.Parse content
+    log.Info(sprintf "Parsed Hologram reading for device %d" payload.SourceDevice)
     parsePayload payload.Body @ [DeviceId (string payload.SourceDevice)]    

@@ -3,6 +3,8 @@
 
 open System.Text.RegularExpressions
 
+open Microsoft.Azure.WebJobs.Host
+
 open FSharp.Data
 open Model
 
@@ -12,23 +14,32 @@ type ParticlePayload = JsonProvider<ParticleSample, SampleIsList = true>
 
 let readingParser = new Regex(@"(?<SettingsCounter>\d+):(?<BatteryVoltage>\d+\.\d+):(?<PanelVoltage>\d+)\|(d(?<DhtTemperature>\d+\.\d+):(?<DhtHumidity>\d+.\d+))?(a(?<AnemometerWindSpeed>\d+\.\d+):(?<AnemometerDirection>\d+))?")
 
-let readRegexGroups key builder (regexGroups : GroupCollection) =
+let readRegexGroups (log: TraceWriter) key builder (regexGroups : GroupCollection) =
     let value = regexGroups.[key : string]
-    if value <> null then Some (builder value.Value) else None
+    if value <> null then 
+        log.Info(sprintf "RegexValue %s %s" key value.Value)
+        Some (builder value.Value) else None
 
-let valueParsers = [
-    readRegexGroups "BatteryVoltage" (int >> BatteryChargeVoltage)
-    readRegexGroups "PanelVoltage" (int >> PanelVoltage)
-    readRegexGroups "DhtTemperature" (double >> TemperatureCelciusHydrometer)
-    readRegexGroups "DhtHumidity" (double >> HumidityPercent)
-    readRegexGroups "AnemometerWindSpeed" (double >> SpeedMetersPerSecond)
-    readRegexGroups "AnemometerDirection" (int >> DirectionSixteenths)]
+let convertPanelVoltage rawValue = (rawValue / 4095.0) * 18.0
 
-let parseValues content =
+let valueParsers (log: TraceWriter) = 
+    let read = readRegexGroups log    
+    [
+        read "BatteryVoltage" (double >> BatteryChargeVoltage)
+        read "PanelVoltage" (double >> convertPanelVoltage >> PanelVoltage)
+        read "DhtTemperature" (double >> TemperatureCelciusHydrometer)
+        read "DhtHumidity" (double >> HumidityPercent)
+        read "AnemometerWindSpeed" (double >> SpeedMetersPerSecond)
+        read "AnemometerDirection" (int >> DirectionSixteenths)
+    ]
+
+let parseValues (log: TraceWriter) content =
     let particleReading = ParticlePayload.Parse content
+    log.Info(sprintf "Parsed particle reading for device %s" particleReading.DeviceId)
     let sensorValues = [
         for regexMatch in readingParser.Matches(particleReading.Data) do                
-            for valueParser in valueParsers do
+            for valueParser in valueParsers log do
                 let parseResult = valueParser regexMatch.Groups
-                yield parseResult ]
-    sensorValues @ [ReadingTime (particleReading.PublishedAt.ToUniversalTime())]
+                if parseResult.IsSome then
+                    yield parseResult.Value ]
+    sensorValues @ [ReadingTime (particleReading.PublishedAt.ToUniversalTime()); DeviceId particleReading.DeviceId]

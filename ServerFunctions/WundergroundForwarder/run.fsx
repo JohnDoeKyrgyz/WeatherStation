@@ -14,44 +14,71 @@ open Database
 open Model
 open WundergroundPost
 
+let tryParse parser content =
+    try
+        Choice1Of2 (parser content)
+    with ex -> Choice2Of2 ex
+
 let parsers = 
     [Particle, Particle.parseValues; Hologram, Hologram.parseValues]
 
-let tryParse parser content =
-    try
-        Some (parser content)
-    with _ -> None    
+let rec innerMostException (ex : exn) =
+    if ex.InnerException <> null then innerMostException ex.InnerException else ex
 
 let Run(eventHubMessage: string, weatherStationsTable: IQueryable<WeatherStation>, storedReading : byref<Reading>, log: TraceWriter) =
+    
+    let reading =
+        async {
+            log.Info(eventHubMessage)
 
-    async {
-        log.Info(eventHubMessage)
+            let parseAttempts = [
+                for (key, parser) in parsers do
+                    yield key, (tryParse (parser log) eventHubMessage)]
 
-        let parseAttempts = [
-            for (key, parser) in parsers do
-                let parseResult = tryParse parser eventHubMessage
-                if parseResult.IsSome then
-                    yield key, parseResult.Value ]
+            let successfulAttempts = [
+                for (key, attempt) in parseAttempts do
+                    match attempt with
+                    | Choice1Of2 result -> yield key, result
+                    | _ -> ()]
 
-        match parseAttempts with
-        | (deviceType, values) :: _ ->
+            match successfulAttempts with
+            | (deviceType, values) :: _ ->
 
-            let reading = Model.createReading values
+                log.Info(sprintf "%A" values)
+                let reading = Model.createReading values
 
-            let partitionKey = string deviceType
-            let deviceSerialNumber = reading.SourceDevice
+                let partitionKey = string deviceType
+                let deviceSerialNumber = reading.SourceDevice
+                log.Info(sprintf "Searching for device %s %s in registry" partitionKey deviceSerialNumber)
 
-            let weatherStation = 
-                weatherStationsTable
-                    .Where( fun station -> station.PartitionKey = partitionKey && station.RowKey = deviceSerialNumber )
-                    .ToArray()
-                    .Single()
+                let weatherStations = 
+                    weatherStationsTable
+                        .Where( fun station -> station.PartitionKey = partitionKey && station.RowKey = deviceSerialNumber )
+                        .ToArray()
 
-            let valuesSeq = values |> Seq.ofList
-            let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
+                if weatherStations.Length <> 1 then failwithf "WeatherStation %s %s is incorrectly provisioned" partitionKey deviceSerialNumber
+                let weatherStation = weatherStations.[0]
 
-            log.Info(sprintf "%A" wundergroundResponse)
+                let valuesSeq = values |> Seq.ofList
+                let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
 
-            storedReading <- reading
-        | _ -> 
-            log.Info("No values parsed") }            
+                log.Info(sprintf "%A" wundergroundResponse)
+
+                return Some reading
+            | _ -> 
+                log.Info("No values parsed")
+                for (key, attempt) in parseAttempts do
+                    let message =
+                        match attempt with
+                        | Choice2Of2 ex -> 
+                            string (innerMostException ex)
+                        | _ -> "no exception"
+
+                    log.Info(string key)
+                    log.Error(message)
+                return None }
+        |> Async.RunSynchronously
+
+    match reading with
+    | Some reading -> storedReading <- reading
+    | None -> ()

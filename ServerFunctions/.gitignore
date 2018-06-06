@@ -2,4 +2,4 @@
 /packages
 /.paket
 /package.json
-local.settings.json
+/local.settings.json
