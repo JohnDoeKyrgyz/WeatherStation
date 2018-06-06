@@ -80,5 +80,8 @@ let Run(eventHubMessage: string, weatherStationsTable: IQueryable<WeatherStation
         |> Async.RunSynchronously
 
     match reading with
-    | Some reading -> storedReading <- reading
-    | None -> ()
+    | Some reading -> 
+        log.Info(sprintf "Saving Reading %A" reading)
+        storedReading <- reading
+    | None ->
+        log.Info("Nothing to save")

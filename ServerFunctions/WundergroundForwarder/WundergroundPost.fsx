@@ -11,6 +11,7 @@ let queryParameter value =
     | DirectionSixteenths direction -> Some( "winddir", string (float direction * (360.0 / 16.0)))
     | HumidityPercent humidity -> Some( "humidity", string (humidity))
     | RefreshInterval intervalSeconds -> Some( "rtfreq", string intervalSeconds )
+    | TemperatureCelciusHydrometer tempC -> Some( "tempf", string (((9.0 / 5.0) * tempC) + 32.0))
     | _ -> None
 
 let queryParameters values = [
