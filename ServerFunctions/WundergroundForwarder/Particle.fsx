@@ -1,6 +1,7 @@
 #load @"..\Preamble.fsx"
 #load "Model.fsx"
 
+open System
 open System.Text.RegularExpressions
 
 open Microsoft.Azure.WebJobs.Host
@@ -16,7 +17,7 @@ let readingParser = new Regex(@"(?<SettingsCounter>\d+):(?<BatteryVoltage>\d+\.\
 
 let readRegexGroups (log: TraceWriter) key builder (regexGroups : GroupCollection) =
     let value = regexGroups.[key : string]
-    if value <> null then 
+    if value <> null && not (String.IsNullOrWhiteSpace(value.Value)) then 
         log.Info(sprintf "RegexValue %s %s" key value.Value)
         Some (builder value.Value) else None
 
