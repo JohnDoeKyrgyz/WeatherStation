@@ -6,11 +6,11 @@ open FSharp.Data
 
 let queryParameter value =
     match value with
-    | ReadingTime time -> Some( "dateutc", time.ToUniversalTime().ToString("yyyy-mm-dd hh:mm:ss") )
+    | ReadingTime time -> Some( "dateutc", time.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss") )
     | SpeedMetersPerSecond speed -> Some( "windspeedmph", string (speed * 2.23694) )
     | DirectionSixteenths direction -> Some( "winddir", string (float direction * (360.0 / 16.0)))
     | HumidityPercent humidity -> Some( "humidity", string (humidity))
-    | RefreshInterval intervalSeconds -> Some( "rtfreq", string intervalSeconds)
+    | RefreshInterval intervalSeconds -> Some( "rtfreq", string intervalSeconds )
     | _ -> None
 
 let queryParameters values = [
