@@ -10,6 +10,5 @@
 #r "Microsoft.WindowsAzure.Storage.dll"
 #endif
 
-
 #r "System.Net.Http"
 #r "Newtonsoft.Json"
