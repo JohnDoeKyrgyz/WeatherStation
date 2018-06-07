@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#define FIRMWARE_VERSION "1.0"
+#define FIRMWARE_VERSION "1.1"
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
