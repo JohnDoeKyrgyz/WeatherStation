@@ -9,7 +9,7 @@ let queryParameter value =
     match value with
     | ReadingTime time -> Some( "dateutc", time.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss") )
     | SpeedMetersPerSecond speed -> Some( "windspeedmph", string (speed * 2.23694) )
-    | GustMetersPerSecond gust -> Some( "windgustmph", string (gust * 2.23694) )
+    | GustMetersPerSecond gust -> Some( "windgustmph_10m", string (gust * 2.23694) )
     | DirectionSixteenths direction -> Some( "winddir", string (float direction * (360.0 / 16.0)))
     | HumidityPercent humidity -> Some( "humidity", string (humidity))
     | RefreshInterval intervalSeconds -> Some( "rtfreq", string intervalSeconds )
