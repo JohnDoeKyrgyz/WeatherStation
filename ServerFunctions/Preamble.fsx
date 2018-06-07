@@ -11,4 +11,3 @@
 #endif
 
 #r "System.Net.Http"
-#r "Newtonsoft.Json"
