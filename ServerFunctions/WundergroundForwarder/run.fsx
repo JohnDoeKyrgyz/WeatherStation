@@ -69,18 +69,20 @@ let Run(eventHubMessage: string, weatherStationsTable: IQueryable<WeatherStation
 
                 let additionalReadings = 
                     match lastTenMinutesOfReadings with
-                    | mostRecentWindReading :: _ -> [
-                        let gust = 
-                            lastTenMinutesOfReadings 
-                            |> Seq.map (fun reading -> reading.SpeedMetersPerSecond.Value) 
-                            |> Seq.max 
-                        yield GustMetersPerSecond gust
-                        
-                        let secondsSinceLastRun = int (reading.ReadingTime.Subtract(mostRecentWindReading.ReadingTime).TotalSeconds)
-                        yield RefreshInterval secondsSinceLastRun
+                    | mostRecentWindReading :: _ -> 
+                        [
+                            let gust = 
+                                lastTenMinutesOfReadings 
+                                |> Seq.map (fun reading -> reading.SpeedMetersPerSecond.Value) 
+                                |> Seq.max 
+                            yield GustMetersPerSecond gust
+                            
+                            let secondsSinceLastRun = int (reading.ReadingTime.Subtract(mostRecentWindReading.ReadingTime).TotalSeconds)
+                            yield RefreshInterval secondsSinceLastRun
 
-                        if values |> Seq.exists (fun value -> match value with | SpeedMetersPerSecond _ -> true | _ -> false) |> not then
-                            yield SpeedMetersPerSecond mostRecentWindReading.SpeedMetersPerSecond.Value]
+                            if values |> Seq.exists (fun value -> match value with | SpeedMetersPerSecond _ -> true | _ -> false) |> not then
+                                yield SpeedMetersPerSecond mostRecentWindReading.SpeedMetersPerSecond.Value
+                        ]
                     | _ -> []
                 log.Info(sprintf "Extrapolated readings %A" additionalReadings)
 
