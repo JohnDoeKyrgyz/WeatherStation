@@ -16,6 +16,13 @@
       "direction": "in"
     },
     {
+      "tableName": "Readings",
+      "connection": "WeatherStationStorage",
+      "name": "readingsTable",
+      "type": "table",
+      "direction": "in"
+    },
+    {
       "name": "storedReading",
       "type": "table",
       "direction": "out",

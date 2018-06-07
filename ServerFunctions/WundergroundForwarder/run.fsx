@@ -25,7 +25,7 @@ let parsers =
 let rec innerMostException (ex : exn) =
     if ex.InnerException <> null then innerMostException ex.InnerException else ex
 
-let Run(eventHubMessage: string, weatherStationsTable: IQueryable<WeatherStation>, storedReading : byref<Reading>, log: TraceWriter) =
+let Run(eventHubMessage: string, weatherStationsTable: IQueryable<WeatherStation>, readingsTable: IQueryable<Reading>, storedReading : byref<Reading>, log: TraceWriter) =
     
     let reading =
         async {
