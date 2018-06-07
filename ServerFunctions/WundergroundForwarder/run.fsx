@@ -4,6 +4,9 @@
 #load "Particle.fsx"
 #load "WundergroundPost.fsx"
 
+#I __SOURCE_DIRECTORY__
+#r @"..\packages\FSharp.Data\lib\net45\FSharp.Data.dll"
+
 open System
 open System.Linq
 

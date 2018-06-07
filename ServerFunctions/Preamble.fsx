@@ -1,6 +1,5 @@
 #I __SOURCE_DIRECTORY__
 #r @"packages\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll"
-#r @"packages\FSharp.Data\lib\net45\FSharp.Data.dll"
 
 #if INTERACTIVE
 #I @"C:\Users\jatwood\AppData\Roaming\npm\node_modules\azure-functions-core-tools\bin"
