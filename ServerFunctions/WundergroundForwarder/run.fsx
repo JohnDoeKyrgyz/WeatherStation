@@ -1,7 +1,3 @@
-
-#I __SOURCE_DIRECTORY__
-#r @"..\packages\FSharp.Data\lib\net45\FSharp.Data.dll"
-
 #load "../Preamble.fsx"
 #load "../Database.fsx"
 #load "Hologram.fsx"

@@ -1,8 +1,5 @@
 #load "Preamble.fsx"
 
-#r "Microsoft.Azure.WebJobs"
-#r "Microsoft.WindowsAzure.Storage"
-
 open System
 open Microsoft.WindowsAzure.Storage.Table;
 

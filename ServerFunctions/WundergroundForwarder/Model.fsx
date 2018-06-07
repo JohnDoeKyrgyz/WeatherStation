@@ -1,4 +1,4 @@
-#load @"..\Database.fsx"
+#load "../Database.fsx"
 
 open System
 open Database

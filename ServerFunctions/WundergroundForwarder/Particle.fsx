@@ -1,7 +1,4 @@
-#I __SOURCE_DIRECTORY__
-#r @"..\packages\FSharp.Data\lib\net45\FSharp.Data.dll"
-
-#load @"..\Preamble.fsx"
+#load "../Preamble.fsx"
 #load "Model.fsx"
 
 open System
