@@ -1,10 +1,8 @@
-#I __SOURCE_DIRECTORY__
 #load "../Preamble.fsx"
 #load "../Database.fsx"
 #load "Hologram.fsx"
 #load "Particle.fsx"
 #load "WundergroundPost.fsx"
-#r "../packages/FSharp.Data/lib/net40/FSharp.Data.dll"
 
 open System
 open System.Linq

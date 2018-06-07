@@ -28,6 +28,7 @@ type Reading() =
     member val TemperatureCelciusBarometer = new Nullable<double>() with get, set
     member val HumidityPercent = new Nullable<double>() with get, set
     member val PressurePascal = new Nullable<double>() with get, set
+    member val GustMetersPerSecond = new Nullable<double>() with get, set
     member val SpeedMetersPerSecond = new Nullable<double>() with get, set
     member val DirectionSixteenths = new Nullable<double>() with get, set
     member val SourceDevice = "" with get, set
