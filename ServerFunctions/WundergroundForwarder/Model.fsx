@@ -23,6 +23,7 @@ type ReadingValues =
     | HumidityPercent of double
     | PressurePascal of double
     | SpeedMetersPerSecond of double
+    | GustMetersPerSecond of double
     | DirectionSixteenths of int
     | DeviceId of string
     | RefreshInterval of int
