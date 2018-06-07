@@ -65,19 +65,24 @@ let Run(eventHubMessage: string, weatherStationsTable: IQueryable<WeatherStation
                     let tenMinutesAgo = reading.ReadingTime.Subtract(TimeSpan.FromMinutes(10.0))
                     query {
                         for reading in readingsTable do
-                        where (reading.ReadingTime > tenMinutesAgo)
-                        select reading.SpeedMetersPerSecond }
-                    |> Seq.toList
-                    |> Seq.filter (fun value -> value.HasValue)
-                    |> Seq.map (fun value -> value.Value)
+                        where (reading.ReadingTime > tenMinutesAgo && reading.SpeedMetersPerSecond.HasValue)
+                        select reading }
                     |> Seq.toList
 
                 let additionalReadings = 
                     match lastTenMinutesOfReadings with
                     | mostRecentWindReading :: _ -> [
-                        yield lastTenMinutesOfReadings |> Seq.max |> GustMetersPerSecond
+                        let gust = 
+                            lastTenMinutesOfReadings 
+                            |> Seq.map (fun reading -> reading.SpeedMetersPerSecond.Value) 
+                            |> Seq.max 
+                        yield GustMetersPerSecond gust
+                        
+                        let secondsSinceLastRun = int (reading.ReadingTime.Subtract(mostRecentWindReading.ReadingTime).TotalSeconds)
+                        yield RefreshInterval secondsSinceLastRun
+
                         if values |> Seq.exists (fun value -> match value with | SpeedMetersPerSecond _ -> true | _ -> false) |> not then
-                            yield SpeedMetersPerSecond mostRecentWindReading]
+                            yield SpeedMetersPerSecond mostRecentWindReading.SpeedMetersPerSecond.Value]
                     | _ -> []
                 log.Info(sprintf "Extrapolated readings %A" additionalReadings)
 
