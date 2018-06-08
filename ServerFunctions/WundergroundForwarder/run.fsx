@@ -43,30 +43,30 @@ let Run(eventHubMessage: string, weatherStationsTable: IQueryable<WeatherStation
                     | _ -> ()]
 
             match successfulAttempts with
-            | (deviceType, values) :: _ ->
+            | (deviceType, deviceReading) :: _ ->
 
-                log.Info(sprintf "%A" values)
-                let reading = Model.createReading values
+                log.Info(sprintf "%A" deviceReading)
 
                 let partitionKey = string deviceType
-                let deviceSerialNumber = reading.SourceDevice
-                log.Info(sprintf "Searching for device %s %s in registry" partitionKey deviceSerialNumber)
+                log.Info(sprintf "Searching for device %s %s in registry" partitionKey deviceReading.DeviceId)
 
                 let weatherStations = 
                     weatherStationsTable
-                        .Where( fun station -> station.PartitionKey = partitionKey && station.RowKey = deviceSerialNumber )
+                        .Where( fun station -> station.PartitionKey = partitionKey && station.RowKey = deviceReading.DeviceId )
                         .ToArray()
 
-                if weatherStations.Length <> 1 then failwithf "WeatherStation %s %s is incorrectly provisioned" partitionKey deviceSerialNumber
+                if weatherStations.Length <> 1 then failwithf "WeatherStation %s %s is incorrectly provisioned" partitionKey deviceReading.DeviceId
                 let weatherStation = weatherStations.[0]
                 
-                let values = fixReadings readingsTable weatherStation values
+                let values = fixReadings readingsTable weatherStation deviceReading.Readings
+                log.Info(sprintf "Fixed Values %A" values)
 
                 let valuesSeq = values |> Seq.ofList
                 let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
 
                 log.Info(sprintf "%A" wundergroundResponse)
-
+                
+                let reading = Model.createReading deviceReading
                 return Some reading
             | _ -> 
                 log.Info("No values parsed")

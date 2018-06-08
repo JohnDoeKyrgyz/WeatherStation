@@ -43,4 +43,4 @@ let parseValues (log: TraceWriter) content =
                 let parseResult = valueParser regexMatch.Groups
                 if parseResult.IsSome then
                     yield parseResult.Value ]
-    sensorValues @ [ReadingTime (particleReading.PublishedAt.ToUniversalTime()); DeviceId particleReading.DeviceId]
+    { Readings = sensorValues @ [ReadingTime (particleReading.PublishedAt.ToUniversalTime())]; DeviceId = particleReading.DeviceId}

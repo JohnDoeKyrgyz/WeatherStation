@@ -52,4 +52,4 @@ let parseValues (log: TraceWriter) content =
 
     let payload = HologramPayload.Parse content
     log.Info(sprintf "Parsed Hologram reading for device %d" payload.SourceDevice)
-    parsePayload payload.Body @ [DeviceId (string payload.SourceDevice)]    
+    {Readings = parsePayload payload.Body; DeviceId = (string payload.SourceDevice)}

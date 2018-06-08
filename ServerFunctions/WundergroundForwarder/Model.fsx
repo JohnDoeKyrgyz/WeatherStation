@@ -49,8 +49,12 @@ type ReadingValues =
     | SpeedMetersPerSecond of decimal<metersPerSecond>
     | GustMetersPerSecond of decimal<metersPerSecond>
     | DirectionSixteenths of int<sixteenths>
-    | DeviceId of string
-    | RefreshInterval of int<seconds>    
+    | RefreshInterval of int<seconds>
+
+type DeviceReadings = {
+    DeviceId : string
+    Readings : ReadingValues list
+}    
 
 let applyReading (reading : Reading) value =
 
@@ -72,12 +76,11 @@ let applyReading (reading : Reading) value =
     | SpeedMetersPerSecond speed -> reading.SpeedMetersPerSecond <- toDouble(speed)
     | GustMetersPerSecond speed -> reading.GustMetersPerSecond <- toDouble(speed)
     | DirectionSixteenths direction -> reading.DirectionSixteenths <- new Nullable<double>(double direction)
-    | DeviceId id -> 
-        reading.PartitionKey <- id
-        reading.SourceDevice <- id    
 
-let createReading values = 
+let createReading deviceReading = 
     let reading = new Reading(RowKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks))
-    values |> List.iter (applyReading reading)
-    if reading.DeviceTime = DateTime.MinValue then reading.DeviceTime <- reading.ReadingTime
+    deviceReading.Readings |> List.iter (applyReading reading)
+    if reading.DeviceTime = DateTime.MinValue then reading.DeviceTime <- reading.ReadingTime    
+    reading.PartitionKey <- deviceReading.DeviceId
+    reading.SourceDevice <- deviceReading.DeviceId
     reading
