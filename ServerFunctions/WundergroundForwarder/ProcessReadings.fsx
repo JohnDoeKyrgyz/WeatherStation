@@ -9,7 +9,7 @@ open System.Linq
 open Model
 open Database
 
-let averageMinutes = 10.0
+let averageWindowMinutes = 10.0
 
 let rec readingTime values =
     match values with
@@ -30,10 +30,10 @@ let fixReadings (history : IQueryable<Reading>) (weatherStation : WeatherStation
     let recentReadings =
         match readingTime with
         | Some readingTime ->
-            let tenMinutesAgo = readingTime.Subtract(TimeSpan.FromMinutes(averageMinutes))
+            let windowStartTime = readingTime.Subtract(TimeSpan.FromMinutes(averageWindowMinutes))
             query {
                 for reading in history do
-                where (reading.ReadingTime > tenMinutesAgo && reading.SpeedMetersPerSecond.HasValue)
+                where (reading.ReadingTime > windowStartTime)
                 select reading }
             |> Seq.toList
         | None -> []
