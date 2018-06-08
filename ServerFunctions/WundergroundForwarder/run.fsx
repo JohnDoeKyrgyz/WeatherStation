@@ -3,6 +3,7 @@
 #load "Hologram.fsx"
 #load "Particle.fsx"
 #load "WundergroundPost.fsx"
+#load "ProcessReadings.fsx"
 
 open System
 open System.Linq
@@ -11,6 +12,7 @@ open Microsoft.Azure.WebJobs.Host
 
 open Database
 open Model
+open ProcessReadings
 open WundergroundPost
 
 let tryParse parser content =
@@ -57,36 +59,8 @@ let Run(eventHubMessage: string, weatherStationsTable: IQueryable<WeatherStation
 
                 if weatherStations.Length <> 1 then failwithf "WeatherStation %s %s is incorrectly provisioned" partitionKey deviceSerialNumber
                 let weatherStation = weatherStations.[0]
-
-                //Find the last ten minutes of readings
-                let lastTenMinutesOfReadings =
-                    let tenMinutesAgo = reading.ReadingTime.Subtract(TimeSpan.FromMinutes(10.0))
-                    query {
-                        for reading in readingsTable do
-                        where (reading.ReadingTime > tenMinutesAgo && reading.SpeedMetersPerSecond.HasValue)
-                        select reading }
-                    |> Seq.toList
-
-                let additionalReadings = 
-                    match lastTenMinutesOfReadings with
-                    | mostRecentWindReading :: _ -> 
-                        [
-                            let gust = 
-                                lastTenMinutesOfReadings 
-                                |> Seq.map (fun reading -> reading.SpeedMetersPerSecond.Value) 
-                                |> Seq.max 
-                            yield GustMetersPerSecond gust
-                            
-                            let secondsSinceLastRun = int (reading.ReadingTime.Subtract(mostRecentWindReading.ReadingTime).TotalSeconds)
-                            yield RefreshInterval secondsSinceLastRun
-
-                            if values |> Seq.exists (fun value -> match value with | SpeedMetersPerSecond _ -> true | _ -> false) |> not then
-                                yield SpeedMetersPerSecond mostRecentWindReading.SpeedMetersPerSecond.Value
-                        ]
-                    | _ -> []
-                log.Info(sprintf "Extrapolated readings %A" additionalReadings)
-
-                let values = values @ additionalReadings                                                                    
+                
+                let values = fixReadings readingsTable weatherStation values
 
                 let valuesSeq = values |> Seq.ofList
                 let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log

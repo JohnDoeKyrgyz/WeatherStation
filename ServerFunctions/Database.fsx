@@ -8,6 +8,8 @@ type WeatherStation() =
     member val WundergroundStationId = "" with get, set
     member val WundergroundPassword = "" with get, set
 
+    member val DirectionOffsetDegrees = new Nullable<int>() with get, set
+
 let nullable v =
     match v with
     | Some v -> new Nullable<'T>(v)

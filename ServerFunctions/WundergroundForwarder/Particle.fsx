@@ -21,17 +21,17 @@ let readRegexGroups (log: TraceWriter) key builder (regexGroups : GroupCollectio
         log.Info(sprintf "RegexValue %s %s" key value.Value)
         Some (builder value.Value) else None
 
-let convertPanelVoltage rawValue = (rawValue / 4095.0) * 18.0
+let convertPanelVoltage rawValue = (rawValue / 4095.0m<_>) * 18.0m<_>
 
 let valueParsers (log: TraceWriter) = 
     let read = readRegexGroups log    
     [
-        read "BatteryVoltage" (double >> BatteryChargeVoltage)
-        read "PanelVoltage" (double >> convertPanelVoltage >> PanelVoltage)
-        read "DhtTemperature" (double >> TemperatureCelciusHydrometer)
-        read "DhtHumidity" (double >> HumidityPercent)
-        read "AnemometerWindSpeed" (double >> SpeedMetersPerSecond)
-        read "AnemometerDirection" (int >> DirectionSixteenths)
+        read "BatteryVoltage" (decimal >> LanguagePrimitives.DecimalWithMeasure<volts> >> BatteryChargeVoltage)
+        read "PanelVoltage" (decimal >> LanguagePrimitives.DecimalWithMeasure<volts> >> convertPanelVoltage >> PanelVoltage)
+        read "DhtTemperature" (decimal >> LanguagePrimitives.DecimalWithMeasure<celcius> >> TemperatureCelciusHydrometer)
+        read "DhtHumidity" (decimal >> LanguagePrimitives.DecimalWithMeasure<percent> >> HumidityPercent)
+        read "AnemometerWindSpeed" (decimal >> LanguagePrimitives.DecimalWithMeasure<metersPerSecond> >> SpeedMetersPerSecond)
+        read "AnemometerDirection" (int >> LanguagePrimitives.Int32WithMeasure<sixteenths> >> DirectionSixteenths)
     ]
 
 let parseValues (log: TraceWriter) content =

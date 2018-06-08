@@ -12,37 +12,66 @@ type DevicePlatform =
             | Particle -> "Particle"
             | Hologram -> "Hologram"
 
+[<Measure>]
+type volts
+
+[<Measure>]
+type celcius
+
+[<Measure>]
+type percent
+
+[<Measure>]
+type pascal
+
+[<Measure>]
+type metersPerSecond
+
+[<Measure>]
+type sixteenths
+
+[<Measure>]
+type degrees
+
+[<Measure>]
+type seconds
+
 type ReadingValues =
     | ReadingTime of DateTime
     | DeviceTime of DateTime
-    | SupplyVoltage of double
-    | BatteryChargeVoltage of double
-    | PanelVoltage of double
-    | TemperatureCelciusHydrometer of double
-    | TemperatureCelciusBarometer of double
-    | HumidityPercent of double
-    | PressurePascal of double
-    | SpeedMetersPerSecond of double
-    | GustMetersPerSecond of double
-    | DirectionSixteenths of int
+    | SupplyVoltage of decimal<volts>
+    | BatteryChargeVoltage of decimal<volts>
+    | PanelVoltage of decimal<volts>
+    | TemperatureCelciusHydrometer of decimal<celcius>
+    | TemperatureCelciusBarometer of decimal<celcius>
+    | HumidityPercent of decimal<percent>
+    | PressurePascal of decimal<pascal>
+    | SpeedMetersPerSecond of decimal<metersPerSecond>
+    | GustMetersPerSecond of decimal<metersPerSecond>
+    | DirectionSixteenths of int<sixteenths>
     | DeviceId of string
-    | RefreshInterval of int
+    | RefreshInterval of int<seconds>    
 
 let applyReading (reading : Reading) value =
+
+    let toDouble (v : decimal<'T>) = 
+        let cleanV = (v / LanguagePrimitives.DecimalWithMeasure<'T> 1.0m)
+        new Nullable<double>(double cleanV)
+
     match value with
-    | RefreshInterval seconds -> reading.RefreshIntervalSeconds <- seconds
+    | RefreshInterval seconds -> reading.RefreshIntervalSeconds <- seconds / 1<seconds>
     | ReadingTime time -> reading.ReadingTime <- time.ToUniversalTime()
     | DeviceTime time -> reading.DeviceTime <- time.ToUniversalTime()
-    | SupplyVoltage voltage -> reading.SupplyVoltage <- new Nullable<double>(voltage)
-    | BatteryChargeVoltage voltage -> reading.BatteryChargeVoltage <- new Nullable<double>(voltage)
-    | PanelVoltage voltage -> reading.PanelVoltage <- new Nullable<double>(voltage)
-    | TemperatureCelciusBarometer temp -> reading.TemperatureCelciusBarometer <- new Nullable<double>(temp)
-    | TemperatureCelciusHydrometer temp -> reading.TemperatureCelciusHydrometer <- new Nullable<double>(temp)
-    | HumidityPercent perc -> reading.HumidityPercent <- new Nullable<double>(perc)
-    | PressurePascal perc -> reading.PressurePascal <- new Nullable<double>(perc)
-    | SpeedMetersPerSecond speed -> reading.SpeedMetersPerSecond <- new Nullable<double>(speed)
-    | GustMetersPerSecond speed -> reading.GustMetersPerSecond <- new Nullable<double>(speed)
-    | DirectionSixteenths direction -> reading.DirectionSixteenths <- new Nullable<double>(double direction)    
+    | SupplyVoltage voltage -> reading.SupplyVoltage <- toDouble(voltage)
+    | BatteryChargeVoltage voltage -> reading.BatteryChargeVoltage <- toDouble(voltage)
+    | PanelVoltage voltage -> reading.PanelVoltage <- toDouble(voltage)
+    | TemperatureCelciusBarometer temp -> reading.TemperatureCelciusBarometer <- toDouble(temp)
+    | TemperatureCelciusHydrometer temp -> reading.TemperatureCelciusHydrometer <- toDouble(temp)
+    | HumidityPercent perc -> reading.HumidityPercent <- toDouble(perc)
+    | PressurePascal perc -> reading.PressurePascal <- toDouble(perc)
+    | SpeedMetersPerSecond speed -> reading.SpeedMetersPerSecond <- toDouble(speed)
+    | GustMetersPerSecond speed -> reading.GustMetersPerSecond <- toDouble(speed)
+    | DirectionSixteenths direction -> reading.DirectionSixteenths <- new Nullable<double>(double direction)
     | DeviceId id -> 
         reading.PartitionKey <- id
         reading.SourceDevice <- id    
