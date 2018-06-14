@@ -36,6 +36,8 @@ type degrees
 [<Measure>]
 type seconds
 
+let degreesPerSixteenth = 22.5<degrees/sixteenths>
+
 type ReadingValues =
     | ReadingTime of DateTime
     | DeviceTime of DateTime

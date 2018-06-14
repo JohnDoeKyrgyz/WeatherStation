@@ -64,9 +64,9 @@ let fixReadings (history : IQueryable<Reading>) (weatherStation : WeatherStation
                 match reading with
                 | DirectionSixteenths direction ->                    
                     let offset = float offset.Value * 1.0<degrees>
-                    let degrees = float direction * 16.0<degrees>
+                    let degrees = degreesPerSixteenth * (float direction) * 1.0<sixteenths>
                     let correctDegrees = offset + degrees % 360.0<degrees>
-                    let trueDegrees = correctDegrees / 22.5<degrees/sixteenths>
+                    let trueDegrees = correctDegrees / degreesPerSixteenth
                     DirectionSixteenths ((int trueDegrees) * 1<sixteenths>)
                 | value -> value]
         | _-> values
