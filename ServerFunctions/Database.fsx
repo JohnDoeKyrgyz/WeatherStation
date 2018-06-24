@@ -1,8 +1,5 @@
 #load "Preamble.fsx"
 
-#r "Microsoft.Azure.WebJobs"
-#r "Microsoft.WindowsAzure.Storage"
-
 open System
 open Microsoft.WindowsAzure.Storage.Table;
 
@@ -10,6 +7,8 @@ type WeatherStation() =
     inherit TableEntity()
     member val WundergroundStationId = "" with get, set
     member val WundergroundPassword = "" with get, set
+
+    member val DirectionOffsetDegrees = new Nullable<int>() with get, set
 
 let nullable v =
     match v with
@@ -28,6 +27,7 @@ type Reading() =
     member val TemperatureCelciusBarometer = new Nullable<double>() with get, set
     member val HumidityPercent = new Nullable<double>() with get, set
     member val PressurePascal = new Nullable<double>() with get, set
+    member val GustMetersPerSecond = new Nullable<double>() with get, set
     member val SpeedMetersPerSecond = new Nullable<double>() with get, set
     member val DirectionSixteenths = new Nullable<double>() with get, set
     member val SourceDevice = "" with get, set

@@ -1,5 +1,4 @@
 /node_modules
 /packages
-/.paket
 /package.json
 /local.settings.json

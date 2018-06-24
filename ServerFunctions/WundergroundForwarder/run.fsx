@@ -1,10 +1,9 @@
-#I __SOURCE_DIRECTORY__
 #load "../Preamble.fsx"
 #load "../Database.fsx"
 #load "Hologram.fsx"
 #load "Particle.fsx"
 #load "WundergroundPost.fsx"
-#r "../packages/FSharp.Data/lib/net40/FSharp.Data.dll"
+#load "ProcessReadings.fsx"
 
 open System
 open System.Linq
@@ -13,6 +12,7 @@ open Microsoft.Azure.WebJobs.Host
 
 open Database
 open Model
+open ProcessReadings
 open WundergroundPost
 
 let tryParse parser content =
@@ -43,51 +43,30 @@ let Run(eventHubMessage: string, weatherStationsTable: IQueryable<WeatherStation
                     | _ -> ()]
 
             match successfulAttempts with
-            | (deviceType, values) :: _ ->
+            | (deviceType, deviceReading) :: _ ->
 
-                log.Info(sprintf "%A" values)
-                let reading = Model.createReading values
+                log.Info(sprintf "%A" deviceReading)
 
                 let partitionKey = string deviceType
-                let deviceSerialNumber = reading.SourceDevice
-                log.Info(sprintf "Searching for device %s %s in registry" partitionKey deviceSerialNumber)
+                log.Info(sprintf "Searching for device %s %s in registry" partitionKey deviceReading.DeviceId)
 
                 let weatherStations = 
                     weatherStationsTable
-                        .Where( fun station -> station.PartitionKey = partitionKey && station.RowKey = deviceSerialNumber )
+                        .Where( fun station -> station.PartitionKey = partitionKey && station.RowKey = deviceReading.DeviceId )
                         .ToArray()
 
-                if weatherStations.Length <> 1 then failwithf "WeatherStation %s %s is incorrectly provisioned" partitionKey deviceSerialNumber
+                if weatherStations.Length <> 1 then failwithf "WeatherStation %s %s is incorrectly provisioned" partitionKey deviceReading.DeviceId
                 let weatherStation = weatherStations.[0]
-
-                //Find the last ten minutes of readings
-                let lastTenMinutesOfReadings =
-                    let tenMinutesAgo = reading.ReadingTime.Subtract(TimeSpan.FromMinutes(10.0))
-                    query {
-                        for reading in readingsTable do
-                        where (reading.ReadingTime > tenMinutesAgo)
-                        select reading.SpeedMetersPerSecond }
-                    |> Seq.toList
-                    |> Seq.filter (fun value -> value.HasValue)
-                    |> Seq.map (fun value -> value.Value)
-                    |> Seq.toList
-
-                let additionalReadings = 
-                    match lastTenMinutesOfReadings with
-                    | mostRecentWindReading :: _ -> [
-                        yield lastTenMinutesOfReadings |> Seq.max |> GustMetersPerSecond
-                        if values |> Seq.exists (fun value -> match value with | SpeedMetersPerSecond _ -> true | _ -> false) |> not then
-                            yield SpeedMetersPerSecond mostRecentWindReading]
-                    | _ -> []
-                log.Info(sprintf "Extrapolated readings %A" additionalReadings)
-
-                let values = values @ additionalReadings                                                                    
+                
+                let values = fixReadings readingsTable weatherStation deviceReading.Readings
+                log.Info(sprintf "Fixed Values %A" values)
 
                 let valuesSeq = values |> Seq.ofList
                 let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
 
                 log.Info(sprintf "%A" wundergroundResponse)
-
+                
+                let reading = Model.createReading deviceReading
                 return Some reading
             | _ -> 
                 log.Info("No values parsed")

@@ -1,3 +1,4 @@
+#load "../Preamble.fsx"
 #load "Model.fsx"
 
 open Model
@@ -7,12 +8,12 @@ open FSharp.Data
 let queryParameter value =
     match value with
     | ReadingTime time -> Some( "dateutc", time.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss") )
-    | SpeedMetersPerSecond speed -> Some( "windspeedmph", string (speed * 2.23694) )
-    | GustMetersPerSecond gust -> Some( "windgustmph", string (gust * 2.23694) )
+    | SpeedMetersPerSecond speed -> Some( "windspeedmph", string (speed * 2.23694m<_>) )
+    | GustMetersPerSecond gust -> Some( "windgustmph", string (gust * 2.23694m<_>) )
     | DirectionSixteenths direction -> Some( "winddir", string (float direction * (360.0 / 16.0)))
     | HumidityPercent humidity -> Some( "humidity", string (humidity))
     | RefreshInterval intervalSeconds -> Some( "rtfreq", string intervalSeconds )
-    | TemperatureCelciusHydrometer tempC -> Some( "tempf", string (((9.0 / 5.0) * tempC) + 32.0))
+    | TemperatureCelciusHydrometer tempC -> Some( "tempf", string (((9.0m<_> / 5.0m<_>) * tempC) + 32.0m<_>))
     | _ -> None
 
 let queryParameters values = [
