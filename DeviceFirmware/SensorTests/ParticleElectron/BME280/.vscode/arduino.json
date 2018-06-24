@@ -1,0 +1,7 @@
+{
+    "port": "COM15",
+    "board": "arduino:avr:pro",
+    "configuration": "cpu=16MHzatmega328",
+    "sketch": "bme280.ino",
+    "output": "build"
+}
