@@ -13,7 +13,7 @@ open Model
 let ParticleSample = __SOURCE_DIRECTORY__ + @"\ParticleStatusUpdate.json"
 type ParticlePayload = JsonProvider<ParticleSample, SampleIsList = true>
 
-let readingParser = new Regex(@"(?<SettingsCounter>\d+):(?<BatteryVoltage>\d+\.\d+):(?<PanelVoltage>\d+)\|(d(?<DhtTemperature>\d+\.\d+):(?<DhtHumidity>\d+.\d+))?(a(?<AnemometerWindSpeed>\d+\.\d+):(?<AnemometerDirection>\d+))?")
+let readingParser = new Regex(@"(?<SettingsCounter>\d+):(?<BatteryVoltage>\d+\.\d+):(?<PanelVoltage>\d+)\|(b(?<BmpTemperature>\d+\.\d+):(?<BmpPressure>\d+.\d+))(d(?<DhtTemperature>\d+\.\d+):(?<DhtHumidity>\d+.\d+))?(a(?<AnemometerWindSpeed>\d+\.\d+):(?<AnemometerDirection>\d+))?")
 
 let readRegexGroups (log: TraceWriter) key builder (regexGroups : GroupCollection) =
     let value = regexGroups.[key : string]
@@ -28,6 +28,8 @@ let valueParsers (log: TraceWriter) =
     [
         read "BatteryVoltage" (decimal >> LanguagePrimitives.DecimalWithMeasure<volts> >> BatteryChargeVoltage)
         read "PanelVoltage" (decimal >> LanguagePrimitives.DecimalWithMeasure<volts> >> convertPanelVoltage >> PanelVoltage)
+        read "BmpTemperature" (decimal >> LanguagePrimitives.DecimalWithMeasure<celcius> >> TemperatureCelciusBarometer)
+        read "BmpPressure" (decimal >> LanguagePrimitives.DecimalWithMeasure<pascal> >> PressurePascal)
         read "DhtTemperature" (decimal >> LanguagePrimitives.DecimalWithMeasure<celcius> >> TemperatureCelciusHydrometer)
         read "DhtHumidity" (decimal >> LanguagePrimitives.DecimalWithMeasure<percent> >> HumidityPercent)
         read "AnemometerWindSpeed" (decimal >> LanguagePrimitives.DecimalWithMeasure<metersPerSecond> >> SpeedMetersPerSecond)
