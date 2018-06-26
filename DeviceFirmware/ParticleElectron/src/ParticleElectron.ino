@@ -56,6 +56,8 @@ Settings settings;
 #define diagnosticMode settings.diagnositicCycles
 unsigned long duration;
 
+Reading initialReading;
+
 char* serializeToJson(JsonObject& json)
 {
     int length = json.measureLength() + 1;
@@ -63,6 +65,57 @@ char* serializeToJson(JsonObject& json)
     jsonString[length] = NULL;
     json.printTo(jsonString, length);
     return jsonString;
+}
+
+bool timeout(int timeout, std::function<bool()> opperation)
+{
+    unsigned long endTime = millis() + timeout;
+    bool result = false;
+    while(!(result = opperation()) && millis() < endTime)
+    {
+        Serial.print(".");
+        delay(10);
+    }
+    return result;
+}
+
+bool readAnemometer(Reading *reading)
+{
+    Serial.print("ANEMOMETER ");
+    bool result = timeout(ANEMOMETER_TIME, [reading]()
+    {
+        return laCrosseTX23.read(reading->windSpeed, reading->windDirection);
+    });
+    Serial.println();
+    return result;
+}
+
+bool readVoltage(Reading *reading)
+{
+    reading->batteryVoltage = gauge.getVCell();
+    int panelVoltage = analogRead(PANEL_VOLTAGE);
+    reading->panelVoltage = panelVoltage;
+    return true;
+}
+
+bool readDht(Reading *reading)
+{
+    Serial.print("DHT ");
+    bool result = timeout(DHT_INIT, [reading]()
+    {
+        reading->dhtTemperature = dht.getTempCelcius();
+        reading->humidity = dht.getHumidity();
+        return !isnan(reading->dhtTemperature) && !isnan(reading->humidity);
+    });
+    Serial.println();
+    return result;
+}
+
+bool readBmp280(Reading *reading)
+{
+    reading->bmpTemperature = bmp280.readTemperature();
+    reading->pressure = bmp280.readPressure();
+    return !isnan(reading->bmpTemperature) && !isnan(reading->pressure) && reading->pressure > 0;
 }
 
 void deviceSetup()
@@ -85,13 +138,18 @@ void deviceSetup()
         saveSettings(&settings);
     }
 
-    pinMode(SENSOR_POWER, OUTPUT);
-
     //turn on the sensors    
+    pinMode(SENSOR_POWER, OUTPUT);    
     digitalWrite(SENSOR_POWER, HIGH);
 
     dht.begin();
     bmp280.begin();
+
+    //take an initial wind reading
+    if(!(initialReading.anemometerRead = readAnemometer(&initialReading)))
+    {
+        Serial.println("ERROR: Could not get initial wind reading");
+    }
 }
 STARTUP(deviceSetup());
 
@@ -145,59 +203,6 @@ char* serialize(Reading *reading)
     return messageBuffer;
 }
 
-
-bool timeout(int timeout, std::function<bool()> opperation)
-{
-    unsigned long endTime = millis() + timeout;
-    bool result = false;
-    while(millis() < endTime && !(result = opperation()))
-    {
-        Serial.print(".");
-        delay(10);
-    }
-    return result;
-}
-
-bool readAnemometer(Reading *reading)
-{
-    Serial.print("ANEMOMETER ");
-    bool result = timeout(ANEMOMETER_TIME, [reading]()
-    {
-        return laCrosseTX23.read(reading->windSpeed, reading->windDirection);
-    });
-    Serial.println();
-    return result;
-}
-
-bool readVoltage(Reading *reading)
-{
-    reading->batteryVoltage = gauge.getVCell();
-    int panelVoltage = analogRead(PANEL_VOLTAGE);
-    //Serial.println(panelVoltage);
-    reading->panelVoltage = panelVoltage;
-    return true;
-}
-
-bool readDht(Reading *reading)
-{
-    Serial.print("DHT ");
-    bool result = timeout(DHT_INIT, [reading]()
-    {
-        reading->dhtTemperature = dht.getTempCelcius();
-        reading->humidity = dht.getHumidity();
-        return !isnan(reading->dhtTemperature) && !isnan(reading->humidity);
-    });
-    Serial.println();
-    return result;
-}
-
-bool readBmp280(Reading *reading)
-{
-    reading->bmpTemperature = bmp280.readTemperature();
-    reading->pressure = bmp280.readPressure();
-    return !isnan(reading->bmpTemperature) && !isnan(reading->pressure) && reading->pressure > 0;
-}
-
 void loop()
 {
     Reading reading;
@@ -217,7 +222,19 @@ void loop()
     {
         Serial.println("ERROR: Could not read anemometer");
     }
+
     digitalWrite(SENSOR_POWER, LOW);
+
+    //take the greater of the initial wind reading or the most recent wind reading
+    if(!reading.anemometerRead || (reading.anemometerRead && initialReading.anemometerRead && initialReading.windSpeed > reading.windSpeed))
+    {
+        reading.windSpeed = initialReading.windSpeed;
+        reading.windDirection = initialReading.windDirection;
+        Serial.print("Using faster wind speed ");
+        Serial.print(initialReading.windSpeed);
+        Serial.print(", ");
+        Serial.println(reading.windSpeed);        
+    }
 
     //send serialized reading to the cloud
     char* publishedReading = serialize(&reading);
