@@ -46,7 +46,8 @@ type ReadingValues =
     | PanelVoltage of decimal<volts>
     | TemperatureCelciusHydrometer of decimal<celcius>
     | TemperatureCelciusBarometer of decimal<celcius>
-    | HumidityPercent of decimal<percent>
+    | HumidityPercentHydrometer of decimal<percent>
+    | HumidityPercentBarometer of decimal<percent>
     | PressurePascal of decimal<pascal>
     | SpeedMetersPerSecond of decimal<metersPerSecond>
     | GustMetersPerSecond of decimal<metersPerSecond>
@@ -73,7 +74,8 @@ let applyReading (reading : Reading) value =
     | PanelVoltage voltage -> reading.PanelVoltage <- toDouble(voltage)
     | TemperatureCelciusBarometer temp -> reading.TemperatureCelciusBarometer <- toDouble(temp)
     | TemperatureCelciusHydrometer temp -> reading.TemperatureCelciusHydrometer <- toDouble(temp)
-    | HumidityPercent perc -> reading.HumidityPercent <- toDouble(perc)
+    | HumidityPercentHydrometer perc -> reading.HumidityPercentHydrometer <- toDouble(perc)
+    | HumidityPercentBarometer perc -> reading.HumidityPercentBarometer <- toDouble(perc)
     | PressurePascal perc -> reading.PressurePascal <- toDouble(perc)
     | SpeedMetersPerSecond speed -> reading.SpeedMetersPerSecond <- toDouble(speed)
     | GustMetersPerSecond speed -> reading.GustMetersPerSecond <- toDouble(speed)
