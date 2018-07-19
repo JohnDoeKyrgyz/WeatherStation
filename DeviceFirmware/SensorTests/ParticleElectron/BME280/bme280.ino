@@ -18,15 +18,15 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_Sensor.h>
-#include <Adafruit_BMP280.h>
+#include <Adafruit_BME280.h>
 #include <Wire.h>
 
 #define BMP_CS A2
 
-Adafruit_BMP280 bmpI2C;                 // I2C
-Adafruit_BMP280 bmpHardwareSpi(BMP_CS); // hardware SPI
+Adafruit_BME280 bmpI2C;                 // I2C
+Adafruit_BME280 bmpHardwareSpi(BMP_CS); // hardware SPI
 //Adafruit_BME280 bmpSoftwareSpi(BMP_CS, BMP_MOSI, BMP_MISO, BMP_SCK);
-Adafruit_BMP280 *sensor;
+Adafruit_BME280 *sensor;
 String connectionType;
 
 void setup()
@@ -117,6 +117,10 @@ void loop()
   Serial.print("Approx altitude = ");
   Serial.print(sensor->readAltitude(1013.25)); // this should be adjusted to your local forcase
   Serial.println(" m");
+
+  Serial.print("Humidity = ");
+  Serial.print(sensor->readHumidity()); // this should be adjusted to your local forcase
+  Serial.println(" %");
 
   Serial.println();
   delay(2000);

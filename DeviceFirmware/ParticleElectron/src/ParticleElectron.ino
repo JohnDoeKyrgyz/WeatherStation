@@ -5,7 +5,7 @@
 #include <Adafruit_DHT.h>
 #include <LaCrosse_TX23.h>
 #include <Adafruit_Sensor.h>
-#include <Adafruit_BMP280.h>
+#include <Adafruit_BME280.h>
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -24,10 +24,11 @@ struct Reading
     int windDirection;
     bool dhtRead;
     float dhtTemperature;
-    float humidity;
-    bool bmpRead;
-    float bmpTemperature;
+    float dhtHumidity;
+    bool bmeRead;
+    float bmeTemperature;
     float pressure;
+    float bmeHumidity;
 };
 
 /* Connections */
@@ -44,11 +45,10 @@ struct Reading
 #define DHTTYPE DHT22 // DHT 22  (AM2302), AM2321
 #define DHT_INIT 1000
 #define ANEMOMETER_TIME 1000
-#define BMP_CS A2
 
 DHT dht(DHT_IN, DHTTYPE);
 
-Adafruit_BMP280 bmp280(BMP_CS);
+Adafruit_BME280 bme280;
 LaCrosse_TX23 laCrosseTX23(ANEMOMETER);
 FuelGauge gauge;
 
@@ -104,18 +104,19 @@ bool readDht(Reading *reading)
     bool result = timeout(DHT_INIT, [reading]()
     {
         reading->dhtTemperature = dht.getTempCelcius();
-        reading->humidity = dht.getHumidity();
-        return !isnan(reading->dhtTemperature) && !isnan(reading->humidity);
+        reading->dhtHumidity = dht.getHumidity();
+        return !isnan(reading->dhtTemperature) && !isnan(reading->dhtHumidity);
     });
     Serial.println();
     return result;
 }
 
-bool readBmp280(Reading *reading)
+bool readBme280(Reading *reading)
 {
-    reading->bmpTemperature = bmp280.readTemperature();
-    reading->pressure = bmp280.readPressure();
-    return !isnan(reading->bmpTemperature) && !isnan(reading->pressure) && reading->pressure > 0;
+    reading->bmeTemperature = bme280.readTemperature();
+    reading->pressure = bme280.readPressure();
+    reading->bmeHumidity = bme280.readHumidity();
+    return !isnan(reading->bmeTemperature) && !isnan(reading->pressure) && reading->pressure > 0 && !isnan(reading->bmeHumidity);
 }
 
 void deviceSetup()
@@ -143,7 +144,7 @@ void deviceSetup()
     digitalWrite(SENSOR_POWER, HIGH);
 
     dht.begin();
-    bmp280.begin();
+    bme280.begin(0x76);
 
     //take an initial wind reading
     if(!(initialReading.anemometerRead = readAnemometer(&initialReading)))
@@ -188,13 +189,13 @@ char* serialize(Reading *reading)
 {
     char* buffer = messageBuffer;
     buffer += sprintf(buffer, "%d:%f:%d|", reading->version, reading->batteryVoltage, reading->panelVoltage);
-    if(reading->bmpRead)
+    if(reading->bmeRead)
     {
-        buffer += sprintf(buffer, "b%f:%f", reading->bmpTemperature, reading->pressure);
+        buffer += sprintf(buffer, "b%f:%f:%f", reading->bmeTemperature, reading->pressure, reading->bmeHumidity);
     }
     if(reading->dhtRead)
     {
-        buffer += sprintf(buffer, "d%f:%f", reading->dhtTemperature, reading->humidity);
+        buffer += sprintf(buffer, "d%f:%f", reading->dhtTemperature, reading->dhtHumidity);
     }
     if(reading->anemometerRead)
     {
@@ -210,9 +211,9 @@ void loop()
     //read data
     reading.version = settings.version;
     readVoltage(&reading);
-    if(!(reading.bmpRead = readBmp280(&reading)))
+    if(!(reading.bmeRead = readBme280(&reading)))
     {
-        Serial.println("ERROR: BMP280 temp/pressure sensor");
+        Serial.println("ERROR: BME280 temp/pressure sensor");
     }
     if(!(reading.dhtRead = readDht(&reading)))
     {
