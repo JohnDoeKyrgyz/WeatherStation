@@ -35,7 +35,7 @@ let parseValues (log: TraceWriter) content =
         let possibleValues = [
             Some (RefreshInterval(readInt 0 * 1<seconds>))
             readOptionalDecimal 1 (LanguagePrimitives.DecimalWithMeasure >> TemperatureCelciusHydrometer)
-            readOptionalDecimal 2 (LanguagePrimitives.DecimalWithMeasure >> HumidityPercent)
+            readOptionalDecimal 2 (LanguagePrimitives.DecimalWithMeasure >> HumidityPercentHydrometer)
             readOptionalDecimal 3 (LanguagePrimitives.DecimalWithMeasure >> TemperatureCelciusBarometer)
             readOptionalDecimal 4 (LanguagePrimitives.DecimalWithMeasure >> PressurePascal)
             readOptionalDecimal 5 (LanguagePrimitives.DecimalWithMeasure >> SupplyVoltage)

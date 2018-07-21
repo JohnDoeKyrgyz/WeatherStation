@@ -11,7 +11,7 @@ let queryParameter value =
     | SpeedMetersPerSecond speed -> Some( "windspeedmph", string (speed * 2.23694m<_>) )
     | GustMetersPerSecond gust -> Some( "windgustmph", string (gust * 2.23694m<_>) )
     | DirectionSixteenths direction -> Some( "winddir", string (float direction * (360.0 / 16.0)))
-    | HumidityPercent humidity -> Some( "humidity", string (humidity))
+    | HumidityPercentBarometer humidity -> Some( "humidity", string (humidity))
     | RefreshInterval intervalSeconds -> Some( "rtfreq", string intervalSeconds )
     | TemperatureCelciusHydrometer tempC -> Some( "tempf", string (((9.0m<_> / 5.0m<_>) * tempC) + 32.0m<_>))
     | _ -> None
