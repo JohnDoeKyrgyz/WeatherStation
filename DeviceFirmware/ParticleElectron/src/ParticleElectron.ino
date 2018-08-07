@@ -119,6 +119,12 @@ bool readBme280(Reading *reading)
     return !isnan(reading->bmeTemperature) && !isnan(reading->pressure) && reading->pressure > 0 && !isnan(reading->bmeHumidity);
 }
 
+void onError(char* message)
+{
+    RGB.color(255, 255, 0);
+    Serial.println(message);
+}
+
 void deviceSetup()
 {
     duration = millis();
@@ -149,7 +155,7 @@ void deviceSetup()
     //take an initial wind reading
     if(!(initialReading.anemometerRead = readAnemometer(&initialReading)))
     {
-        Serial.println("ERROR: Could not get initial wind reading");
+        onError("ERROR: Could not get initial wind reading");
     }
 }
 STARTUP(deviceSetup());
@@ -211,17 +217,18 @@ void loop()
     //read data
     reading.version = settings.version;
     readVoltage(&reading);
+
     if(!(reading.bmeRead = readBme280(&reading)))
     {
-        Serial.println("ERROR: BME280 temp/pressure sensor");
+        onError("ERROR: BME280 temp/pressure sensor");
     }
     if(!(reading.dhtRead = readDht(&reading)))
     {
-        Serial.println("ERROR: DHT22 temp/humidity sensor");
+        onError("ERROR: DHT22 temp/humidity sensor");
     }
     if(!(reading.anemometerRead = readAnemometer(&reading)))
     {
-        Serial.println("ERROR: Could not read anemometer");
+        onError("ERROR: Could not read anemometer");
     }
 
     digitalWrite(SENSOR_POWER, LOW);
