@@ -14,12 +14,24 @@ let port = 8085us
 
 let getInitCounter() : Task<Counter> = task { return 42 }
 
+let getStations() =
+    task { 
+        return [
+            {Name = "Main"; WundergroundId = "abcdxyx"; Location = {Latitude = 12.0m; Longitude = 12.0m}}
+            {Name = "Secondary"; WundergroundId = "abcdxyx"; Location = {Latitude = 12.0m; Longitude = 12.0m}}]}
+
 let webApp = router {
     get "/api/init" (fun next ctx ->
         task {
             let! counter = getInitCounter()
             return! Successful.OK counter next ctx
         })
+        
+    get "/api/stations" (fun next ctx ->
+        task {
+            let! stations = getStations()
+            return! ctx.WriteJsonAsync stations
+        })        
 }
 
 let configureSerialization (services:IServiceCollection) =
