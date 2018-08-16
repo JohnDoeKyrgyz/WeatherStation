@@ -41,9 +41,12 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     | Stations Loading ->
         let nextModel = { currentModel with Stations = Loading }
         nextModel, loadStationsCmd
-    | Stations result  ->
+    | Stations result ->
         let nextModel = { currentModel with Stations = result }
         nextModel, Cmd.none
+    | Select station ->
+        let nextModel = { currentModel with SelectedStation = Some station }
+        nextModel, Cmd.none        
 
 let safeComponents =
     let components =
@@ -63,10 +66,21 @@ let safeComponents =
           str " powered by: "
           components ]
 
+let stationsList stations =
+    table [] [
+        thead [] [
+            th [] [str "Name"]
+            th [] [str "Status"]]
+        tbody [] 
+            [for station in stations do
+                yield tr [] [
+                    td [] [str station.Name]
+                    td [] [str "Nominal"]]]]
+    
 let show model = 
     match model.Stations with
     | Loading -> str "Loading..."
-    | Loaded (Ok data) -> str (string data)
+    | Loaded (Ok data) -> stationsList data
     | Loaded (Error error) -> str error.Message
 
 let button txt onClick =
