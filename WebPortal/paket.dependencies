@@ -3,10 +3,8 @@ group Server
     source https://api.nuget.org/v3/index.json
 
     nuget FSharp.Core
-    nuget Suave
-    nuget Fable.Remoting.Suave 
-    nuget Microsoft.ApplicationInsights.AspNetCore ~> 2.2
-    nuget WindowsAzure.Storage
+    nuget Saturn
+    nuget Fable.JsonConverter
 
 group Client
     storage: none
@@ -16,7 +14,6 @@ group Client
     nuget Fable.Elmish.Debugger
     nuget Fable.Elmish.React
     nuget Fable.Elmish.HMR
-    nuget Fable.Remoting.Client
     nuget Fulma
 
     clitool dotnet-fable
@@ -29,8 +26,4 @@ group Build
     nuget Fake.Core.Target
     nuget Fake.DotNet.Cli
     nuget Fake.IO.FileSystem
-    nuget Fake.Core.Environment
-    nuget Fake.Core.Trace
-    nuget Fake.IO.Zip
-    github CompositionalIT/fshelpers src/FsHelpers/ArmHelper/ArmHelper.fs
 

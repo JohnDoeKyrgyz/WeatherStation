@@ -1,6 +1,0 @@
-group Server
-    FSharp.Core
-    Suave
-    Microsoft.ApplicationInsights.AspNetCore
-    WindowsAzure.Storage
-    Fable.Remoting.Suave
