@@ -66,29 +66,34 @@ let safeComponents =
           str " powered by: "
           components ]
 
-let stationsList stations =
-    table [] [
-        thead [] [
-            th [] [str "Name"]
-            th [] [str "Status"]]
-        tbody [] 
-            [for station in stations do
-                yield tr [] [
-                    td [] [a [Href (sprintf "https://www.wunderground.com/personal-weather-station/dashboard?ID=%s" station.WundergroundId) ] [str station.Name]]
-                    td [] [str (string station.Status)]]]]
-    
-let show model = 
-    match model.Stations with
-    | Loading -> str "Loading..."
-    | Loaded (Ok data) -> stationsList data
-    | Loaded (Error error) -> str error.Message
-
 let button txt onClick =
     Button.button
         [ Button.IsFullWidth
           Button.Color IsPrimary
           Button.OnClick onClick ]
         [ str txt ]
+
+let stationsList dispatch stations =
+    table [] [
+        thead [] [
+            th [] [str "Name"]
+            th [] [str "Status"]
+            th [] [button "Reload" (fun _ -> dispatch (Stations Loading))]]
+        tbody [] 
+            [for station in stations do
+                yield tr [] [
+                    td [] [a [Href (sprintf "https://www.wunderground.com/personal-weather-station/dashboard?ID=%s" station.WundergroundId) ] [str station.Name]]
+                    td [] [str (string station.Status)]
+                    td [] [
+                        Button.button [
+                            Button.IsFullWidth
+                            Button.Color IsPrimary] [str "Details"]]]]]
+    
+let show dispatch model = 
+    match model.Stations with
+    | Loading -> str "Loading..."
+    | Loaded (Ok data) -> stationsList dispatch data
+    | Loaded (Error error) -> str error.Message
 
 let view (model : Model) (dispatch : Msg -> unit) =
     div []
@@ -99,7 +104,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
 
           Container.container []
               [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
-                    [ Heading.h3 [] [ show model ] ]
+                    [ Heading.h3 [] [ show dispatch model ] ]
                 Columns.columns []
                     [ Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]
 
