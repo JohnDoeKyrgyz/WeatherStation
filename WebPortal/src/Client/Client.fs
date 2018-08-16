@@ -74,8 +74,8 @@ let stationsList stations =
         tbody [] 
             [for station in stations do
                 yield tr [] [
-                    td [] [str station.Name]
-                    td [] [str "Nominal"]]]]
+                    td [] [a [Href (sprintf "https://www.wunderground.com/personal-weather-station/dashboard?ID=%s" station.WundergroundId) ] [str station.Name]]
+                    td [] [str (string station.Status)]]]]
     
 let show model = 
     match model.Stations with
@@ -95,14 +95,13 @@ let view (model : Model) (dispatch : Msg -> unit) =
         [ Navbar.navbar [ Navbar.Color IsPrimary ]
             [ Navbar.Item.div [ ]
                 [ Heading.h2 [ ]
-                    [ str "SAFE Template" ] ] ]
+                    [ str "Weather Stations" ] ] ]
 
           Container.container []
               [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
                     [ Heading.h3 [] [ show model ] ]
                 Columns.columns []
-                    [ Column.column [] [ button "-" (fun _ -> dispatch (Stations Loading)) ]
-                      Column.column [] [ button "+" (fun _ -> dispatch (Stations Loading)) ] ] ]
+                    [ Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]
 
           Footer.footer [ ]
                 [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]

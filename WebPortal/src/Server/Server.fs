@@ -17,8 +17,8 @@ let getInitCounter() : Task<Counter> = task { return 42 }
 let getStations() =
     task { 
         return [
-            {Name = "Main"; WundergroundId = "abcdxyx"; Location = {Latitude = 12.0m; Longitude = 12.0m}}
-            {Name = "Secondary"; WundergroundId = "abcdxyx"; Location = {Latitude = 12.0m; Longitude = 12.0m}}]}
+            {Name = "Main"; WundergroundId = "KVTWESTR7"; Status = Active; Location = {Latitude = 12.0m; Longitude = 12.0m}}
+            {Name = "Secondary"; WundergroundId = "abcdxyx"; Status = Offline; Location = {Latitude = 12.0m; Longitude = 12.0m}}]}
 
 let webApp = router {
     get "/api/init" (fun next ctx ->
