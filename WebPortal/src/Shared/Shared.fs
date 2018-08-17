@@ -1,4 +1,4 @@
-namespace Shared
+namespace WeatherStations.Shared
 
 type Counter = int
 

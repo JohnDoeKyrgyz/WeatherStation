@@ -6,6 +6,7 @@ group Server
     nuget Saturn
     nuget Fable.JsonConverter
     nuget FSharp.Azure.StorageTypeProvider
+    nuget WindowsAzure.Storage = 7.2.1.0
 
 group Client
     storage: none
