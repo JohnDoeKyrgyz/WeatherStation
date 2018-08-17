@@ -1,3 +1,5 @@
+namespace Server
+
 open System.IO
 open System.Threading.Tasks
 
