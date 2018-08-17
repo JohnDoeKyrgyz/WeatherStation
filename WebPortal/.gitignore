@@ -12,3 +12,4 @@ release.sh
 *.user
 deploy
 *.user
+src/Server/appsettings.json

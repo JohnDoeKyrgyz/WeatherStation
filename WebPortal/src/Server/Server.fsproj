@@ -10,7 +10,7 @@
         <Compile Include="Server.fs" />
     </ItemGroup>
     <ItemGroup>
-      <Content Include="appsettings.json">
+      <Content Include="App.config">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
