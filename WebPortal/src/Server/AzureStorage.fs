@@ -15,7 +15,7 @@ module AzureStorage =
         "Hologram"
     ]
 
-    let getStations() = 
+    let getWeatherStations() = 
         task {
             return
                 [for partitionKey in deviceTypes do

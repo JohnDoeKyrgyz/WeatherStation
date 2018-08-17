@@ -8,7 +8,9 @@ module Server =
     open Microsoft.Extensions.DependencyInjection
     open Giraffe
     open Saturn
-    open Shared
+
+    open WeatherStations.AzureStorage
+    open WeatherStations.Shared
 
     open Giraffe.Serialization
 
@@ -16,12 +18,6 @@ module Server =
     let port = 8085us
 
     let getInitCounter() : Task<Counter> = task { return 42 }
-
-    let getStations() =
-        task { 
-            return [
-                {Name = "Main"; WundergroundId = "KVTWESTR7"; Status = Active; Location = {Latitude = 12.0m; Longitude = 12.0m}}
-                {Name = "Secondary"; WundergroundId = "abcdxyx"; Status = Offline; Location = {Latitude = 12.0m; Longitude = 12.0m}}]}
 
     let webApp = router {
         get "/api/init" (fun next ctx ->
@@ -32,7 +28,7 @@ module Server =
             
         get "/api/stations" (fun next ctx ->
             task {
-                let! stations = getStations()
+                let! stations = getWeatherStations()
                 return! ctx.WriteJsonAsync stations
             })        
     }
