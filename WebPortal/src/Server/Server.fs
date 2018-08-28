@@ -4,13 +4,12 @@ module Server =
     open System.IO
     open System.Threading.Tasks
 
-    open Microsoft.AspNetCore.Builder
     open Microsoft.Extensions.DependencyInjection
     open Giraffe
     open Saturn
 
-    open WeatherStations.AzureStorage
     open WeatherStations.Shared
+    open WeatherStations.AzureStorage
 
     open Giraffe.Serialization
 

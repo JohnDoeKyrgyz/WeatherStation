@@ -2,5 +2,4 @@ group Server
     FSharp.Core
     Saturn
     Fable.JsonConverter
-    FSharp.Azure.StorageTypeProvider
     WindowsAzure.Storage

@@ -1,12 +1,11 @@
 group Server
-    framework: net462
+    framework: netstandard2.0
     storage: none
     source https://api.nuget.org/v3/index.json
 
     nuget FSharp.Core
     nuget Saturn
     nuget Fable.JsonConverter
-    nuget FSharp.Azure.StorageTypeProvider
     nuget WindowsAzure.Storage
 
 group Client
