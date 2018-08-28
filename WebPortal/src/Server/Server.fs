@@ -8,6 +8,8 @@ module Server =
     open Giraffe
     open Saturn
 
+    open FSharp.Control.Tasks
+
     open WeatherStations.Shared
     open WeatherStations.AzureStorage
 
