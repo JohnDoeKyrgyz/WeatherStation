@@ -1,0 +1,10 @@
+﻿group Functions
+	FSharp.Core
+	FSharp.Data
+	Newtonsoft.Json
+	Microsoft.NET.Sdk.Functions
+	Microsoft.AspNetCore.Mvc.Core
+
+FSharp.Core
+Microsoft.NET.Sdk.Functions
+Microsoft.AspNetCore.Mvc.Core

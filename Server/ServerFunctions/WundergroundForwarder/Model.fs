@@ -1,90 +1,92 @@
-#load "../Database.fsx"
+namespace WeatherStation.Functions
 
-open System
-open Database
+module Model =
 
-type DevicePlatform =
-    | Particle
-    | Hologram
-    with
-        override this.ToString() =
-            match this with
-            | Particle -> "Particle"
-            | Hologram -> "Hologram"
+    open System
+    open Database
 
-[<Measure>]
-type volts
+    type DevicePlatform =
+        | Particle
+        | Hologram
+        with
+            override this.ToString() =
+                match this with
+                | Particle -> "Particle"
+                | Hologram -> "Hologram"
 
-[<Measure>]
-type celcius
+    [<Measure>]
+    type volts
 
-[<Measure>]
-type percent
+    [<Measure>]
+    type celcius
 
-[<Measure>]
-type pascal
+    [<Measure>]
+    type percent
 
-[<Measure>]
-type metersPerSecond
+    [<Measure>]
+    type pascal
 
-[<Measure>]
-type sixteenths
+    [<Measure>]
+    type metersPerSecond
 
-[<Measure>]
-type degrees
+    [<Measure>]
+    type sixteenths
 
-[<Measure>]
-type seconds
+    [<Measure>]
+    type degrees
 
-let degreesPerSixteenth = 22.5<degrees/sixteenths>
+    [<Measure>]
+    type seconds
 
-type ReadingValues =
-    | ReadingTime of DateTime
-    | DeviceTime of DateTime
-    | SupplyVoltage of decimal<volts>
-    | BatteryChargeVoltage of decimal<volts>
-    | PanelVoltage of decimal<volts>
-    | TemperatureCelciusHydrometer of decimal<celcius>
-    | TemperatureCelciusBarometer of decimal<celcius>
-    | HumidityPercentHydrometer of decimal<percent>
-    | HumidityPercentBarometer of decimal<percent>
-    | PressurePascal of decimal<pascal>
-    | SpeedMetersPerSecond of decimal<metersPerSecond>
-    | GustMetersPerSecond of decimal<metersPerSecond>
-    | DirectionSixteenths of int<sixteenths>
-    | RefreshInterval of int<seconds>
+    let degreesPerSixteenth = 22.5<degrees/sixteenths>
 
-type DeviceReadings = {
-    DeviceId : string
-    Readings : ReadingValues list
-}    
+    type ReadingValues =
+        | ReadingTime of DateTime
+        | DeviceTime of DateTime
+        | SupplyVoltage of decimal<volts>
+        | BatteryChargeVoltage of decimal<volts>
+        | PanelVoltage of decimal<volts>
+        | TemperatureCelciusHydrometer of decimal<celcius>
+        | TemperatureCelciusBarometer of decimal<celcius>
+        | HumidityPercentHydrometer of decimal<percent>
+        | HumidityPercentBarometer of decimal<percent>
+        | PressurePascal of decimal<pascal>
+        | SpeedMetersPerSecond of decimal<metersPerSecond>
+        | GustMetersPerSecond of decimal<metersPerSecond>
+        | DirectionSixteenths of int<sixteenths>
+        | RefreshInterval of int<seconds>
 
-let applyReading (reading : Reading) value =
+    type DeviceReadings = {
+        DeviceId : string
+        Readings : ReadingValues list
+    }    
 
-    let toDouble (v : decimal<'T>) = 
-        let cleanV = (v / LanguagePrimitives.DecimalWithMeasure<'T> 1.0m)
-        new Nullable<double>(double cleanV)
+    let applyReading (reading : Reading) value =
 
-    match value with
-    | RefreshInterval seconds -> reading.RefreshIntervalSeconds <- seconds / 1<seconds>
-    | ReadingTime time -> reading.ReadingTime <- time.ToUniversalTime()
-    | DeviceTime time -> reading.DeviceTime <- time.ToUniversalTime()
-    | SupplyVoltage voltage -> reading.SupplyVoltage <- toDouble(voltage)
-    | BatteryChargeVoltage voltage -> reading.BatteryChargeVoltage <- toDouble(voltage)
-    | PanelVoltage voltage -> reading.PanelVoltage <- toDouble(voltage)
-    | TemperatureCelciusBarometer temp -> reading.TemperatureCelciusBarometer <- toDouble(temp)
-    | TemperatureCelciusHydrometer temp -> reading.TemperatureCelciusHydrometer <- toDouble(temp)
-    | HumidityPercentHydrometer perc -> reading.HumidityPercentHydrometer <- toDouble(perc)
-    | HumidityPercentBarometer perc -> reading.HumidityPercentBarometer <- toDouble(perc)
-    | PressurePascal perc -> reading.PressurePascal <- toDouble(perc)
-    | SpeedMetersPerSecond speed -> reading.SpeedMetersPerSecond <- toDouble(speed)
-    | GustMetersPerSecond speed -> reading.GustMetersPerSecond <- toDouble(speed)
-    | DirectionSixteenths direction -> reading.DirectionSixteenths <- new Nullable<double>(double direction)
+        let toDouble (v : decimal<'T>) = 
+            let cleanV = (v / LanguagePrimitives.DecimalWithMeasure<'T> 1.0m)
+            new Nullable<double>(double cleanV)
 
-let createReading deviceReading = 
-    let reading = new Reading(RowKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks))
-    deviceReading.Readings |> List.iter (applyReading reading)
-    if reading.DeviceTime = DateTime.MinValue then reading.DeviceTime <- reading.ReadingTime    
-    reading.PartitionKey <- deviceReading.DeviceId
-    reading.SourceDevice <- deviceReading.DeviceId
-    reading
+        match value with
+        | RefreshInterval seconds -> reading.RefreshIntervalSeconds <- seconds / 1<seconds>
+        | ReadingTime time -> reading.ReadingTime <- time.ToUniversalTime()
+        | DeviceTime time -> reading.DeviceTime <- time.ToUniversalTime()
+        | SupplyVoltage voltage -> reading.SupplyVoltage <- toDouble(voltage)
+        | BatteryChargeVoltage voltage -> reading.BatteryChargeVoltage <- toDouble(voltage)
+        | PanelVoltage voltage -> reading.PanelVoltage <- toDouble(voltage)
+        | TemperatureCelciusBarometer temp -> reading.TemperatureCelciusBarometer <- toDouble(temp)
+        | TemperatureCelciusHydrometer temp -> reading.TemperatureCelciusHydrometer <- toDouble(temp)
+        | HumidityPercentHydrometer perc -> reading.HumidityPercentHydrometer <- toDouble(perc)
+        | HumidityPercentBarometer perc -> reading.HumidityPercentBarometer <- toDouble(perc)
+        | PressurePascal perc -> reading.PressurePascal <- toDouble(perc)
+        | SpeedMetersPerSecond speed -> reading.SpeedMetersPerSecond <- toDouble(speed)
+        | GustMetersPerSecond speed -> reading.GustMetersPerSecond <- toDouble(speed)
+        | DirectionSixteenths direction -> reading.DirectionSixteenths <- new Nullable<double>(double direction)
+
+    let createReading deviceReading = 
+        let reading = new Reading(RowKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks))
+        deviceReading.Readings |> List.iter (applyReading reading)
+        if reading.DeviceTime = DateTime.MinValue then reading.DeviceTime <- reading.ReadingTime    
+        reading.PartitionKey <- deviceReading.DeviceId
+        reading.SourceDevice <- deviceReading.DeviceId
+        reading

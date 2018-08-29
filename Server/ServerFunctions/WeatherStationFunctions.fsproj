@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="paket.references" />
+    <Compile Include="WundergroundForwarder\Hologram.fs" />
+    <Compile Include="WundergroundForwarder\Model.fs" />
+    <Compile Include="WundergroundForwarder\Particle.fs" />
+    <Compile Include="WundergroundForwarder\ProcessReadings.fs" />
+    <Compile Include="WundergroundForwarder\run.fs" />
+    <Compile Include="WundergroundForwarder\WundergroundPost.fs" />
+    <Content Include="local.settings.json" />
+    <None Include=".deployment" />
+    <None Include="build.cmd" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DataModel\DataModel.fsproj" />
+  </ItemGroup>  
+  <Import Project="..\.paket\Paket.Restore.targets" />
+</Project>
