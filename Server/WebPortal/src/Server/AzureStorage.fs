@@ -1,6 +1,7 @@
 namespace WeatherStation
 
 module AzureStorage =
+    open System
     open System.Configuration
     open FSharp.Control.Tasks
     open Microsoft.WindowsAzure.Storage
@@ -17,21 +18,29 @@ module AzureStorage =
             typedefof<Model.DeviceType>
             |> FSharp.Reflection.FSharpType.GetUnionCases
         [for case in cases -> case.Name]
-    
 
-    let getWeatherStations() = 
+    let weatherStationRepository = Repository.createWeatherStationsRepository connection
+    let settingsRepository = Repository.createSystemSettingRepository connection
+
+    let getSystemSetting key =
         task {
-            let repository = Repository.createWeatherStationsRepository connection
+        }
+
+    let getWeatherStations activeThreshold = 
+        task {
+            let! repository = Repository.createWeatherStationsRepository connection
             let! stations = repository.GetAll()
             return [
                 for station in stations do
+                    let lastReadingAge = station.LastReading.ToUniversalTime().Subtract(DateTime.Now.ToUniversalTime())
+                    let status = if lastReadingAge > activeThreshold then Active else Offline
                     yield {
                         Name = station.WundergroundStationId
                         WundergroundId = station.WundergroundStationId
-                        Status = Active
+                        Status = status
                         Location = {
-                            Latitude = 0.0m
-                            Longitude = 0.0m
+                            Latitude = decimal station.Latitude
+                            Longitude = decimal station.Longitude
                         }
                     }]
         }

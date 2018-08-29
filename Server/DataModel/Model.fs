@@ -5,6 +5,13 @@ module Model =
     open System    
     open FSharp.Azure.Storage.Table
 
+    type SystemSetting = {
+        Group : string
+        Key : string
+        Value : string
+    }
+    EntityIdentiferReader.GetIdentifier <- fun setting -> {PartitionKey = setting.Group; RowKey = setting.Value}
+
     type DeviceType =
         | Particle
         | Hologram
@@ -15,6 +22,9 @@ module Model =
         WundergroundStationId : string
         WundergroundPassword : string
         DirectionOffsetDegrees : int option
+        Latitude : double
+        Longitude : double
+        LastReading : DateTime
     }        
 
     EntityIdentiferReader.GetIdentifier <- fun weatherStation -> {PartitionKey = string weatherStation.DeviceType; RowKey = weatherStation.DeviceId}
