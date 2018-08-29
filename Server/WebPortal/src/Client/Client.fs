@@ -7,7 +7,7 @@ open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Fable.PowerPack.Fetch
 
-open WeatherStations.Shared
+open WeatherStation.Shared
 
 open Fulma
 

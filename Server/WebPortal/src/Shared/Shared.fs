@@ -1,6 +1,4 @@
-namespace WeatherStations.Shared
-
-type Counter = int
+namespace WeatherStation.Shared
 
 type Location = {
     Latitude : decimal

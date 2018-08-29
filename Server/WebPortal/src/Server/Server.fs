@@ -1,4 +1,4 @@
-namespace WeatherStations
+namespace WeatherStation
 
 module Server =
     open System.IO
@@ -10,22 +10,14 @@ module Server =
 
     open FSharp.Control.Tasks
 
-    open WeatherStations.Shared
-    open WeatherStations.AzureStorage
+    open WeatherStation.AzureStorage
 
     open Giraffe.Serialization
 
     let publicPath = Path.GetFullPath "../Client/public"
     let port = 8085us
-
-    let getInitCounter() : Task<Counter> = task { return 42 }
-
+    
     let webApp = router {
-        get "/api/init" (fun next ctx ->
-            task {
-                let! counter = getInitCounter()
-                return! Successful.OK counter next ctx
-            })
             
         get "/api/stations" (fun next ctx ->
             task {
