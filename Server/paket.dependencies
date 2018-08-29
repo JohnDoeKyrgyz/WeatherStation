@@ -5,7 +5,7 @@ group Server
     nuget FSharp.Core
     nuget Saturn
     nuget Fable.JsonConverter
-    nuget WindowsAzure.Storage
+    nuget FSharp.Azure.Storage
 
 group Client
     storage: none
