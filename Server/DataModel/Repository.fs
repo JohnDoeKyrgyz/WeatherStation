@@ -12,6 +12,7 @@ module Repository =
     type ISystemSettingsRepository =
         inherit IRepository<SystemSetting>
         abstract member GetSetting : string -> Async<SystemSetting>
+        abstract member GetSetting : string * string -> Async<SystemSetting>
 
     let createTableIfNecessary (connection : CloudTableClient) tableName =
         let tableReference = connection.GetTableReference(tableName)
@@ -35,6 +36,13 @@ module Repository =
         inherit AzureStorageRepository<SystemSetting>(connection, tableName)
         interface ISystemSettingsRepository with
             member this.GetSetting key = 
+                async {
+                    let! results =
+                        Query.all<SystemSetting>
+                        |> Query.where <@ fun setting _ -> setting.Key = key @>
+                        |> runQuery connection tableName
+                    return results.Single()}
+            member this.GetSetting(key, defaultValue) = 
                 async {
                     let! results =
                         Query.all<SystemSetting>
