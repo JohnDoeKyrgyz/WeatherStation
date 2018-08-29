@@ -2,7 +2,10 @@ namespace WeatherStations
 
 module AzureStorage =
     open WeatherStations.Shared
+    open System.Configuration
     open FSharp.Control.Tasks
+
+    let connectionString = ConfigurationManager.connectionString
 (*
     open FSharp.Control.Tasks
     open FSharp.Azure.StorageTypeProvider
