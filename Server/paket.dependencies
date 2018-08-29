@@ -6,7 +6,7 @@ group Server
     nuget Saturn
     nuget Fable.JsonConverter
     nuget FSharp.Azure.Storage
-    nuget System.Configuration
+    nuget System.Configuration.ConfigurationManager 4.4.0
 
 group Client
     storage: none

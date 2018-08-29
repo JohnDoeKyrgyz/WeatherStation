@@ -21,5 +21,5 @@ module Repository =
         interface IRepository<'TEntity> with
             member this.GetAll() = runQuery Query.all<'TEntity>
 
-    let createWeatherStationsRepository connection = new AzureStorageRepository<WeatherStation>(connection, "WeatherStations")
-    let createReadingRepository connection = new AzureStorageRepository<Reading>(connection, "Readings")
+    let createWeatherStationsRepository connection = new AzureStorageRepository<WeatherStation>(connection, "WeatherStations") :> IRepository<WeatherStation>
+    let createReadingRepository connection = new AzureStorageRepository<Reading>(connection, "Readings") :> IRepository<Reading>

@@ -1,38 +1,25 @@
 namespace WeatherStations
 
 module AzureStorage =
-    open WeatherStations.Shared
     open System.Configuration
     open FSharp.Control.Tasks
+    open Microsoft.WindowsAzure.Storage
+    open WeatherStation
 
-    let connectionString = ConfigurationManager.connectionString
-(*
-    open FSharp.Control.Tasks
-    open FSharp.Azure.StorageTypeProvider
+    let connection =
+        let connectionString = ConfigurationManager.ConnectionStrings.["AzureStorageConnection"].ConnectionString
+        let storageAccount = CloudStorageAccount.Parse connectionString
+        storageAccount.CreateCloudTableClient()
 
-    type AzureTableStorage = AzureTypeProvider<connectionStringName = "AzureStorageConnection", configFileName="App.config">
-*)
-
-    //TODO: This should not be harcoded. (Definition file somehere)
-    let deviceTypes = [
-        "Particle"
-        "Devices"
-        "Hologram"
-    ]
+    let deviceTypes =
+        let cases =
+            typedefof<Model.DeviceType>
+            |> FSharp.Reflection.FSharpType.GetUnionCases
+        [for case in cases -> case.Name]
+    
 
     let getWeatherStations() = 
         task {
-            return []
-            (*
-                [for partitionKey in deviceTypes do
-                    let partitionRows = AzureTableStorage.Tables.WeatherStations.GetPartition(partitionKey)
-                    for row in partitionRows do 
-                        let station = {
-                            Name = row.RowKey
-                            WundergroundId = string row.WundergroundStationId
-                            Location = {Latitude = 0.0m; Longitude = 0.0m }
-                            Status = Active
-                        }
-                        yield row
-                ]*)
+            let repository = Repository.createWeatherStationsRepository connection
+            return! repository.GetAll()
         }
