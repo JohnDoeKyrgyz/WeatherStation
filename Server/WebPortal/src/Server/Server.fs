@@ -2,17 +2,15 @@ namespace WeatherStation
 
 module Server =
     open System.IO
-    open System.Threading.Tasks
 
     open Microsoft.Extensions.DependencyInjection
-    open Giraffe
-    open Saturn
-
-    open FSharp.Control.Tasks
-
     open WeatherStation.AzureStorage
 
+    open Saturn
+    open Giraffe
     open Giraffe.Serialization
+    
+    open FSharp.Control.Tasks
 
     let publicPath = Path.GetFullPath "../Client/public"
     let port = 8085us
@@ -21,7 +19,8 @@ module Server =
             
         get "/api/stations" (fun next ctx ->
             task {
-                let! stations = getWeatherStations()
+                let! activeThreshold = SystemSettings.activeThreshold
+                let! stations = getWeatherStations activeThreshold
                 return! ctx.WriteJsonAsync stations
             })        
     }

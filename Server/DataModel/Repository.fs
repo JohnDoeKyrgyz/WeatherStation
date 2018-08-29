@@ -11,8 +11,8 @@ module Repository =
 
     type ISystemSettingsRepository =
         inherit IRepository<SystemSetting>
-        abstract member GetSetting : string -> Async<SystemSetting>
-        abstract member GetSetting : string * string -> Async<SystemSetting>
+        abstract member GetSetting : key:string -> Async<SystemSetting>
+        abstract member GetSetting : key:string * defaultValue:string -> Async<SystemSetting>
 
     let createTableIfNecessary (connection : CloudTableClient) tableName =
         let tableReference = connection.GetTableReference(tableName)
@@ -44,11 +44,24 @@ module Repository =
                     return results.Single()}
             member this.GetSetting(key, defaultValue) = 
                 async {
-                    let! results =
+                    let! settings =
                         Query.all<SystemSetting>
                         |> Query.where <@ fun setting _ -> setting.Key = key @>
                         |> runQuery connection tableName
-                    return results.Single()}
+                    let! setting =
+                        match settings with
+                        | [setting] -> async { return setting }
+                        | [] ->
+                            async {
+                                let setting = {Group = "Default"; Key = key; Value = defaultValue}
+                                do!
+                                    InsertOrReplace setting
+                                    |> inTableAsync connection tableName
+                                    |> Async.Ignore
+                                return setting
+                            }
+                        | _ -> failwithf "Expected only one setting for key [%s]" key
+                    return setting}
 
     let createRepository tableName constructor connection =
         async {

@@ -4,9 +4,12 @@ module AzureStorage =
     open System
     open System.Configuration
     open FSharp.Control.Tasks
-    open Microsoft.WindowsAzure.Storage
-    open WeatherStation
+
+    open Microsoft.WindowsAzure.Storage    
+    open Microsoft.WindowsAzure.Storage.Table
+
     open WeatherStation.Shared
+    open WeatherStation.Cache
 
     let connection =
         let connectionString = ConfigurationManager.ConnectionStrings.["AzureStorageConnection"].ConnectionString
@@ -19,13 +22,17 @@ module AzureStorage =
             |> FSharp.Reflection.FSharpType.GetUnionCases
         [for case in cases -> case.Name]
 
-    let weatherStationRepository = Repository.createWeatherStationsRepository connection
-    let settingsRepository = Repository.createSystemSettingRepository connection
+    let private repositoryCache = new Cache<string, obj>()
 
-    let getSystemSetting key =
-        task {
+    let private getOrCreateRepository<'TRepository> key (builder : CloudTableClient -> Async<'TRepository>) =
+        async {
+            let! repository = repositoryCache.GetOrCreate(key, async { return box (builder connection) })
+            return unbox<'TRepository> repository
         }
 
+    let weatherStationRepository = getOrCreateRepository "WeatherStations" Repository.createWeatherStationsRepository        
+    let settingsRepository = getOrCreateRepository "SystemSettings" Repository.createSystemSettingRepository
+    
     let getWeatherStations activeThreshold = 
         task {
             let! repository = Repository.createWeatherStationsRepository connection
