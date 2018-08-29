@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Repository.fs" />
     <None Include="DataQueryTest.fsx" />
     <Compile Include="Model.fs" />
   </ItemGroup>
