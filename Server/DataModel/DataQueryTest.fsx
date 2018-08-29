@@ -36,14 +36,31 @@ async {
 }
 |> Async.RunSynchronously
 
+let refreshTestTable tableName =
+    let testTable = connection.GetTableReference(tableName)
+    let deleted = testTable.DeleteIfExistsAsync() |> Async.AwaitTask |> Async.RunSynchronously
+    printfn "Delete %s %O" tableName deleted
+    if deleted then Async.Sleep(3000) |> Async.RunSynchronously
+    testTable.CreateAsync() |> Async.AwaitTask |> Async.RunSynchronously
+
+refreshTestTable "TestWeatherStations"
 let weatherStation = {
     DeviceType = Hologram
     DeviceId = "1234"
     WundergroundStationId = "abc"
     WundergroundPassword = "asd"
     DirectionOffsetDegrees = Some 0
+    Latitude = 0.0
+    Longitude = 0.0
+    LastReading = DateTime.Now
 }
 
 Insert weatherStation
-|> inTableAsync connection "TEST"
+|> inTableAsync connection "TestWeatherStations"
+|> Async.RunSynchronously
+
+
+refreshTestTable "TestSettings"
+InsertOrReplace {Group = "Default"; Key = "Foo"; Value = "Foo"}
+|> inTableAsync connection "TestSettings"
 |> Async.RunSynchronously

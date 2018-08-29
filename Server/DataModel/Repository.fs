@@ -16,7 +16,12 @@ module Repository =
 
     let createTableIfNecessary (connection : CloudTableClient) tableName =
         let tableReference = connection.GetTableReference(tableName)
-        tableReference.CreateIfNotExistsAsync()
+        async {
+            let! tableCreated = tableReference.CreateIfNotExistsAsync() |> Async.AwaitTask
+            if(tableCreated) 
+            then printfn "Created Table [%s]" tableName 
+            else printfn "Table [%s] already exists" tableName
+        }
 
     let runQuery connection tableName query =
         async {
@@ -54,10 +59,12 @@ module Repository =
                         | [] ->
                             async {
                                 let setting = {Group = "Default"; Key = key; Value = defaultValue}
-                                do!
+                                printfn "Adding setting %s %s" key defaultValue
+                                let! settingInsertResult =
                                     InsertOrReplace setting
                                     |> inTableAsync connection tableName
-                                    |> Async.Ignore
+                                    |> Async.Catch
+                                printfn "Added setting %s %s %A" key defaultValue settingInsertResult
                                 return setting
                             }
                         | _ -> failwithf "Expected only one setting for key [%s]" key
@@ -65,7 +72,7 @@ module Repository =
 
     let createRepository tableName constructor connection =
         async {
-            do! createTableIfNecessary connection tableName |> Async.AwaitTask |> Async.Ignore
+            do! createTableIfNecessary connection tableName
             let repository : 'TRepository = constructor(connection, tableName)
             return repository
         }

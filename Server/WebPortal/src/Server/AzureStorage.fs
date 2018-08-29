@@ -25,8 +25,12 @@ module AzureStorage =
     let private repositoryCache = new Cache<string, obj>()
 
     let private getOrCreateRepository<'TRepository> key (builder : CloudTableClient -> Async<'TRepository>) =
+        let cacheValueBuilder =
+            async {
+                let! repository = builder connection
+                return box repository }
         async {
-            let! repository = repositoryCache.GetOrCreate(key, async { return box (builder connection) })
+            let! repository = repositoryCache.GetOrCreate(key, cacheValueBuilder)
             return unbox<'TRepository> repository
         }
 
@@ -35,7 +39,7 @@ module AzureStorage =
     
     let getWeatherStations activeThreshold = 
         task {
-            let! repository = Repository.createWeatherStationsRepository connection
+            let! repository = weatherStationRepository
             let! stations = repository.GetAll()
             return [
                 for station in stations do

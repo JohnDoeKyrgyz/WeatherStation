@@ -1,3 +1,5 @@
+#I __SOURCE_DIRECTORY__
+#I @"..\"
 #r "paket: groupref build //"
 #load "./.fake/build.fsx/intellisense.fsx"
 

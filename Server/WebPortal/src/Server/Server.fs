@@ -1,6 +1,7 @@
 namespace WeatherStation
 
 module Server =
+    open System
     open System.IO
 
     open Microsoft.Extensions.DependencyInjection
@@ -14,6 +15,10 @@ module Server =
 
     let publicPath = Path.GetFullPath "../Client/public"
     let port = 8085us
+
+    #if DEBUG
+    Console.Beep()
+    #endif
     
     let webApp = router {
             

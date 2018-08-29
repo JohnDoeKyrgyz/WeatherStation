@@ -9,16 +9,18 @@ module Cache =
             async {
                 let! key, valueBuilder, reply = mailBox.Receive()
                 let cachedValue = settings |> Map.tryFind key
-                let! nextSettings =
+                let! nextSettings, value =
                     if cachedValue.IsSome
-                    then
-                        reply.Reply(cachedValue.Value)
-                        async { return settings }
+                    then async { return settings, cachedValue.Value }
                     else
                         async {
                             let! value = valueBuilder                        
-                            return settings |> Map.add key value
+                            let nextSettings = settings |> Map.add key value
+                            return nextSettings, value
                         }
+                let hitOrMiss = if cachedValue.IsSome then "HIT" else "MISS"
+                printfn "Cache Lookup [%A] -> %s {%A}" key hitOrMiss value
+                reply.Reply(value)
                 do! processor nextSettings mailBox                        
             }
         MailboxProcessor<CacheOpperation<'TKey, 'TValue>>.Start (processor Map.empty)

@@ -6,11 +6,12 @@ module Model =
     open FSharp.Azure.Storage.Table
 
     type SystemSetting = {
+        [<PartitionKey>]
         Group : string
+        [<RowKey>]
         Key : string
         Value : string
     }
-    EntityIdentiferReader.GetIdentifier <- fun setting -> {PartitionKey = setting.Group; RowKey = setting.Value}
 
     type DeviceType =
         | Particle
