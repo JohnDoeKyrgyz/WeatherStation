@@ -46,7 +46,7 @@ module AzureStorage =
                     let lastReadingAge = station.LastReading.ToUniversalTime().Subtract(DateTime.Now.ToUniversalTime())
                     let status = if lastReadingAge > activeThreshold then Active else Offline
                     yield {
-                        Name = station.WundergroundStationId
+                        Name = station.DeviceId
                         WundergroundId = station.WundergroundStationId
                         Status = status
                         Location = {
