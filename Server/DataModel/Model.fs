@@ -49,8 +49,7 @@ module Model =
         RowKey : string
     }
     with
-        static member Default = 
-        {
+        static member Default = {
             RefreshIntervalSeconds = 0
             DeviceTime = DateTime.MinValue
             ReadingTime = DateTime.MinValue

@@ -1,6 +1,7 @@
 ﻿namespace WeatherStation
 
 module Repository =
+    open System
     open System.Linq
     open WeatherStation.Model
     open FSharp.Azure.Storage.Table
@@ -8,11 +9,20 @@ module Repository =
 
     type IRepository<'TEntity> =
         abstract member GetAll : unit -> Async<'TEntity list>
+        abstract member Save : 'TEntity -> Async<unit>
 
     type ISystemSettingsRepository =
         inherit IRepository<SystemSetting>
         abstract member GetSetting : key:string -> Async<SystemSetting>
         abstract member GetSetting : key:string * defaultValue:string -> Async<SystemSetting>
+
+    type IWeatherStationsRepository =
+        inherit IRepository<WeatherStation>
+        abstract member Get : deviceType:DeviceType -> deviceId:string -> Async<WeatherStation>
+
+    type IReadingsRepository =
+        inherit IRepository<Reading>
+        abstract member GetHistory : deviceId:string -> cutOff:DateTime -> Async<Reading list>
 
     let createTableIfNecessary (connection : CloudTableClient) tableName =
         let tableReference = connection.GetTableReference(tableName)
@@ -36,6 +46,13 @@ module Repository =
         let runQuery = runQuery connection tableName
         interface IRepository<'TEntity> with
             member this.GetAll() = runQuery Query.all<'TEntity>
+            member this.Save entity =
+                async {
+                    do!
+                        InsertOrReplace entity
+                        |> inTableAsync connection tableName
+                        |> Async.Ignore
+                }
 
     type SystemSettingsRepository(connection, tableName) =
         inherit AzureStorageRepository<SystemSetting>(connection, tableName)
@@ -69,6 +86,33 @@ module Repository =
                             }
                         | _ -> failwithf "Expected only one setting for key [%s]" key
                     return setting}
+
+    type WeatherStationsRepository(connection, tableName) =
+        inherit AzureStorageRepository<WeatherStation>(connection, tableName)
+        interface IWeatherStationsRepository with
+            member this.Get deviceType deviceId =
+                async {
+                    let! weatherStations =
+                        Query.all<WeatherStation>
+                        |> Query.where <@ fun station key -> key.PartitionKey = string deviceType && key.RowKey = deviceId @>
+                        |> Query.take 1
+                        |> runQuery connection tableName
+                    return weatherStations.Single()
+                }
+
+    type ReadingsRepository(connection, tableName) =
+        inherit AzureStorageRepository<Reading>(connection, tableName)
+        interface IReadingsRepository with
+            member this.GetHistory deviceId cutOff =
+                let cutOff = cutOff.ToUniversalTime()
+                async {
+                    let! readings =
+                        Query.all<Reading>
+                        |> Query.where <@ fun reading key -> key.PartitionKey = deviceId && reading.ReadingTime > cutOff @>
+                        |> runQuery connection tableName
+                    return readings
+                }
+
 
     let createRepository tableName constructor connection =
         async {

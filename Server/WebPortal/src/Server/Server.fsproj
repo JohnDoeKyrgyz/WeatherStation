@@ -7,9 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Shared\Shared.fs" />
-    <Compile Include="Cache.fs" />
     <Compile Include="AzureStorage.fs" />
-    <Compile Include="SystemSettings.fs" />
     <Compile Include="Server.fs" />
   </ItemGroup>
   <ItemGroup>

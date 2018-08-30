@@ -4,12 +4,12 @@ module SystemSettings =
     open System
 
     open Cache
+    open Repository
 
     let private settingsCache = new Cache<string, string>()
 
-    let private getOrCreateSetting key defaultValue =
+    let private getOrCreateSetting (settingsRepository : ISystemSettingsRepository) key defaultValue =
         let buildSetting = async {
-            let! settingsRepository = AzureStorage.settingsRepository
             let! settingResult =
                 settingsRepository.GetSetting(key, defaultValue)
                 |> Async.Catch
@@ -22,8 +22,11 @@ module SystemSettings =
         }
         settingsCache.GetOrCreate(key, buildSetting)
 
-    let activeThreshold =
+    let private objectSetting settingsRepository key defaultValue =
         async {
-            let! settingValue = getOrCreateSetting "ActiveThreshold" (string (TimeSpan.FromHours(1.0)))
+            let! settingValue = getOrCreateSetting settingsRepository key (string (defaultValue))
             return TimeSpan.Parse settingValue
         }
+
+    let activeThreshold settingsRepository = objectSetting settingsRepository "ActiveThreshold" (TimeSpan.FromHours(1.0))
+    let averageReadingsWindow settingsRepository = objectSetting settingsRepository "ReadingAveragingWindow" (TimeSpan.FromMinutes(10.0))
