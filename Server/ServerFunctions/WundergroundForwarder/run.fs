@@ -2,13 +2,13 @@ namespace WeatherStation.Functions
 
 module WundergroundForwarder =
     open System
-
+    
+    open Microsoft.Azure.WebJobs
     open Microsoft.Azure.WebJobs.Host
 
     open WeatherStation.Model
     open ProcessReadings
     open WundergroundPost
-    open Microsoft.Azure.WebJobs
     open WeatherStation
 
     let tryParse parser content =
@@ -23,7 +23,7 @@ module WundergroundForwarder =
         if ex.InnerException <> null then innerMostException ex.InnerException else ex
 
     [<FunctionName("WundergroundForwarder")>]
-    let Run ([<EventHubTrigger("weatherstationsiot")>] eventHubMessage: string) (log: TraceWriter) =    
+    let Run ([<Microsoft.Azure.WebJobs.ServiceBus.EventHubTrigger("weatherstationsiot")>] eventHubMessage: string) (log: TraceWriter) =    
         async {
             log.Info(eventHubMessage)
 

@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="host.json" />
     <None Include="paket.references" />
     <Content Include="WundergroundForwarder\HologramStatusUpdate.json" />
     <Content Include="WundergroundForwarder\ParticleStatusUpdate.json" />
@@ -19,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataModel\DataModel.fsproj" />
+    <ProjectReference Include="extensions.csproj" />
   </ItemGroup>  
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
