@@ -3,16 +3,7 @@ namespace WeatherStation.Functions
 module Model =
 
     open System
-    open Database
-
-    type DevicePlatform =
-        | Particle
-        | Hologram
-        with
-            override this.ToString() =
-                match this with
-                | Particle -> "Particle"
-                | Hologram -> "Hologram"
+    open WeatherStation.Model
 
     [<Measure>]
     type volts
@@ -65,28 +56,30 @@ module Model =
 
         let toDouble (v : decimal<'T>) = 
             let cleanV = (v / LanguagePrimitives.DecimalWithMeasure<'T> 1.0m)
-            new Nullable<double>(double cleanV)
+            double cleanV
 
         match value with
-        | RefreshInterval seconds -> reading.RefreshIntervalSeconds <- seconds / 1<seconds>
-        | ReadingTime time -> reading.ReadingTime <- time.ToUniversalTime()
-        | DeviceTime time -> reading.DeviceTime <- time.ToUniversalTime()
-        | SupplyVoltage voltage -> reading.SupplyVoltage <- toDouble(voltage)
-        | BatteryChargeVoltage voltage -> reading.BatteryChargeVoltage <- toDouble(voltage)
-        | PanelVoltage voltage -> reading.PanelVoltage <- toDouble(voltage)
-        | TemperatureCelciusBarometer temp -> reading.TemperatureCelciusBarometer <- toDouble(temp)
-        | TemperatureCelciusHydrometer temp -> reading.TemperatureCelciusHydrometer <- toDouble(temp)
-        | HumidityPercentHydrometer perc -> reading.HumidityPercentHydrometer <- toDouble(perc)
-        | HumidityPercentBarometer perc -> reading.HumidityPercentBarometer <- toDouble(perc)
-        | PressurePascal perc -> reading.PressurePascal <- toDouble(perc)
-        | SpeedMetersPerSecond speed -> reading.SpeedMetersPerSecond <- toDouble(speed)
-        | GustMetersPerSecond speed -> reading.GustMetersPerSecond <- toDouble(speed)
-        | DirectionSixteenths direction -> reading.DirectionSixteenths <- new Nullable<double>(double direction)
+        | RefreshInterval seconds -> {reading with RefreshIntervalSeconds = seconds / 1<seconds>}
+        | ReadingTime time -> {reading with ReadingTime = time.ToUniversalTime()}
+        | DeviceTime time -> {reading with DeviceTime = time.ToUniversalTime()}
+        | SupplyVoltage voltage -> {reading with SupplyVoltage = toDouble(voltage)}
+        | BatteryChargeVoltage voltage -> {reading with BatteryChargeVoltage = toDouble(voltage)}
+        | PanelVoltage voltage -> {reading with PanelVoltage = toDouble(voltage)}
+        | TemperatureCelciusBarometer temp -> {reading with TemperatureCelciusBarometer = toDouble(temp)}
+        | TemperatureCelciusHydrometer temp -> {reading with TemperatureCelciusHydrometer = toDouble(temp)}
+        | HumidityPercentHydrometer perc -> {reading with HumidityPercentHydrometer = toDouble(perc)}
+        | HumidityPercentBarometer perc -> {reading with HumidityPercentBarometer = toDouble(perc)}
+        | PressurePascal perc -> {reading with PressurePascal = toDouble(perc)}
+        | SpeedMetersPerSecond speed -> {reading with SpeedMetersPerSecond = toDouble(speed)}
+        | GustMetersPerSecond speed -> {reading with GustMetersPerSecond = toDouble(speed)}
+        | DirectionSixteenths direction -> {reading with DirectionSixteenths = double direction}
 
     let createReading deviceReading = 
-        let reading = new Reading(RowKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks))
-        deviceReading.Readings |> List.iter (applyReading reading)
-        if reading.DeviceTime = DateTime.MinValue then reading.DeviceTime <- reading.ReadingTime    
-        reading.PartitionKey <- deviceReading.DeviceId
-        reading.SourceDevice <- deviceReading.DeviceId
-        reading
+        let readingKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)
+        let reading = {Reading.Default with RowKey = readingKey}
+        let reading = deviceReading.Readings |> List.fold applyReading reading
+        let reading =
+            if reading.DeviceTime = DateTime.MinValue
+            then {reading with DeviceTime = reading.ReadingTime}
+            else reading
+        {reading with SourceDevice = deviceReading.DeviceId}

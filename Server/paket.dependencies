@@ -4,10 +4,12 @@ group Functions
     source https://api.nuget.org/v3/index.json
 
 	nuget FSharp.Core
-	nuget FSharp.Data
+	nuget FSharp.Data prerelease
 	nuget Newtonsoft.Json
-	nuget Microsoft.NET.Sdk.Functions
+	nuget Microsoft.NET.Sdk.Functions prerelease
 	nuget Microsoft.AspNetCore.Mvc.Core
+	nuget Microsoft.Azure.WebJobs prerelease
+	nuget Microsoft.Azure.WebJobs.Extensions.EventHubs prerelease
 
 group Server
     storage: none

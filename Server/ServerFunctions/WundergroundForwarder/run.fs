@@ -6,10 +6,11 @@ module WundergroundForwarder =
 
     open Microsoft.Azure.WebJobs.Host
 
-    open Database
+    open WeatherStation.Model
     open Model
     open ProcessReadings
     open WundergroundPost
+    open Microsoft.Azure.WebJobs
 
     let tryParse parser content =
         try
@@ -22,7 +23,8 @@ module WundergroundForwarder =
     let rec innerMostException (ex : exn) =
         if ex.InnerException <> null then innerMostException ex.InnerException else ex
 
-    let Run(eventHubMessage: string, weatherStationsTable: IQueryable<WeatherStation>, readingsTable: IQueryable<Reading>, storedReading : byref<Reading>, log: TraceWriter) =
+    [<FunctionName("WundergroundForwarder")>]
+    let Run ([<EventHubTrigger("weatherstationsiot")>] eventHubMessage: string) (log: TraceWriter) =
     
         let reading =
             async {

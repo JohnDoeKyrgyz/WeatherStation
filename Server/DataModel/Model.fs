@@ -48,5 +48,25 @@ module Model =
         SourceDevice : string
         RowKey : string
     }
+    with
+        static member Default = 
+        {
+            RefreshIntervalSeconds = 0
+            DeviceTime = DateTime.MinValue
+            ReadingTime = DateTime.MinValue
+            SupplyVoltage = 0.0
+            BatteryChargeVoltage = 0.0
+            PanelVoltage = 0.0
+            TemperatureCelciusHydrometer = 0.0
+            TemperatureCelciusBarometer = 0.0
+            HumidityPercentHydrometer = 0.0
+            HumidityPercentBarometer = 0.0
+            PressurePascal = 0.0
+            GustMetersPerSecond = 0.0
+            SpeedMetersPerSecond = 0.0
+            DirectionSixteenths = 0.0
+            SourceDevice = null
+            RowKey = null
+        }
 
     EntityIdentiferReader.GetIdentifier <- fun reading -> {PartitionKey = reading.RowKey; RowKey = reading.SourceDevice}

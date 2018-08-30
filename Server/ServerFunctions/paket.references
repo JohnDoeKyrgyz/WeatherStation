@@ -4,7 +4,5 @@
 	Newtonsoft.Json
 	Microsoft.NET.Sdk.Functions
 	Microsoft.AspNetCore.Mvc.Core
-
-FSharp.Core
-Microsoft.NET.Sdk.Functions
-Microsoft.AspNetCore.Mvc.Core
+	Microsoft.Azure.WebJobs
+	Microsoft.Azure.WebJobs.Extensions.EventHubs
