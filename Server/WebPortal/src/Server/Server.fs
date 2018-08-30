@@ -5,13 +5,14 @@ module Server =
     open System.IO
 
     open Microsoft.Extensions.DependencyInjection
-    open WeatherStation.AzureStorage
 
     open Saturn
     open Giraffe
     open Giraffe.Serialization
-    
-    open FSharp.Control.Tasks
+
+    open FSharp.Control.Tasks    
+
+    open Logic
 
     let publicPath = Path.GetFullPath "../Client/public"
     let port = 8085us

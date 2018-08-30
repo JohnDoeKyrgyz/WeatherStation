@@ -1,15 +1,9 @@
 namespace WeatherStation.Functions
 
 module ProcessReadings =
-
-    open System
-    open System.Linq
-
+    
     open Model
     open WeatherStation.Model
-
-    //TODO: Make this a setting
-    let averageWindowMinutes = 10.0
 
     let rec readingTime values =
         match values with
@@ -23,22 +17,9 @@ module ProcessReadings =
         | _ :: vs -> readingTime vs
         | [] -> None
 
-    //TODO: Avoid using LINQ here
-    let fixReadings (history : IQueryable<Reading>) (weatherStation : WeatherStation) values =
+    let fixReadings recentReadings (weatherStation : WeatherStation) values =
 
         let readingTime = readingTime values
-
-        let recentReadings =
-            match readingTime with
-            | Some readingTime ->
-                let windowStartTime = readingTime.Subtract(TimeSpan.FromMinutes(averageWindowMinutes))
-                query {
-                    for reading in history do
-                    where (reading.ReadingTime > windowStartTime)
-                    select reading }
-                |> Seq.toList
-            | None -> []
-
         let recentWindSpeeds = [for reading in recentReadings -> reading.SpeedMetersPerSecond]
 
         let additionalReadings = [

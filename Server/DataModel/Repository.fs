@@ -112,7 +112,9 @@ module Repository =
                         |> runQuery connection tableName
                     return readings
                 }
-
+            member this.Save reading =
+                let baseRepo = this :> IRepository<Reading>
+                baseRepo.Save {reading with ReadingTime = reading.ReadingTime.ToUniversalTime()}
 
     let createRepository tableName constructor connection =
         async {
@@ -123,12 +125,12 @@ module Repository =
 
     let createWeatherStationsRepository connection = 
         async {
-            let! repository = createRepository "WeatherStations" AzureStorageRepository<WeatherStation> connection
-            return repository :> IRepository<WeatherStation> }
+            let! repository = createRepository "WeatherStations" WeatherStationsRepository connection
+            return repository :> IWeatherStationsRepository }
     let createReadingRepository connection = 
         async {
-            let! repository = createRepository "Readings" AzureStorageRepository<Reading> connection
-            return repository :> IRepository<Reading>}
+            let! repository = createRepository "Readings" ReadingsRepository connection
+            return repository :> IReadingsRepository}
     let createSystemSettingRepository connection = 
         async {
             let! repository = createRepository "Settings" SystemSettingsRepository connection

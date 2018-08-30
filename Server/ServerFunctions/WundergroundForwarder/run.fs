@@ -2,15 +2,14 @@ namespace WeatherStation.Functions
 
 module WundergroundForwarder =
     open System
-    open System.Linq
 
     open Microsoft.Azure.WebJobs.Host
 
     open WeatherStation.Model
-    open Model
     open ProcessReadings
     open WundergroundPost
     open Microsoft.Azure.WebJobs
+    open WeatherStation
 
     let tryParse parser content =
         try
@@ -24,65 +23,67 @@ module WundergroundForwarder =
         if ex.InnerException <> null then innerMostException ex.InnerException else ex
 
     [<FunctionName("WundergroundForwarder")>]
-    let Run ([<EventHubTrigger("weatherstationsiot")>] eventHubMessage: string) (log: TraceWriter) =
-    
-        let reading =
-            async {
-                log.Info(eventHubMessage)
+    let Run ([<EventHubTrigger("weatherstationsiot")>] eventHubMessage: string) (log: TraceWriter) =    
+        async {
+            log.Info(eventHubMessage)
 
-                let parseAttempts = [
-                    for (key, parser) in parsers do
-                        yield key, (tryParse (parser log) eventHubMessage)]
+            let parseAttempts = [
+                for (key, parser) in parsers do
+                    yield key, (tryParse (parser log) eventHubMessage)]
 
-                let successfulAttempts = [
-                    for (key, attempt) in parseAttempts do
-                        match attempt with
-                        | Choice1Of2 result -> yield key, result
-                        | _ -> ()]
+            let successfulAttempts = [
+                for (key, attempt) in parseAttempts do
+                    match attempt with
+                    | Choice1Of2 result -> yield key, result
+                    | _ -> ()]
 
+            let! readingsRepository = AzureStorage.readingsRepository
+
+            let! reading =
                 match successfulAttempts with
                 | (deviceType, deviceReading) :: _ ->
+                    async {
+                        log.Info(sprintf "%A" deviceReading)
 
-                    log.Info(sprintf "%A" deviceReading)
+                        log.Info(sprintf "Searching for device %A %s in registry" deviceType deviceReading.DeviceId)
 
-                    let partitionKey = string deviceType
-                    log.Info(sprintf "Searching for device %s %s in registry" partitionKey deviceReading.DeviceId)
-
-                    let weatherStations = 
-                        weatherStationsTable
-                            .Where( fun station -> station.PartitionKey = partitionKey && station.RowKey = deviceReading.DeviceId )
-                            .ToArray()
-
-                    if weatherStations.Length <> 1 then failwithf "WeatherStation %s %s is incorrectly provisioned" partitionKey deviceReading.DeviceId
-                    let weatherStation = weatherStations.[0]
+                        let! weatherStationRepository = AzureStorage.weatherStationRepository
+                        let! weatherStation = weatherStationRepository.Get deviceType deviceReading.DeviceId
                 
-                    let values = fixReadings readingsTable weatherStation deviceReading.Readings
-                    log.Info(sprintf "Fixed Values %A" values)
+                        let! settingsRepository = AzureStorage.settingsRepository
+                        let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
+                        let readingCutOff = DateTime.Now.Subtract(readingsWindow)
+                        let! recentReadings = readingsRepository.GetHistory deviceReading.DeviceId readingCutOff
 
-                    let valuesSeq = values |> Seq.ofList
-                    let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
+                        let values = fixReadings recentReadings weatherStation deviceReading.Readings
+                        log.Info(sprintf "Fixed Values %A" values)
 
-                    log.Info(sprintf "%A" wundergroundResponse)
+                        let valuesSeq = values |> Seq.ofList
+                        let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
+
+                        log.Info(sprintf "%A" wundergroundResponse)
                 
-                    let reading = Model.createReading deviceReading
-                    return Some reading
-                | _ -> 
-                    log.Info("No values parsed")
-                    for (key, attempt) in parseAttempts do
-                        let message =
-                            match attempt with
-                            | Choice2Of2 ex -> 
-                                string (innerMostException ex)
-                            | _ -> "no exception"
+                        let reading = Model.createReading deviceReading
+                        return Some reading
+                    }                    
+                | _ ->
+                    async {
+                        log.Info("No values parsed")
+                        for (key, attempt) in parseAttempts do
+                            let message =
+                                match attempt with
+                                | Choice2Of2 ex -> 
+                                    string (innerMostException ex)
+                                | _ -> "no exception"
 
-                        log.Info(string key)
-                        log.Error(message)
-                    return None }
-            |> Async.RunSynchronously
+                            log.Info(string key)
+                            log.Error(message)
+                        return None
+                    }
 
-        match reading with
-        | Some reading -> 
-            log.Info(sprintf "Saving Reading %A" reading)
-            storedReading <- reading
-        | None ->
-            log.Info("Nothing to save")
+            match reading with
+            | Some reading -> 
+                log.Info(sprintf "Saving Reading %A" reading)
+                do! readingsRepository.Save reading
+            | None ->
+                log.Info("Nothing to save") }
