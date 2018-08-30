@@ -5,3 +5,6 @@
 	Microsoft.NET.Sdk.Functions
 	Microsoft.AspNetCore.Mvc.Core
 	Microsoft.Azure.WebJobs
+	Microsoft.Azure.WebJobs.Extensions
+	Microsoft.Azure.WebJobs.ServiceBus
+	Microsoft.Azure.WebJobs.Extensions.EventHubs

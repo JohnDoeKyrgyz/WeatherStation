@@ -23,7 +23,7 @@ module WundergroundForwarder =
         if ex.InnerException <> null then innerMostException ex.InnerException else ex
 
     [<FunctionName("WundergroundForwarder")>]
-    let Run ([<Microsoft.Azure.WebJobs.ServiceBus.EventHubTrigger("weatherstationsiot")>] eventHubMessage: string) (log: TraceWriter) =    
+    let Run ([<EventHubTrigger("weatherstationsiot")>] eventHubMessage: string) (log: TraceWriter) =    
         async {
             log.Info(eventHubMessage)
 

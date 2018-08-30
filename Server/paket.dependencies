@@ -8,7 +8,10 @@ group Functions
 	nuget Newtonsoft.Json
 	nuget Microsoft.NET.Sdk.Functions prerelease
 	nuget Microsoft.AspNetCore.Mvc.Core
-	nuget Microsoft.Azure.WebJobs
+	nuget Microsoft.Azure.WebJobs 3.0.0-beta8
+	nuget Microsoft.Azure.WebJobs.Extensions 3.0.0-beta8
+	nuget Microsoft.Azure.WebJobs.ServiceBus 3.0.0-beta8
+	nuget Microsoft.Azure.WebJobs.Extensions.EventHubs 3.0.0-beta8
 
 group Server
     storage: none
