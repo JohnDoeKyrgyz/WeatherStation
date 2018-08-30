@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="init.cmd" />
     <Content Include="host.json" />
     <None Include="paket.references" />
     <Content Include="WundergroundForwarder\HologramStatusUpdate.json" />
@@ -14,7 +15,9 @@
     <Compile Include="WundergroundForwarder\ProcessReadings.fs" />
     <Compile Include="WundergroundForwarder\WundergroundPost.fs" />
     <Compile Include="WundergroundForwarder\run.fs" />
-    <Content Include="local.settings.json" />
+    <Content Include="local.settings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include=".deployment" />
     <None Include="build.cmd" />
   </ItemGroup>

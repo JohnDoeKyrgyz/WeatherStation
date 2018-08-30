@@ -1,17 +1,17 @@
 group Functions
-	framework: >= netstandard2.0
+	framework: netstandard2.0
 	storage: none
     source https://api.nuget.org/v3/index.json
 
 	nuget FSharp.Core
 	nuget FSharp.Data prerelease
 	nuget Newtonsoft.Json
-	nuget Microsoft.NET.Sdk.Functions prerelease
+	nuget Microsoft.NET.Sdk.Functions 1.0.19
 	nuget Microsoft.AspNetCore.Mvc.Core
-	nuget Microsoft.Azure.WebJobs 3.0.0-beta8
-	nuget Microsoft.Azure.WebJobs.Extensions 3.0.0-beta8
-	nuget Microsoft.Azure.WebJobs.ServiceBus 3.0.0-beta8
-	nuget Microsoft.Azure.WebJobs.Extensions.EventHubs 3.0.0-beta8
+	nuget Microsoft.Azure.WebJobs prerelease
+	nuget Microsoft.Azure.WebJobs.Extensions prerelease
+	nuget Microsoft.Azure.WebJobs.ServiceBus prerelease
+	nuget Microsoft.Azure.WebJobs.Extensions.EventHubs prerelease
 
 group Server
     storage: none
@@ -21,7 +21,7 @@ group Server
     nuget Saturn
     nuget Fable.JsonConverter
     nuget FSharp.Azure.Storage
-    nuget System.Configuration.ConfigurationManager 4.4.0
+    nuget System.Configuration.ConfigurationManager
 
 group Client
     storage: none
