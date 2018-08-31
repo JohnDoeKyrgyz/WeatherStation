@@ -6,11 +6,7 @@ group Functions
 	nuget FSharp.Core
 	nuget FSharp.Data prerelease
 	nuget Newtonsoft.Json
-	nuget Microsoft.NET.Sdk.Functions 1.0.19
-	nuget Microsoft.AspNetCore.Mvc.Core
-	nuget Microsoft.Azure.WebJobs prerelease
-	nuget Microsoft.Azure.WebJobs.Extensions prerelease
-	nuget Microsoft.Azure.WebJobs.ServiceBus prerelease
+	nuget Microsoft.NET.Sdk.Functions prerelease
 	nuget Microsoft.Azure.WebJobs.Extensions.EventHubs prerelease
 
 group Server
