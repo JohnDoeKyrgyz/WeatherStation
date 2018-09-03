@@ -2,6 +2,7 @@ namespace WeatherStation.Functions
 
 module WundergroundForwarder =
     open System
+    open System.Threading.Tasks
     
     open Microsoft.Azure.WebJobs
     open Microsoft.Azure.WebJobs.Host    
@@ -10,7 +11,7 @@ module WundergroundForwarder =
     open WeatherStation.Model
     open ProcessReadings
     open WundergroundPost
-    open WeatherStation
+    open WeatherStation    
 
     let tryParse parser content =
         try
@@ -88,3 +89,4 @@ module WundergroundForwarder =
                 do! readingsRepository.Save reading
             | None ->
                 log.Info("Nothing to save") }
+        |> Async.StartAsTask :> Task

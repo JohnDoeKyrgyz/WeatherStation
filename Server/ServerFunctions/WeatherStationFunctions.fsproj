@@ -6,7 +6,9 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="init.cmd" />
-    <Content Include="host.json" />
+    <Content Include="host.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="paket.references" />
     <Content Include="WundergroundForwarder\HologramStatusUpdate.json" />
     <Content Include="WundergroundForwarder\ParticleStatusUpdate.json" />
