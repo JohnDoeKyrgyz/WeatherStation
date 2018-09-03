@@ -1,13 +1,12 @@
 group Functions
-	framework: netstandard2.0
 	storage: none
     source https://api.nuget.org/v3/index.json
 
 	nuget FSharp.Core
-	nuget FSharp.Data prerelease
+	nuget FSharp.Data
 	nuget Newtonsoft.Json
-	nuget Microsoft.NET.Sdk.Functions prerelease
-	nuget Microsoft.Azure.WebJobs.Extensions.EventHubs prerelease
+	nuget Microsoft.Azure.WebJobs
+	nuget Microsoft.Azure.WebJobs.ServiceBus
 
 group Server
     storage: none

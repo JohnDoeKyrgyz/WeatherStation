@@ -2,5 +2,5 @@
 	FSharp.Core
 	FSharp.Data
 	Newtonsoft.Json
-	Microsoft.NET.Sdk.Functions
-	Microsoft.Azure.WebJobs.Extensions.EventHubs
+	Microsoft.Azure.WebJobs
+	Microsoft.Azure.WebJobs.ServiceBus
