@@ -1,4 +1,3 @@
 group Server
-    FSharp.Core
-    Saturn
-    Fable.JsonConverter
+Saturn
+Fable.JsonConverter

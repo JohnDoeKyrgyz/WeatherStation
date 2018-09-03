@@ -1,6 +1,5 @@
-﻿group Functions
-	FSharp.Core
-	FSharp.Data
-	Newtonsoft.Json
-	Microsoft.Azure.WebJobs
-	Microsoft.Azure.WebJobs.ServiceBus
+group Functions
+FSharp.Core
+FSharp.Data
+Microsoft.Azure.WebJobs.ServiceBus
+Microsoft.NET.Sdk.Functions

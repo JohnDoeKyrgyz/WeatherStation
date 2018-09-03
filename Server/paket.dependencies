@@ -1,18 +1,17 @@
 group Functions
+	framework: >= net461
 	storage: none
     source https://api.nuget.org/v3/index.json
 
 	nuget FSharp.Core
+	nuget Microsoft.NET.Sdk.Functions
 	nuget FSharp.Data
-	nuget Newtonsoft.Json
-	nuget Microsoft.Azure.WebJobs
-	nuget Microsoft.Azure.WebJobs.ServiceBus
+	nuget Microsoft.Azure.WebJobs.ServiceBus	
 
 group Server
     storage: none
     source https://api.nuget.org/v3/index.json
 
-    nuget FSharp.Core
     nuget Saturn
     nuget Fable.JsonConverter
     nuget FSharp.Azure.Storage
@@ -22,7 +21,6 @@ group Client
     storage: none
     source https://api.nuget.org/v3/index.json
 
-    nuget Fable.Core
     nuget Fable.Elmish.Debugger
     nuget Fable.Elmish.React
     nuget Fable.Elmish.HMR
@@ -34,8 +32,6 @@ group Build
     storage: none
     source https://api.nuget.org/v3/index.json
 
-    nuget FSharp.Core 4.3.4 // https://github.com/fsharp/FAKE/issues/2001
     nuget Fake.Core.Target
     nuget Fake.DotNet.Cli
-    nuget Fake.IO.FileSystem
     
