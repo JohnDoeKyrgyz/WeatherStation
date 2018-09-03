@@ -22,6 +22,7 @@ module WundergroundForwarder =
         [Particle, Particle.parseValues; Hologram, Hologram.parseValues]
 
     let rec innerMostException (ex : exn) =
+        printfn "%A" ex
         if ex.InnerException <> null then innerMostException ex.InnerException else ex
 
     [<FunctionName("WundergroundForwarder")>]
@@ -39,9 +40,7 @@ module WundergroundForwarder =
                     | Choice1Of2 result -> yield key, result
                     | _ -> ()]
 
-            let! readingsRepository = AzureStorage.readingsRepository
-
-            let! reading =
+            do!
                 match successfulAttempts with
                 | (deviceType, deviceReading) :: _ ->
                     async {
@@ -55,6 +54,7 @@ module WundergroundForwarder =
                         let! settingsRepository = AzureStorage.settingsRepository
                         let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
                         let readingCutOff = DateTime.Now.Subtract(readingsWindow)
+                        let! readingsRepository = AzureStorage.readingsRepository
                         let! recentReadings = readingsRepository.GetHistory deviceReading.DeviceId readingCutOff
 
                         let values = fixReadings recentReadings weatherStation deviceReading.Readings
@@ -66,7 +66,9 @@ module WundergroundForwarder =
                         log.Info(sprintf "%A" wundergroundResponse)
                 
                         let reading = Model.createReading deviceReading
-                        return Some reading
+                        
+                        log.Info(sprintf "Saving Reading %A" reading)
+                        do! readingsRepository.Save reading
                     }                    
                 | _ ->
                     async {
@@ -79,14 +81,5 @@ module WundergroundForwarder =
                                 | _ -> "no exception"
 
                             log.Info(string key)
-                            log.Error(message)
-                        return None
-                    }
-
-            match reading with
-            | Some reading -> 
-                log.Info(sprintf "Saving Reading %A" reading)
-                do! readingsRepository.Save reading
-            | None ->
-                log.Info("Nothing to save") }
+                            log.Error(message)}}
         |> Async.StartAsTask :> Task
