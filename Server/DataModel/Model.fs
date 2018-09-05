@@ -18,7 +18,9 @@ module Model =
         | Hologram
 
     type WeatherStation = {
-        DeviceType : DeviceType
+        [<PartitionKey>]
+        DeviceType : string
+        [<RowKey>]
         DeviceId : string
         WundergroundStationId : string
         WundergroundPassword : string
@@ -28,7 +30,6 @@ module Model =
         LastReading : DateTime
     }        
 
-    EntityIdentiferReader.GetIdentifier <- fun weatherStation -> {PartitionKey = string weatherStation.DeviceType; RowKey = weatherStation.DeviceId}
 
     type Reading = {
         RefreshIntervalSeconds : int
@@ -45,7 +46,9 @@ module Model =
         GustMetersPerSecond : double
         SpeedMetersPerSecond : double
         DirectionSixteenths : double
+        [<PartitionKey>]
         SourceDevice : string
+        [<RowKey>]
         RowKey : string
     }
     with
@@ -67,5 +70,3 @@ module Model =
             SourceDevice = null
             RowKey = null
         }
-
-    EntityIdentiferReader.GetIdentifier <- fun reading -> {PartitionKey = reading.RowKey; RowKey = reading.SourceDevice}

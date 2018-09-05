@@ -44,15 +44,15 @@ module Repository =
 
     type AzureStorageRepository<'TEntity>(connection, tableName) =
         let runQuery = runQuery connection tableName
+        member internal this.Save entity =
+            async {
+                do!
+                    InsertOrReplace entity
+                    |> inTableAsync connection tableName
+                    |> Async.Ignore }
         interface IRepository<'TEntity> with
             member this.GetAll() = runQuery Query.all<'TEntity>
-            member this.Save entity =
-                async {
-                    do!
-                        InsertOrReplace entity
-                        |> inTableAsync connection tableName
-                        |> Async.Ignore
-                }
+            member this.Save entity = this.Save entity
 
     type SystemSettingsRepository(connection, tableName) =
         inherit AzureStorageRepository<SystemSetting>(connection, tableName)
@@ -101,7 +101,8 @@ module Repository =
                 }
 
     type ReadingsRepository(connection, tableName) =
-        inherit AzureStorageRepository<Reading>(connection, tableName)
+        inherit AzureStorageRepository<Reading>(connection, tableName)        
+
         interface IReadingsRepository with
             member this.GetHistory deviceId cutOff =
                 let cutOff = cutOff.ToUniversalTime()
@@ -112,9 +113,9 @@ module Repository =
                         |> runQuery connection tableName
                     return readings
                 }
-            member this.Save reading =
-                let baseRepo = this :> IRepository<Reading>
-                baseRepo.Save {reading with ReadingTime = reading.ReadingTime.ToUniversalTime()}
+            override this.Save(reading) =
+                let updatedReading = {reading with ReadingTime = reading.ReadingTime.ToUniversalTime()}
+                base.Save(updatedReading)                
 
     let createRepository tableName constructor connection =
         async {
