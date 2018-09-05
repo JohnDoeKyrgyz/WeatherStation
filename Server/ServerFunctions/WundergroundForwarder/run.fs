@@ -2,8 +2,7 @@ namespace WeatherStation.Functions
 
 module WundergroundForwarder =
     open System
-    open System.Threading.Tasks    
-    open System.Configuration
+    open System.Threading.Tasks
     
     open Microsoft.Azure.WebJobs
     open Microsoft.Azure.WebJobs.Host    
@@ -11,6 +10,8 @@ module WundergroundForwarder =
     open WeatherStation.Model
     open ProcessReadings
     open WundergroundPost
+    open WeatherStation
+    open WeatherStation
     open WeatherStation
 
     let tryParse parser content =
@@ -48,28 +49,36 @@ module WundergroundForwarder =
 
                         log.Info(sprintf "Searching for device %A %s in registry" deviceType deviceReading.DeviceId)                        
                         
-                        let connectionString = ConfigurationManager.ConnectionStrings.["AzureStorageConnection"].ConnectionString
+                        let connectionString = Environment.GetEnvironmentVariable("WeatherStationStorage")                        
                         let! weatherStationRepository = AzureStorage.weatherStationRepository connectionString
-                        let! weatherStation = weatherStationRepository.Get deviceType deviceReading.DeviceId
-                
-                        let! settingsRepository = AzureStorage.settingsRepository connectionString
-                        let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
-                        let readingCutOff = DateTime.Now.Subtract(readingsWindow)
                         let! readingsRepository = AzureStorage.readingsRepository connectionString
-                        let! recentReadings = readingsRepository.GetHistory deviceReading.DeviceId readingCutOff
 
-                        let values = fixReadings recentReadings weatherStation deviceReading.Readings
-                        log.Info(sprintf "Fixed Values %A" values)
+                        let! weatherStation = weatherStationRepository.Get deviceType deviceReading.DeviceId
 
-                        let valuesSeq = values |> Seq.ofList
-                        let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
+                        try
+                            let! settingsRepository = AzureStorage.settingsRepository connectionString
+                            let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
+                            let readingCutOff = DateTime.Now.Subtract(readingsWindow)
+                            
+                            let! recentReadings = readingsRepository.GetHistory deviceReading.DeviceId readingCutOff
 
-                        log.Info(sprintf "%A" wundergroundResponse)
+                            let values = fixReadings recentReadings weatherStation deviceReading.Readings
+                            log.Info(sprintf "Fixed Values %A" values)
+
+                            let valuesSeq = values |> Seq.ofList
+                            let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
+
+                            log.Info(sprintf "%A" wundergroundResponse)
+                        with
+                        | ex -> log.Error("Error while posting to Wunderground", ex)
                 
-                        let reading = Model.createReading deviceReading
+                        let reading = Model.createReading deviceReading                        
                         
                         log.Info(sprintf "Saving Reading %A" reading)
                         do! readingsRepository.Save reading
+
+                        let updatedWeatherStation = { weatherStation with LastReading = DateTime.Now.ToUniversalTime() }
+                        do! weatherStationRepository.Save updatedWeatherStation
                     }                    
                 | _ ->
                     async {
