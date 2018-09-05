@@ -22,7 +22,7 @@ module Server =
     Console.Beep()
     #endif
     
-    let connectionString = ConfigurationManager.ConnectionStrings.["AzureStorageConnection"].ConnectionString
+    let connectionString = ConfigurationManager.ConnectionStrings.["WeatherStationStorage"].ConnectionString
     
     let webApp = router {
             
