@@ -5,8 +5,7 @@ module WundergroundForwarder =
     open System.Threading.Tasks
     
     open Microsoft.Azure.WebJobs
-    open Microsoft.Azure.WebJobs.Host    
-    open Microsoft.Azure.WebJobs.ServiceBus
+    open Microsoft.Azure.WebJobs.Host
 
     open WeatherStation.Model
     open ProcessReadings

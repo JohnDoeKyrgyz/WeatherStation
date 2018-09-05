@@ -1,5 +1,4 @@
 group Functions
-FSharp.Core
 FSharp.Data
-Microsoft.Azure.WebJobs.ServiceBus
+Microsoft.Azure.WebJobs.Extensions.EventHubs
 Microsoft.NET.Sdk.Functions

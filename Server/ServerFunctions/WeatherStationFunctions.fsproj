@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>    
-    <AzureFunctionsVersion>v1</AzureFunctionsVersion>
+    <TargetFramework>netstandard2.0</TargetFramework>    
+    <AzureFunctionsVersion>v2</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Include="init.cmd" />
@@ -25,7 +25,13 @@
     <None Include="build.cmd" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.2.3" />
     <ProjectReference Include="..\DataModel\DataModel.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\..\..\..\Users\jatwood\AppData\Roaming\npm\node_modules\azure-functions-core-tools\bin\FSharp.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>  
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

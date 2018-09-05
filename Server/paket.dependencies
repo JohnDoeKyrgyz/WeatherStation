@@ -1,12 +1,10 @@
 group Functions
-	framework: >= net461
 	storage: none
     source https://api.nuget.org/v3/index.json
 
-	nuget FSharp.Core
-	nuget Microsoft.NET.Sdk.Functions
-	nuget FSharp.Data
-	nuget Microsoft.Azure.WebJobs.ServiceBus	
+	nuget Microsoft.NET.Sdk.Functions prerelease
+	nuget FSharp.Data prerelease
+	nuget Microsoft.Azure.WebJobs.Extensions.EventHubs prerelease
 
 group Server
     storage: none
