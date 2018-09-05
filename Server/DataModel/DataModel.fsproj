@@ -13,12 +13,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="paket.references" />
-    <PackageReference Update="FSharp.Core" Version="4.2.3" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="FSharp.Core">
-      <HintPath>..\..\..\..\Users\jatwood\AppData\Roaming\npm\node_modules\azure-functions-core-tools\bin\FSharp.Core.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
