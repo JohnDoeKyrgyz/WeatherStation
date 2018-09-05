@@ -5,7 +5,6 @@
     <AzureFunctionsVersion>v2</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="init.cmd" />
     <Content Include="host.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -22,7 +21,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include=".deployment" />
-    <None Include="build.cmd" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataModel\DataModel.fsproj" />
