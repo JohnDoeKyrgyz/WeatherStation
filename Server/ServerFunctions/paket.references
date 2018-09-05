@@ -2,3 +2,4 @@ group Functions
 FSharp.Data
 Microsoft.Azure.WebJobs.Extensions.EventHubs
 Microsoft.NET.Sdk.Functions
+System.Configuration.ConfigurationManager

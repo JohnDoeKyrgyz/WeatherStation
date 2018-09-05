@@ -1,14 +1,15 @@
 namespace WeatherStation
 module Logic =
-    open System
+
+    open System        
     open FSharp.Control.Tasks
     
     open WeatherStation.Shared
     open AzureStorage
-
-    let getWeatherStations activeThreshold = 
+    
+    let getWeatherStations connectionString activeThreshold = 
         task {
-            let! repository = weatherStationRepository
+            let! repository = weatherStationRepository connectionString
             let! stations = repository.GetAll()
             return [
                 for station in stations do

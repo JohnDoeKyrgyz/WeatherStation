@@ -5,6 +5,7 @@ group Functions
 	nuget Microsoft.NET.Sdk.Functions prerelease
 	nuget FSharp.Data prerelease
 	nuget Microsoft.Azure.WebJobs.Extensions.EventHubs prerelease
+    nuget System.Configuration.ConfigurationManager
 
 group Server
     storage: none

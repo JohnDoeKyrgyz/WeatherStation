@@ -2,7 +2,8 @@ namespace WeatherStation
 
 module Server =
     open System
-    open System.IO
+    open System.IO    
+    open System.Configuration
 
     open Microsoft.Extensions.DependencyInjection
 
@@ -21,13 +22,15 @@ module Server =
     Console.Beep()
     #endif
     
+    let connectionString = ConfigurationManager.ConnectionStrings.["AzureStorageConnection"].ConnectionString
+    
     let webApp = router {
             
         get "/api/stations" (fun next ctx ->
             task {
-                let! systemSettingsRepository = AzureStorage.settingsRepository
+                let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
                 let! activeThreshold = SystemSettings.activeThreshold systemSettingsRepository
-                let! stations = getWeatherStations activeThreshold
+                let! stations = getWeatherStations connectionString activeThreshold
                 return! ctx.WriteJsonAsync stations
             })        
     }

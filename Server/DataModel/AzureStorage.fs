@@ -1,16 +1,13 @@
 namespace WeatherStation
 
 module AzureStorage =
-    open System
-    open System.Configuration
 
     open Microsoft.WindowsAzure.Storage    
     open Microsoft.WindowsAzure.Storage.Table
 
     open WeatherStation.Cache
 
-    let connection =
-        let connectionString = ConfigurationManager.ConnectionStrings.["AzureStorageConnection"].ConnectionString
+    let createConnection connectionString =
         let storageAccount = CloudStorageAccount.Parse connectionString
         storageAccount.CreateCloudTableClient()
 
@@ -22,9 +19,10 @@ module AzureStorage =
 
     let private repositoryCache = new Cache<string, obj>()
 
-    let private getOrCreateRepository<'TRepository> key (builder : CloudTableClient -> Async<'TRepository>) =
+    let private getOrCreateRepository<'TRepository> key (builder : CloudTableClient -> Async<'TRepository>) connectionString =
         let cacheValueBuilder =
             async {
+                let connection = createConnection connectionString
                 let! repository = builder connection
                 return box repository }
         async {
@@ -32,6 +30,6 @@ module AzureStorage =
             return unbox<'TRepository> repository
         }
 
-    let weatherStationRepository = getOrCreateRepository "WeatherStations" Repository.createWeatherStationsRepository        
-    let settingsRepository = getOrCreateRepository "SystemSettings" Repository.createSystemSettingRepository
-    let readingsRepository = getOrCreateRepository "Readings" Repository.createReadingRepository
+    let weatherStationRepository connectionString = getOrCreateRepository "WeatherStations" Repository.createWeatherStationsRepository connectionString
+    let settingsRepository connectionString = getOrCreateRepository "SystemSettings" Repository.createSystemSettingRepository connectionString
+    let readingsRepository connectionString = getOrCreateRepository "Readings" Repository.createReadingRepository connectionString

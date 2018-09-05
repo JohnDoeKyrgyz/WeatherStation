@@ -1,3 +1,2 @@
 ﻿group Server
 	FSharp.Azure.Storage
-    System.Configuration.ConfigurationManager

@@ -2,15 +2,16 @@ namespace WeatherStation.Functions
 
 module WundergroundForwarder =
     open System
-    open System.Threading.Tasks
+    open System.Threading.Tasks    
+    open System.Configuration
     
     open Microsoft.Azure.WebJobs
-    open Microsoft.Azure.WebJobs.Host
+    open Microsoft.Azure.WebJobs.Host    
 
     open WeatherStation.Model
     open ProcessReadings
     open WundergroundPost
-    open WeatherStation    
+    open WeatherStation
 
     let tryParse parser content =
         try
@@ -45,15 +46,16 @@ module WundergroundForwarder =
                     async {
                         log.Info(sprintf "%A" deviceReading)
 
-                        log.Info(sprintf "Searching for device %A %s in registry" deviceType deviceReading.DeviceId)
-
-                        let! weatherStationRepository = AzureStorage.weatherStationRepository
+                        log.Info(sprintf "Searching for device %A %s in registry" deviceType deviceReading.DeviceId)                        
+                        
+                        let connectionString = ConfigurationManager.ConnectionStrings.["AzureStorageConnection"].ConnectionString
+                        let! weatherStationRepository = AzureStorage.weatherStationRepository connectionString
                         let! weatherStation = weatherStationRepository.Get deviceType deviceReading.DeviceId
                 
-                        let! settingsRepository = AzureStorage.settingsRepository
+                        let! settingsRepository = AzureStorage.settingsRepository connectionString
                         let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
                         let readingCutOff = DateTime.Now.Subtract(readingsWindow)
-                        let! readingsRepository = AzureStorage.readingsRepository
+                        let! readingsRepository = AzureStorage.readingsRepository connectionString
                         let! recentReadings = readingsRepository.GetHistory deviceReading.DeviceId readingCutOff
 
                         let values = fixReadings recentReadings weatherStation deviceReading.Readings

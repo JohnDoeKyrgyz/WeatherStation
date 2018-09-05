@@ -1,3 +1,4 @@
 group Server
 Saturn
 Fable.JsonConverter
+System.Configuration.ConfigurationManager
