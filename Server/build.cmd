@@ -10,3 +10,6 @@ if errorlevel 1 (
 if errorlevel 1 (
   exit /b %errorlevel%
 )
+
+dotnet clean
+dotnet build
