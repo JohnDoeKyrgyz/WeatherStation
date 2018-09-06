@@ -35,6 +35,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scratch", "Scratch", "{1E5E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "extensions", "ServerFunctions\extensions.csproj", "{38D48DF1-2277-41CD-B692-3039C2AC663A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A9F745C3-F546-4D1F-A6F5-7AA1931E7064}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "WeatherStationFunctions.Tests", "Tests\WeatherStationFunctions.Tests\WeatherStationFunctions.Tests.fsproj", "{DB2285BA-2947-435E-83D4-E896F92805B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +63,10 @@ Global
 		{38D48DF1-2277-41CD-B692-3039C2AC663A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38D48DF1-2277-41CD-B692-3039C2AC663A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38D48DF1-2277-41CD-B692-3039C2AC663A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB2285BA-2947-435E-83D4-E896F92805B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB2285BA-2947-435E-83D4-E896F92805B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB2285BA-2947-435E-83D4-E896F92805B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB2285BA-2947-435E-83D4-E896F92805B7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -68,6 +76,7 @@ Global
 		{73E8E820-C8AA-47CC-BB2B-152CA4D0B856} = {A422A41E-E145-4A76-BB69-8EE0215C5693}
 		{825256A2-F28D-48E9-A4B3-95A7C48D02C1} = {CD58757D-EEAB-48E0-9F08-10159989293D}
 		{38D48DF1-2277-41CD-B692-3039C2AC663A} = {CD58757D-EEAB-48E0-9F08-10159989293D}
+		{DB2285BA-2947-435E-83D4-E896F92805B7} = {A9F745C3-F546-4D1F-A6F5-7AA1931E7064}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7A0AA30E-4CD9-4359-9513-BA68E2E85245}

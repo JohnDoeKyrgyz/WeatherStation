@@ -26,8 +26,7 @@ module WundergroundForwarder =
         printfn "%A" ex
         if ex.InnerException <> null then innerMostException ex.InnerException else ex
 
-    [<FunctionName("WundergroundForwarder")>]
-    let Run ([<EventHubTrigger("weatherstationsiot", Connection="WeatherStationsIoT")>] eventHubMessage: string) (log: TraceWriter) =    
+    let processEventHubMessage eventHubMessage (log: TraceWriter) postToWunderground =
         async {
             log.Info(eventHubMessage)
 
@@ -93,3 +92,7 @@ module WundergroundForwarder =
                             log.Info(string key)
                             log.Error(message)}}
         |> Async.StartAsTask :> Task
+
+    [<FunctionName("WundergroundForwarder")>]
+    let Run ([<EventHubTrigger("weatherstationsiot", Connection="WeatherStationsIoT")>] eventHubMessage: string) (log: TraceWriter) =    
+        processEventHubMessage eventHubMessage log postToWunderground

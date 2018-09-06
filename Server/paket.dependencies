@@ -27,6 +27,11 @@ group Client
 
     clitool dotnet-fable
 
+group Test
+	storage: none
+    source https://api.nuget.org/v3/index.json
+	nuget Expecto
+
 group Build
     storage: none
     source https://api.nuget.org/v3/index.json
