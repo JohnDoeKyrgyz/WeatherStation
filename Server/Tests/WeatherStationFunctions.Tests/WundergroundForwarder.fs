@@ -5,6 +5,7 @@ module WundergroundForwarder =
     open WeatherStation.Functions.WundergroundForwarder
     open Expecto
     open Microsoft.Azure.WebJobs.Host
+    open Expecto.Logging
 
     Environment.SetEnvironmentVariable("WeatherStationStorage", "UseDevelopmentStorage=true")    
 
@@ -12,6 +13,26 @@ module WundergroundForwarder =
         new TraceWriter(TraceLevel.Verbose) with
             override this.Trace event =
                 printfn "%A" event }
+
+    type LogMessageCompare =
+        | Exact of string
+        | Ignore
+        | Test of (string -> bool)
+
+    let logExpectations expectedMessages =                     
+        let messageIndex = ref 0
+        {   
+            new TraceWriter(TraceLevel.Verbose) with
+                override this.Trace event =
+                    printfn "%A" event
+                    let index = !messageIndex
+                    let level, messageCompare = index |> Array.get expectedMessages
+                    Expect.equal level event.Level "Unexpected log level"
+                    match messageCompare with
+                    | Exact message -> Expect.equal message event.Message "Unexpected message"
+                    | Test test -> Expect.isTrue (test event.Message) "Unexpected message"
+                    | Ignore -> ()
+                    messageIndex := index + 1 }
 
     [<Tests>]
     let tests =
@@ -30,19 +51,16 @@ module WundergroundForwarder =
                         "published_at": "2018-06-04T23:35:04.892Z"
                     }
                     """
+
+                let log = logExpectations [|
+                    TraceLevel.Info, Exact message
+                    TraceLevel.Info, Exact "Parsed particle reading for device 1e0037000751363130333334"
+                    TraceLevel.Info, Ignore
+                    TraceLevel.Info, Exact "Searching for device Particle 1e0037000751363130333334 in registry"
+                    TraceLevel.Error, Exact "Device [1e0037000751363130333334] is not provisioned"|]
                 
-                let! result =
+                do!
                     processEventHubMessage message log (fun _ _ _ _ -> async { failwith "Should not have posted to wunderground" }) 
                     |> Async.AwaitTask
-                    |> Async.Catch
-
-                match result with
-                | Choice1Of2 _ -> failwith "Did not expect the process to succeed"
-                | Choice2Of2 exn -> 
-                    match exn with
-                    | :? AggregateException as aggregateException ->
-                            let innerMostException = aggregateException.InnerException
-                            Expect.equal typedefof<InvalidOperationException> (innerMostException.GetType()) "Unexpected exception type"
-                    | exn -> failwithf "Unexpected exception type [%s]" (exn.GetType().Name)
             }
         ]

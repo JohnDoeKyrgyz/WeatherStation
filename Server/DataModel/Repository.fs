@@ -18,7 +18,7 @@ module Repository =
 
     type IWeatherStationsRepository =
         inherit IRepository<WeatherStation>
-        abstract member Get : deviceType:DeviceType -> deviceId:string -> Async<WeatherStation>
+        abstract member Get : deviceType:DeviceType -> deviceId:string -> Async<WeatherStation option>
 
     type IReadingsRepository =
         inherit IRepository<Reading>
@@ -97,7 +97,8 @@ module Repository =
                         |> Query.where <@ fun station key -> key.PartitionKey = string deviceType && key.RowKey = deviceId @>
                         |> Query.take 1
                         |> runQuery connection tableName
-                    return weatherStations.Single()
+                    let result = weatherStations.SingleOrDefault()
+                    return if isNull (box result) then None else Some result
                 }
 
     type ReadingsRepository(connection, tableName) =

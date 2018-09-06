@@ -11,8 +11,6 @@ module WundergroundForwarder =
     open ProcessReadings
     open WundergroundPost
     open WeatherStation
-    open WeatherStation
-    open WeatherStation
 
     let tryParse parser content =
         try
@@ -50,34 +48,37 @@ module WundergroundForwarder =
                         
                         let connectionString = Environment.GetEnvironmentVariable("WeatherStationStorage")                        
                         let! weatherStationRepository = AzureStorage.weatherStationRepository connectionString
-                        let! readingsRepository = AzureStorage.readingsRepository connectionString
-
                         let! weatherStation = weatherStationRepository.Get deviceType deviceReading.DeviceId
 
-                        try
-                            let! settingsRepository = AzureStorage.settingsRepository connectionString
-                            let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
-                            let readingCutOff = DateTime.Now.Subtract(readingsWindow)
+                        if weatherStation.IsNone then
+                            log.Error(sprintf "Device [%s] is not provisioned" deviceReading.DeviceId)
+                        else
+                            let! readingsRepository = AzureStorage.readingsRepository connectionString
+                            let weatherStation = weatherStation.Value
+                            try
+                                let! settingsRepository = AzureStorage.settingsRepository connectionString
+                                let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
+                                let readingCutOff = DateTime.Now.Subtract(readingsWindow)
                             
-                            let! recentReadings = readingsRepository.GetHistory deviceReading.DeviceId readingCutOff
+                                let! recentReadings = readingsRepository.GetHistory deviceReading.DeviceId readingCutOff
 
-                            let values = fixReadings recentReadings weatherStation deviceReading.Readings
-                            log.Info(sprintf "Fixed Values %A" values)
+                                let values = fixReadings recentReadings weatherStation deviceReading.Readings
+                                log.Info(sprintf "Fixed Values %A" values)
 
-                            let valuesSeq = values |> Seq.ofList
-                            let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
+                                let valuesSeq = values |> Seq.ofList
+                                let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
 
-                            log.Info(sprintf "%A" wundergroundResponse)
-                        with
-                        | ex -> log.Error("Error while posting to Wunderground", ex)
+                                log.Info(sprintf "%A" wundergroundResponse)
+                            with
+                            | ex -> log.Error("Error while posting to Wunderground", ex)
                 
-                        let reading = Model.createReading deviceReading                        
+                            let reading = Model.createReading deviceReading                        
                         
-                        log.Info(sprintf "Saving Reading %A" reading)
-                        do! readingsRepository.Save reading
+                            log.Info(sprintf "Saving Reading %A" reading)
+                            do! readingsRepository.Save reading
 
-                        let updatedWeatherStation = { weatherStation with LastReading = DateTime.Now.ToUniversalTime() }
-                        do! weatherStationRepository.Save updatedWeatherStation
+                            let updatedWeatherStation = { weatherStation with LastReading = DateTime.Now.ToUniversalTime() }
+                            do! weatherStationRepository.Save updatedWeatherStation
                     }                    
                 | _ ->
                     async {
