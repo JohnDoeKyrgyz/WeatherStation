@@ -34,7 +34,7 @@ module Particle =
             read "BmeHumidity" (decimal >> LanguagePrimitives.DecimalWithMeasure<percent> >> HumidityPercentBarometer)
             read "DhtTemperature" (decimal >> LanguagePrimitives.DecimalWithMeasure<celcius> >> TemperatureCelciusHydrometer)
             read "DhtHumidity" (decimal >> LanguagePrimitives.DecimalWithMeasure<percent> >> HumidityPercentHydrometer)
-            read "AnemometerWindSpeed" (decimal >> LanguagePrimitives.DecimalWithMeasure<metersPerSecond> >> SpeedMetersPerSecond)
+            read "AnemometerWindSpeed" (decimal >> LanguagePrimitives.DecimalWithMeasure<meters/seconds> >> SpeedMetersPerSecond)
             read "AnemometerDirection" (int >> LanguagePrimitives.Int32WithMeasure<sixteenths> >> DirectionSixteenths)
         ]
 

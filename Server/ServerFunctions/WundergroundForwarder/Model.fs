@@ -18,7 +18,7 @@ module Model =
     type pascal
 
     [<Measure>]
-    type metersPerSecond
+    type meters
 
     [<Measure>]
     type sixteenths
@@ -42,8 +42,8 @@ module Model =
         | HumidityPercentHydrometer of decimal<percent>
         | HumidityPercentBarometer of decimal<percent>
         | PressurePascal of decimal<pascal>
-        | SpeedMetersPerSecond of decimal<metersPerSecond>
-        | GustMetersPerSecond of decimal<metersPerSecond>
+        | SpeedMetersPerSecond of decimal<meters/seconds>
+        | GustMetersPerSecond of decimal<meters/seconds>
         | DirectionSixteenths of int<sixteenths>
         | RefreshInterval of int<seconds>
 

@@ -8,6 +8,7 @@ module AzureStorage =
     open WeatherStation.Cache
 
     let createConnection connectionString =
+        if isNull connectionString then failwith "ConnectionString cannot be null"
         let storageAccount = CloudStorageAccount.Parse connectionString
         storageAccount.CreateCloudTableClient()
 
