@@ -13,7 +13,8 @@ module Logic =
             let! stations = repository.GetAll()
             return [
                 for station in stations do
-                    let lastReadingAge = DateTime.Now.ToUniversalTime().Subtract(station.LastReading.ToUniversalTime())
+                    let stationLastReadingTime = (defaultArg station.LastReading DateTime.MinValue).ToUniversalTime()
+                    let lastReadingAge = DateTime.Now.ToUniversalTime().Subtract(stationLastReadingTime)
                     let status = if lastReadingAge > activeThreshold then Active else Offline
                     yield {
                         Name = station.DeviceId

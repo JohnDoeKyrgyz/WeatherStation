@@ -27,7 +27,7 @@ module Model =
         DirectionOffsetDegrees : int option
         Latitude : double
         Longitude : double
-        LastReading : DateTime
+        LastReading : DateTime option
     }        
 
 

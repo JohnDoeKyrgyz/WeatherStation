@@ -28,10 +28,9 @@ module DataSetup =
                         |> Async.Ignore
         }
 
-    let clear tableName =
+    let clear<'TRecord> tableName =
         let connection = AzureStorage.createConnection connectionString
-        doClear connection tableName
-        
+        doClear<'TRecord> connection tableName        
 
     let load<'TRecord> tableName records =
         let connection = AzureStorage.createConnection connectionString
@@ -53,4 +52,4 @@ module DataSetup =
             printfn "%A" results
         }
         
-    let clearReadings = clear "Readings"        
+    let clearReadings = clear<Reading> "Readings"        

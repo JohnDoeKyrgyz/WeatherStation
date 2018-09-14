@@ -69,20 +69,29 @@ module WundergroundForwarder =
 
     let weatherStation = {
         DeviceType = string DeviceType.Particle
-        DeviceId = "1234"
+        DeviceId = "1e0037000751363130333334"
         WundergroundStationId = "K1234"
         WundergroundPassword = "fuzzybunny"
         DirectionOffsetDegrees = None
         Latitude = 0.0
         Longitude = 0.0
-        LastReading = DateTime.MinValue
+        LastReading = None
     }
 
     [<Tests>]
     let validTests = 
         testList "Basic Device" [
+            testAsync "Insert sample record" {
+                let! weatherStationRepository = AzureStorage.weatherStationRepository connectionString
+                do! weatherStationRepository.Save weatherStation
+
+                let! weatherStationReloaded = weatherStationRepository.Get Particle weatherStation.DeviceId
+                Expect.isSome weatherStationReloaded "No WeatherStation found"
+                Expect.equal weatherStation weatherStationReloaded.Value "WeatherStations are not equal"
+            }
             testAsync "Reading for basic device" {
                 do! loadWeatherStations [weatherStation]
+                do! clearReadings
 
                 let message =
                     """
@@ -94,6 +103,7 @@ module WundergroundForwarder =
                     }
                     """
                 let expectedReadings = [SpeedMetersPerSecond(1.70M<meters/seconds>)] :> seq<ReadingValues>
+                let testStartTime = DateTime.Now.ToUniversalTime()
 
                 do!
                     processEventHubMessage message log (fun stationId password values traceWriter -> async { 
@@ -108,7 +118,9 @@ module WundergroundForwarder =
 
                 match readings with
                 | [reading] ->
-                    Expect.equal reading.SourceDevice weatherStation.DeviceId "Unexpected DeviceId"                    
+                    Expect.equal reading.SourceDevice weatherStation.DeviceId "Unexpected DeviceId"
+                    Expect.isGreaterThan reading.ReadingTime testStartTime "Unexpected ReadingTime"
+                    Expect.equal reading.SpeedMetersPerSecond 1.70 "Unexpected SpeedMetersPerSecond"
                 | _ -> failwith "Unexpected readings"
 
                 do! clearReadings
