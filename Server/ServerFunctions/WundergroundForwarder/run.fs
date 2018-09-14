@@ -77,7 +77,7 @@ module WundergroundForwarder =
                             log.Info(sprintf "Saving Reading %A" reading)
                             do! readingsRepository.Save reading
 
-                            let updatedWeatherStation = { weatherStation with LastReading = Some( DateTime.Now.ToUniversalTime() ) }
+                            let updatedWeatherStation = { weatherStation with LastReading = Some( DateTime.Now ) }
                             do! weatherStationRepository.Save updatedWeatherStation
                     }                    
                 | _ ->

@@ -60,8 +60,8 @@ module Model =
 
         match value with
         | RefreshInterval seconds -> {reading with RefreshIntervalSeconds = seconds / 1<seconds>}
-        | ReadingTime time -> {reading with ReadingTime = time.ToUniversalTime()}
-        | DeviceTime time -> {reading with DeviceTime = time.ToUniversalTime()}
+        | ReadingTime time -> {reading with ReadingTime = time}
+        | DeviceTime time -> {reading with DeviceTime = time}
         | SupplyVoltage voltage -> {reading with SupplyVoltage = toDouble(voltage)}
         | BatteryChargeVoltage voltage -> {reading with BatteryChargeVoltage = toDouble(voltage)}
         | PanelVoltage voltage -> {reading with PanelVoltage = toDouble(voltage)}

@@ -9,6 +9,7 @@ module WundergroundForwarder =
     open WeatherStation.Tests.Functions.DataSetup
     open WeatherStation.Functions.WundergroundForwarder
     open WeatherStation
+    open Microsoft.IdentityModel.Tokens
     
 
     let log = {
@@ -78,6 +79,12 @@ module WundergroundForwarder =
         LastReading = None
     }
 
+    type WundergroundParameters = {
+        StationId : string
+        Password : string
+        Values : ReadingValues list
+    }
+
     [<Tests>]
     let validTests = 
         testList "Basic Device" [
@@ -93,25 +100,47 @@ module WundergroundForwarder =
                 do! loadWeatherStations [weatherStation]
                 do! clearReadings
 
-                let message =
-                    """
-                    {
-                        "data": "100:4.006250:3864|d10.800000:86.500000a1.700000:15",
-                        "device_id": "1e0037000751363130333334",
-                        "event": "Reading",
-                        "published_at": "2018-06-04T23:35:04.892Z"
-                    }
-                    """
-                let expectedReadings = [SpeedMetersPerSecond(1.70M<meters/seconds>)] :> seq<ReadingValues>
-                let testStartTime = DateTime.Now.ToUniversalTime()
+                let readingTime = (new DateTime(2018,9,14))
 
+                let message =
+                    sprintf
+                        """
+                        {
+                            "data": "100:4.006250:3864|b1.0:2.0:3.0d10.800000:86.500000a1.700000:15",
+                            "device_id": "%s",
+                            "event": "Reading",
+                            "published_at": "%s"
+                        }
+                        """
+                        weatherStation.DeviceId
+                        (readingTime.ToString())
+
+                let expectedReadings = [
+                    BatteryChargeVoltage 4.006250M<volts>
+                    PanelVoltage 16.984615384615384615384615385M<volts>
+                    TemperatureCelciusBarometer 1.0M<celcius>
+                    PressurePascal 2.0m<pascal>
+                    HumidityPercentBarometer 3.0m<percent>
+                    TemperatureCelciusHydrometer 10.800000M<celcius>
+                    HumidityPercentHydrometer 86.500000M<percent>
+                    SpeedMetersPerSecond 1.700000M<meters/seconds>
+                    DirectionSixteenths 15<sixteenths>
+                    ReadingTime readingTime]
+                
+                let wundergroundParameters = ref None
                 do!
-                    processEventHubMessage message log (fun stationId password values traceWriter -> async { 
-                        Expect.equal stationId weatherStation.WundergroundStationId "Unexpected StationId"
-                        Expect.equal password weatherStation.WundergroundPassword "Unexpected Password"                        
-                        Expect.equal values expectedReadings "Unexpected readings"
-                        Expect.isNotNull traceWriter "Missing traceWriter" }) 
+                    processEventHubMessage message log (fun stationId password values traceWriter -> async {
+                        wundergroundParameters := Some {StationId = stationId; Password = password; Values = values |> Seq.toList}
+                    }) 
                     |> Async.AwaitTask
+                
+                let wundergroundParameters = !wundergroundParameters
+                Expect.isSome wundergroundParameters "No call to wunderground"
+
+                let wundergroundParameters = wundergroundParameters.Value
+                Expect.equal wundergroundParameters.StationId weatherStation.WundergroundStationId "Unexpected StationId"
+                Expect.equal wundergroundParameters.Password weatherStation.WundergroundPassword "Unexpected Password"                        
+                Expect.equal wundergroundParameters.Values expectedReadings "Unexpected readings"
 
                 let! readingsRepository = AzureStorage.readingsRepository connectionString
                 let! readings = readingsRepository.GetAll()
@@ -119,7 +148,7 @@ module WundergroundForwarder =
                 match readings with
                 | [reading] ->
                     Expect.equal reading.SourceDevice weatherStation.DeviceId "Unexpected DeviceId"
-                    Expect.isGreaterThan reading.ReadingTime testStartTime "Unexpected ReadingTime"
+                    Expect.isGreaterThan reading.ReadingTime readingTime "Unexpected ReadingTime"
                     Expect.equal reading.SpeedMetersPerSecond 1.70 "Unexpected SpeedMetersPerSecond"
                 | _ -> failwith "Unexpected readings"
 

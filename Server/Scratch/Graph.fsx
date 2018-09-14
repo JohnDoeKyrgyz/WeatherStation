@@ -26,7 +26,7 @@ let readingsTableRef = connection.GetTableReference("Readings")
 let readingsQuery = readingsTableRef.CreateQuery<Reading>()
 
 let recentReadings =
-    let tenMinutesAgo = DateTime.Now.ToUniversalTime().Subtract(TimeSpan.FromDays(10.0))
+    let tenMinutesAgo = DateTime.Now.Subtract(TimeSpan.FromDays(10.0))
     query {
         for reading in readingsQuery do
         where (reading.ReadingTime > tenMinutesAgo )

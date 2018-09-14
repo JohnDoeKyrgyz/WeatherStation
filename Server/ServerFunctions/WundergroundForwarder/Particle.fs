@@ -41,10 +41,11 @@ module Particle =
     let parseValues (log: TraceWriter) content =
         let particleReading = ParticlePayload.Parse content
         log.Info(sprintf "Parsed particle reading for device %s" particleReading.DeviceId)
+        let matches = readingParser.Matches(particleReading.Data)
         let sensorValues = [
-            for regexMatch in readingParser.Matches(particleReading.Data) do                
+            for regexMatch in matches do                
                 for valueParser in valueParsers log do
                     let parseResult = valueParser regexMatch.Groups
                     if parseResult.IsSome then
                         yield parseResult.Value ]
-        { Readings = sensorValues @ [ReadingTime (particleReading.PublishedAt.ToUniversalTime())]; DeviceId = particleReading.DeviceId}
+        { Readings = sensorValues @ [ReadingTime (particleReading.PublishedAt)]; DeviceId = particleReading.DeviceId}

@@ -106,7 +106,6 @@ module Repository =
 
         interface IReadingsRepository with
             member this.GetHistory deviceId cutOff =
-                let cutOff = cutOff.ToUniversalTime()
                 async {
                     let! readings =
                         Query.all<Reading>
@@ -115,7 +114,7 @@ module Repository =
                     return readings
                 }
             override this.Save(reading) =
-                let updatedReading = {reading with ReadingTime = reading.ReadingTime.ToUniversalTime()}
+                let updatedReading = {reading with ReadingTime = reading.ReadingTime}
                 base.Save(updatedReading)                
 
     let createRepository tableName constructor connection =
