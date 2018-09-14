@@ -9,7 +9,6 @@ module WundergroundForwarder =
     open WeatherStation.Tests.Functions.DataSetup
     open WeatherStation.Functions.WundergroundForwarder
     open WeatherStation
-    open Microsoft.IdentityModel.Tokens
     
 
     let log = {
@@ -45,6 +44,7 @@ module WundergroundForwarder =
             }
             
             testAsync "Missing particle device" {
+                do! clearWeatherStations                
                 let message =
                     """
                     {

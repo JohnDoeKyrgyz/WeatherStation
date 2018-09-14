@@ -1,8 +1,7 @@
 {
   "profiles": {
     "WeatherStationFunctions.Tests": {
-      "commandName": "Project",
-      "commandLineArgs": "--filter \"Basic Device\""
+      "commandName": "Project"
     }
   }
 }
