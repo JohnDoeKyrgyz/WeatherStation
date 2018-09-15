@@ -80,7 +80,7 @@ module WundergroundForwarder =
                     log.Info(sprintf "Saving Reading %A" reading)
                     do! saveReading reading
 
-                    let updatedWeatherStation = { weatherStation with LastReading = Some( DateTime.Now ) }
+                    let updatedWeatherStation = { weatherStation with LastReading = Some( reading.ReadingTime ) }
                     do! saveWeatherStation updatedWeatherStation }
         | _ ->
             async {

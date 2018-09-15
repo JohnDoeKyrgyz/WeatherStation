@@ -56,11 +56,12 @@ module ReadingsTests =
 
             let reading = readings.Value
             Expect.equal reading.SourceDevice weatherStation.DeviceId "Unexpected DeviceId"
-            Expect.isGreaterThan reading.ReadingTime readingTime "Unexpected ReadingTime"
-            Expect.equal reading.SpeedMetersPerSecond 1.70 "Unexpected SpeedMetersPerSecond"
+            Expect.isGreaterThanOrEqual reading.ReadingTime readingTime "Unexpected ReadingTime"
 
             let weatherStationSave = !weatherStationSave
             Expect.isSome weatherStationSave "WeatherStation not saved"
             let weatherStationSave = weatherStationSave.Value
             Expect.equal weatherStationSave {weatherStation with LastReading = Some readingTime} "Unexpected weatherStation state"
+
+            return reading
         }

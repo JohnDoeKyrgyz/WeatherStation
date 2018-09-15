@@ -9,11 +9,23 @@ module WundergroundForwarder =
     open WeatherStation.Tests.Functions.DataSetup
     open WeatherStation.Functions.WundergroundForwarder
     open WeatherStation
+    open ReadingsTests
 
     let log = {
         new TraceWriter(TraceLevel.Verbose) with
             override this.Trace event =
                 printfn "%A" event }
+
+    let weatherStation = {
+        DeviceType = string DeviceType.Particle
+        DeviceId = "1e0037000751363130333334"
+        WundergroundStationId = "K1234"
+        WundergroundPassword = "fuzzybunny"
+        DirectionOffsetDegrees = None
+        Latitude = 0.0
+        Longitude = 0.0
+        LastReading = None
+    }
 
     type LogMessageCompare =
         | Exact of string
@@ -74,22 +86,16 @@ module WundergroundForwarder =
             }
         ]
 
-    let weatherStation = {
-        DeviceType = string DeviceType.Particle
-        DeviceId = "1e0037000751363130333334"
-        WundergroundStationId = "K1234"
-        WundergroundPassword = "fuzzybunny"
-        DirectionOffsetDegrees = None
-        Latitude = 0.0
-        Longitude = 0.0
-        LastReading = None
-    }
+    [<Tests>]
+    let readingTests =
+        testList "Reading Unit Tests" [
+            testAsync "Empty particle data" {
+                let readingTime = new DateTime(2018,1,1,1,1,0)
+                let message = buildParticleMessage weatherStation readingTime String.Empty
+                let! reading = readingTest log [] readingTime weatherStation message [ReadingTime readingTime]
 
-    type WundergroundParameters = {
-        StationId : string
-        Password : string
-        Values : ReadingValues list
-    }
+                Expect.equal reading.SpeedMetersPerSecond 0.0 "WindSpeed should be blank"
+            }]
 
     [<Tests>]
     let validTests = 
