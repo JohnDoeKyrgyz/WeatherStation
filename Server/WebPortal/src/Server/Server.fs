@@ -29,7 +29,7 @@ module Server =
         get "/api/stations" (fun next ctx ->
             task {
                 let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
-                let! activeThreshold = SystemSettings.activeThreshold systemSettingsRepository
+                let! activeThreshold = SystemSettings.activeThreshold systemSettingsRepository.GetSettingWithDefault
                 let! stations = getWeatherStations connectionString activeThreshold
                 return! ctx.WriteJsonAsync stations
             })        

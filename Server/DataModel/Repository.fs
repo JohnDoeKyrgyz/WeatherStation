@@ -12,9 +12,9 @@ module Repository =
         abstract member Save : 'TEntity -> Async<unit>
 
     type ISystemSettingsRepository =
-        inherit IRepository<SystemSetting>
+        inherit IRepository<SystemSetting>        
+        abstract member GetSettingWithDefault : key:string -> defaultValue:string -> Async<SystemSetting>
         abstract member GetSetting : key:string -> Async<SystemSetting>
-        abstract member GetSetting : key:string * defaultValue:string -> Async<SystemSetting>
 
     type IWeatherStationsRepository =
         inherit IRepository<WeatherStation>
@@ -64,7 +64,7 @@ module Repository =
                         |> Query.where <@ fun setting _ -> setting.Key = key @>
                         |> runQuery connection tableName
                     return results.Single()}
-            member this.GetSetting(key, defaultValue) = 
+            member this.GetSettingWithDefault key defaultValue = 
                 async {
                     let! settings =
                         Query.all<SystemSetting>

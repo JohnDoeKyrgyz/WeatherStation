@@ -9,7 +9,6 @@ module WundergroundForwarder =
     open WeatherStation.Tests.Functions.DataSetup
     open WeatherStation.Functions.WundergroundForwarder
     open WeatherStation
-    
 
     let log = {
         new TraceWriter(TraceLevel.Verbose) with
@@ -20,7 +19,6 @@ module WundergroundForwarder =
         | Exact of string
         | Ignore
         | Test of (string -> bool)
-
     let logExpectations expectedMessages =                     
         let messageIndex = ref 0
         {   
@@ -38,13 +36,22 @@ module WundergroundForwarder =
 
     [<Tests>]
     let errorHandlingTests =
+
+        let processEventHubMessage log weatherStation readings =
+            let save _ = async { return () }
+            processEventHubMessage 
+                log 
+                (fun _ _ _ _ -> async { failwith "Should not have posted to wunderground" })
+                (fun _ _ -> async { return weatherStation} )
+                save
+                save
+                (fun _ _ -> async { return readings })
+                (async { return (fun _ _ -> failwith "Did not expect settings retrieval")})
+
         testList "Error Handling" [
-            testAsync "Empty message" {
-                do! processEventHubMessage "" log (fun _ _ _ _ -> async { failwith "Should not have posted to wunderground" }) |> Async.AwaitTask
-            }
+            testCaseAsync "Empty message" (processEventHubMessage log None [] "")
             
             testAsync "Missing particle device" {
-                do! clearWeatherStations                
                 let message =
                     """
                     {
@@ -63,8 +70,7 @@ module WundergroundForwarder =
                     TraceLevel.Error, Exact "Device [1e0037000751363130333334] is not provisioned"|]
                 
                 do!
-                    processEventHubMessage message log (fun _ _ _ _ -> async { failwith "Should not have posted to wunderground" }) 
-                    |> Async.AwaitTask
+                    processEventHubMessage log None [] message
             }
         ]
 
@@ -87,7 +93,7 @@ module WundergroundForwarder =
 
     [<Tests>]
     let validTests = 
-        testList "Basic Device" [
+        testList "Regression Tests" [
             testAsync "Insert sample record" {
                 let! weatherStationRepository = AzureStorage.weatherStationRepository connectionString
                 do! weatherStationRepository.Save weatherStation
@@ -129,10 +135,10 @@ module WundergroundForwarder =
                 
                 let wundergroundParameters = ref None
                 do!
-                    processEventHubMessage message log (fun stationId password values traceWriter -> async {
+                    
+                    processEventHubMessageWithAzureStorage (fun stationId password values _ -> async {
                         wundergroundParameters := Some {StationId = stationId; Password = password; Values = values |> Seq.toList}
-                    }) 
-                    |> Async.AwaitTask
+                    }) log message
                 
                 let wundergroundParameters = !wundergroundParameters
                 Expect.isSome wundergroundParameters "No call to wunderground"
@@ -152,5 +158,6 @@ module WundergroundForwarder =
                     Expect.equal reading.SpeedMetersPerSecond 1.70 "Unexpected SpeedMetersPerSecond"
                 | _ -> failwith "Unexpected readings"
 
+                do! clearWeatherStations
                 do! clearReadings
             }]

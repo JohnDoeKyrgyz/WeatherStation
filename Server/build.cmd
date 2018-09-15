@@ -13,3 +13,4 @@ if errorlevel 1 (
 
 dotnet clean
 dotnet build
+dotnet Tests\WeatherStationFunctions.Tests\bin\Debug\netcoreapp2.0\WeatherStationFunctions.Tests.dll
