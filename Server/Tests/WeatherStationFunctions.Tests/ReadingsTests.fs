@@ -73,3 +73,45 @@ module ReadingsTests =
 
             return reading
         }
+
+    let particleDeviceReadingTest log expectedReading weatherStation readingTime data = 
+        async {
+            let message = buildParticleMessage weatherStation readingTime data
+            let toVolts (doubleV : double) = 1.0m<_> * decimal doubleV
+            let toCelcius (doubleV : double) = 1.0m<_> * decimal doubleV
+            let toPercent (doubleV : double) = 1.0m<_> * decimal doubleV
+            let toPascal (doubleV : double) = 1.0m<_> * decimal doubleV
+            let toSpeed (doubleV : double) = 1.0m<_> * decimal doubleV
+            let toDirection (doubleV : double) = 1<_> * int doubleV
+            let! reading = 
+                readingTest 
+                    log [] readingTime weatherStation message 
+                    [
+                        ReadingTime readingTime
+                        BatteryChargeVoltage (toVolts expectedReading.BatteryChargeVoltage)
+                        PanelVoltage (toVolts expectedReading.PanelVoltage)
+                        TemperatureCelciusHydrometer (toCelcius expectedReading.TemperatureCelciusHydrometer)
+                        TemperatureCelciusBarometer (toCelcius expectedReading.TemperatureCelciusBarometer)
+                        HumidityPercentHydrometer (toPercent expectedReading.HumidityPercentHydrometer)
+                        HumidityPercentBarometer (toPercent expectedReading.HumidityPercentBarometer)
+                        PressurePascal (toPascal expectedReading.PressurePascal)
+                        SpeedMetersPerSecond (toSpeed expectedReading.SpeedMetersPerSecond)
+                        DirectionSixteenths (toDirection expectedReading.DirectionSixteenths)
+                    ]
+                
+            Expect.equal reading.RefreshIntervalSeconds expectedReading.RefreshIntervalSeconds "Unexpected value"
+            Expect.equal reading.DeviceTime expectedReading.DeviceTime "Unexpected value"
+            Expect.equal reading.ReadingTime expectedReading.ReadingTime "Unexpected value"
+            Expect.equal reading.SupplyVoltage expectedReading.SupplyVoltage "Unexpected value"
+            Expect.equal reading.BatteryChargeVoltage expectedReading.BatteryChargeVoltage "Unexpected value"
+            Expect.floatClose Accuracy.medium (float reading.PanelVoltage) (float expectedReading.PanelVoltage) "Unexpected value"
+            Expect.equal reading.TemperatureCelciusHydrometer expectedReading.TemperatureCelciusHydrometer "Unexpected value"
+            Expect.equal reading.TemperatureCelciusBarometer expectedReading.TemperatureCelciusBarometer "Unexpected value"
+            Expect.equal reading.HumidityPercentHydrometer expectedReading.HumidityPercentHydrometer "Unexpected value"
+            Expect.equal reading.HumidityPercentBarometer expectedReading.HumidityPercentBarometer "Unexpected value"
+            Expect.equal reading.PressurePascal expectedReading.PressurePascal "Unexpected value"
+            Expect.equal reading.GustMetersPerSecond expectedReading.GustMetersPerSecond "Unexpected value"
+            Expect.equal reading.SpeedMetersPerSecond expectedReading.SpeedMetersPerSecond "Unexpected value"
+            Expect.equal reading.DirectionSixteenths expectedReading.DirectionSixteenths "Unexpected value"
+            Expect.equal reading.SourceDevice expectedReading.SourceDevice "Unexpected value"
+        }
