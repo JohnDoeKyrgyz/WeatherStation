@@ -126,7 +126,10 @@ module WundergroundForwarderTests =
         testList "Rotation Tests" [            
             for rotation in [0.0 .. 15.0] do
                 for windDirection in [0.0 .. 15.0] do
-                    let testName = sprintf "WindDirection - Rotation %f, Direction %f" (rotation * degreesPerSixteenth) (degreesPerSixteenth * windDirection)
+                    let rotationDegrees = rotation * degreesPerSixteenth
+                    let testName = sprintf "WindDirection - Rotation %f, Direction %f" rotationDegrees (degreesPerSixteenth * windDirection)
+                    let expectedWindDirection = (windDirection - rotation)
+                    let expectedWindDirection = if expectedWindDirection < 0.0 then 16.0 + expectedWindDirection else expectedWindDirection
                     yield testAsync testName {
                         let expectedReading = {
                             RefreshIntervalSeconds = 0
@@ -142,13 +145,17 @@ module WundergroundForwarderTests =
                             PressurePascal = 2.0
                             GustMetersPerSecond = 0.0
                             SpeedMetersPerSecond = 10.0
-                            DirectionSixteenths = windDirection
+                            DirectionSixteenths = expectedWindDirection
                             SourceDevice = weatherStation.DeviceId
                             RowKey = String.Empty
                         }
                         let data = sprintf "100:4.00:3640|b1.0:2.0:3.0d10.800000:86.500000a10.0:%f" windDirection
-                        let weatherStation = {weatherStation with DirectionOffsetDegrees = Some (int rotation)}
+                        let weatherStation = {weatherStation with DirectionOffsetDegrees = Some (rotationDegrees)}
                         do! particleDeviceReadingTest log expectedReading weatherStation readingTime data
+
+                        Console.ForegroundColor <- ConsoleColor.Blue
+                        printfn "Rotation %f, ReportedDirection %f, ActualDirection %f" rotationDegrees (windDirection * 22.5) (expectedWindDirection * 22.5)
+                        Console.ResetColor()
                 }]
 
     [<Tests>]

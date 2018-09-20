@@ -58,25 +58,24 @@ module WundergroundForwarder =
                     log.Error(sprintf "Device [%s] is not provisioned" deviceReading.DeviceId)
                 else
                     let weatherStation = weatherStation.Value
-                    try
-                        let! settingsRepository = settingsGetter
-                        let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
-                        let readingCutOff = DateTime.Now.Subtract(readingsWindow)
+                    let! settingsRepository = settingsGetter
+                    let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
+                    let readingCutOff = DateTime.Now.Subtract(readingsWindow)
                             
-                        let! recentReadings = getReadings deviceReading.DeviceId readingCutOff
-
-                        let values = fixReadings recentReadings weatherStation deviceReading.Readings
-                        log.Info(sprintf "Fixed Values %A" values)
-
+                    let! recentReadings = getReadings deviceReading.DeviceId readingCutOff
+                    let values = fixReadings recentReadings weatherStation deviceReading.Readings
+                    log.Info(sprintf "Fixed Values %A" values)
+                    
+                    try
                         let valuesSeq = values |> Seq.ofList
                         let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
-
                         log.Info(sprintf "%A" wundergroundResponse)
                     with
                     | ex -> log.Error("Error while posting to Wunderground", ex)
-                
+                            
+                    let deviceReading = {deviceReading with Readings = values}
                     let reading = Model.createReading deviceReading                        
-                        
+
                     log.Info(sprintf "Saving Reading %A" reading)
                     do! saveReading reading
 

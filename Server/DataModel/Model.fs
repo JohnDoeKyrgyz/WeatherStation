@@ -24,7 +24,7 @@ module Model =
         DeviceId : string
         WundergroundStationId : string
         WundergroundPassword : string
-        DirectionOffsetDegrees : int option
+        DirectionOffsetDegrees : double option
         Latitude : double
         Longitude : double
         LastReading : DateTime option
