@@ -90,7 +90,7 @@ module WundergroundForwarderTests =
 
     [<Tests>]
     let readingTests =
-        testList "Reading Unit Tests" [
+        testList "Reading Static Unit Tests" [
             testAsync "Empty particle data" {
                 let message = buildParticleMessage weatherStation readingTime String.Empty
                 let! reading = readingTest log [] readingTime weatherStation message [ReadingTime readingTime]
@@ -119,6 +119,37 @@ module WundergroundForwarderTests =
                 }
                 do! particleDeviceReadingTest log expectedReading weatherStation readingTime "100:4.00:3640|b1.0:2.0:3.0d10.800000:86.500000a10.00:10"
             }]
+            
+    [<Tests>]
+    let rotationTests =
+        let degreesPerSixteenth = 360.0 / 16.0
+        testList "Rotation Tests" [            
+            for rotation in [0.0 .. 15.0] do
+                for windDirection in [0.0 .. 15.0] do
+                    let testName = sprintf "WindDirection - Rotation %f, Direction %f" (rotation * degreesPerSixteenth) (degreesPerSixteenth * windDirection)
+                    yield testAsync testName {
+                        let expectedReading = {
+                            RefreshIntervalSeconds = 0
+                            DeviceTime = readingTime
+                            ReadingTime = readingTime
+                            SupplyVoltage = 0.0
+                            BatteryChargeVoltage = 4.0
+                            PanelVoltage = 16.0
+                            TemperatureCelciusHydrometer = 10.8
+                            TemperatureCelciusBarometer = 1.0
+                            HumidityPercentHydrometer = 86.5
+                            HumidityPercentBarometer = 3.0
+                            PressurePascal = 2.0
+                            GustMetersPerSecond = 0.0
+                            SpeedMetersPerSecond = 10.0
+                            DirectionSixteenths = windDirection
+                            SourceDevice = weatherStation.DeviceId
+                            RowKey = String.Empty
+                        }
+                        let data = sprintf "100:4.00:3640|b1.0:2.0:3.0d10.800000:86.500000a10.0:%f" windDirection
+                        let weatherStation = {weatherStation with DirectionOffsetDegrees = Some (int rotation)}
+                        do! particleDeviceReadingTest log expectedReading weatherStation readingTime data
+                }]
 
     [<Tests>]
     let validTests = 
