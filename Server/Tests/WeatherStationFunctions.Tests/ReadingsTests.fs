@@ -48,8 +48,16 @@ module ReadingsTests =
 
             let wundergroundParameters = wundergroundParameters.Value
             Expect.equal wundergroundParameters.StationId weatherStation.WundergroundStationId "Unexpected StationId"
-            Expect.equal wundergroundParameters.Password weatherStation.WundergroundPassword "Unexpected Password"                        
-            Expect.equal wundergroundParameters.Values expectedReadings "Unexpected readings"
+            Expect.equal wundergroundParameters.Password weatherStation.WundergroundPassword "Unexpected Password"
+            
+            let wundergroundParametersCompare = set wundergroundParameters.Values
+            printfn "%A" wundergroundParametersCompare
+
+            let expectedReadingsCompare = set expectedReadings
+
+            Expect.equal wundergroundParametersCompare.Count expectedReadingsCompare.Count "Unexpected number of readings"
+            for reading in expectedReadingsCompare do Expect.isTrue (wundergroundParametersCompare.Contains reading) (sprintf "Missing reading %A" reading)
+            Expect.equal (set wundergroundParameters.Values) (set expectedReadings) "Unexpected readings"
 
             let readings = !readingSave
             Expect.isSome readings "No readings saved"

@@ -1,5 +1,5 @@
 ﻿namespace WeatherStation.Tests.Functions
-module WundergroundForwarder =
+module WundergroundForwarderTests =
     open System
     open System.Diagnostics    
     open Microsoft.Azure.WebJobs.Host
@@ -86,15 +86,69 @@ module WundergroundForwarder =
             }
         ]
 
+    let readingTime = new DateTime(2018,1,1,1,1,0)
+
     [<Tests>]
     let readingTests =
         testList "Reading Unit Tests" [
             testAsync "Empty particle data" {
-                let readingTime = new DateTime(2018,1,1,1,1,0)
                 let message = buildParticleMessage weatherStation readingTime String.Empty
                 let! reading = readingTest log [] readingTime weatherStation message [ReadingTime readingTime]
-
                 Expect.equal reading.SpeedMetersPerSecond 0.0 "WindSpeed should be blank"
+                Expect.equal reading.BatteryChargeVoltage 0.0 "BatteryCharge should be blank"
+                Expect.equal reading.DeviceTime readingTime "Unexpected DeviceTime"
+            }            
+            testAsync "Basic reading" {
+                let message = buildParticleMessage weatherStation readingTime "100:4.00:3864|b1.0:2.0:3.0d10.800000:86.500000a10.00:10"
+                let expectedReading = {
+                    RefreshIntervalSeconds = 0
+                    DeviceTime = readingTime
+                    ReadingTime = readingTime
+                    SupplyVoltage = 0.0
+                    BatteryChargeVoltage = 4.0
+                    PanelVoltage = 16.98461538
+                    TemperatureCelciusHydrometer = 10.8
+                    TemperatureCelciusBarometer = 1.0
+                    HumidityPercentHydrometer = 86.5
+                    HumidityPercentBarometer = 3.0
+                    PressurePascal = 2.0
+                    GustMetersPerSecond = 0.0
+                    SpeedMetersPerSecond = 10.0
+                    DirectionSixteenths = 10.0
+                    SourceDevice = weatherStation.DeviceId
+                    RowKey = String.Empty
+                }
+                let! reading = 
+                    readingTest 
+                        log [] readingTime weatherStation message 
+                        [
+                            ReadingTime readingTime
+                            BatteryChargeVoltage 4.0m<volts>
+                            PanelVoltage 16.984615384615384615384615385M<volts>                            
+                            TemperatureCelciusHydrometer 10.8m<celcius>
+                            TemperatureCelciusBarometer 1.0m<celcius>
+                            HumidityPercentHydrometer 86.5m<percent>
+                            HumidityPercentBarometer 3.0m<percent>
+                            PressurePascal 2.0m<pascal>
+                            SpeedMetersPerSecond 10.0m<meters/seconds>
+                            DirectionSixteenths 10<sixteenths>
+                        ]
+                
+                Expect.equal reading.RefreshIntervalSeconds expectedReading.RefreshIntervalSeconds "Unexpected value"
+                Expect.equal reading.DeviceTime expectedReading.DeviceTime "Unexpected value"
+                Expect.equal reading.ReadingTime expectedReading.ReadingTime "Unexpected value"
+                Expect.equal reading.SupplyVoltage expectedReading.SupplyVoltage "Unexpected value"
+                Expect.equal reading.BatteryChargeVoltage expectedReading.BatteryChargeVoltage "Unexpected value"
+                Expect.floatClose Accuracy.medium (float reading.PanelVoltage) (float expectedReading.PanelVoltage) "Unexpected value"
+                Expect.equal reading.TemperatureCelciusHydrometer expectedReading.TemperatureCelciusHydrometer "Unexpected value"
+                Expect.equal reading.TemperatureCelciusBarometer expectedReading.TemperatureCelciusBarometer "Unexpected value"
+                Expect.equal reading.HumidityPercentHydrometer expectedReading.HumidityPercentHydrometer "Unexpected value"
+                Expect.equal reading.HumidityPercentBarometer expectedReading.HumidityPercentBarometer "Unexpected value"
+                Expect.equal reading.PressurePascal expectedReading.PressurePascal "Unexpected value"
+                Expect.equal reading.GustMetersPerSecond expectedReading.GustMetersPerSecond "Unexpected value"
+                Expect.equal reading.SpeedMetersPerSecond expectedReading.SpeedMetersPerSecond "Unexpected value"
+                Expect.equal reading.DirectionSixteenths expectedReading.DirectionSixteenths "Unexpected value"
+                Expect.equal reading.SourceDevice expectedReading.SourceDevice "Unexpected value"
             }]
 
     [<Tests>]
