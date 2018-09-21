@@ -29,6 +29,7 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "WeatherStationFunctions", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scratch", "Scratch", "{1E5ECC00-2048-4A97-AE1D-E8170B2B2DD4}"
 	ProjectSection(SolutionItems) = preProject
+		Scratch\DataConvertConvertSixteenthsToDegrees.fsx = Scratch\DataConvertConvertSixteenthsToDegrees.fsx
 		Scratch\Graph.fsx = Scratch\Graph.fsx
 		Scratch\Preamble.fsx = Scratch\Preamble.fsx
 	EndProjectSection
@@ -37,7 +38,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "extensions", "ServerFunctio
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A9F745C3-F546-4D1F-A6F5-7AA1931E7064}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "WeatherStationFunctions.Tests", "Tests\WeatherStationFunctions.Tests\WeatherStationFunctions.Tests.fsproj", "{DB2285BA-2947-435E-83D4-E896F92805B7}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "WeatherStationFunctions.Tests", "Tests\WeatherStationFunctions.Tests\WeatherStationFunctions.Tests.fsproj", "{DB2285BA-2947-435E-83D4-E896F92805B7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
