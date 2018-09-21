@@ -113,7 +113,7 @@ module WundergroundForwarderTests =
                     PressurePascal = 2.0
                     GustMetersPerSecond = 0.0
                     SpeedMetersPerSecond = 10.0
-                    DirectionDegrees = 10.0 * (360.0 / 16.0)
+                    DirectionDegrees = 10.0 * double degreesPerSixteenth
                     SourceDevice = weatherStation.DeviceId
                     RowKey = String.Empty
                 }
@@ -122,11 +122,10 @@ module WundergroundForwarderTests =
             
     [<Tests>]
     let rotationTests =
-        let degreesPerSixteenth = 360.0 / 16.0
         testList "Rotation Tests" [            
             for rotation in [0.0 .. 15.0] do
                 for windDirection in [0.0 .. 15.0] do
-                    let rotationDegrees = rotation * degreesPerSixteenth
+                    let rotationDegrees = rotation * float degreesPerSixteenth
                     let testName = sprintf "WindDirection - Rotation %f, Direction %f" rotationDegrees (degreesPerSixteenth * windDirection)
                     let expectedWindDirection = (windDirection - rotation)
                     let expectedWindDirection = if expectedWindDirection < 0.0 then 16.0 + expectedWindDirection else expectedWindDirection
@@ -145,7 +144,7 @@ module WundergroundForwarderTests =
                             PressurePascal = 2.0
                             GustMetersPerSecond = 0.0
                             SpeedMetersPerSecond = 10.0
-                            DirectionDegrees = expectedWindDirection * (360.0 / 16.0)
+                            DirectionDegrees = expectedWindDirection * float degreesPerSixteenth
                             SourceDevice = weatherStation.DeviceId
                             RowKey = String.Empty
                         }

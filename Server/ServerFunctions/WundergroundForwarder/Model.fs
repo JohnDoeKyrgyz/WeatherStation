@@ -31,6 +31,10 @@ module Model =
 
     let degreesPerSixteenth = 22.5<degrees/sixteenths>
 
+    let sixteenthsToDegrees (value : int<sixteenths>) = 
+        let directionDegrees = ((float value) * 1.0<sixteenths>)
+        directionDegrees * degreesPerSixteenth
+
     type ReadingValues =
         | ReadingTime of DateTime
         | DeviceTime of DateTime
@@ -72,7 +76,7 @@ module Model =
         | PressurePascal perc -> {reading with PressurePascal = toDouble(perc)}
         | SpeedMetersPerSecond speed -> {reading with SpeedMetersPerSecond = toDouble(speed)}
         | GustMetersPerSecond speed -> {reading with GustMetersPerSecond = toDouble(speed)}
-        | DirectionSixteenths direction -> {reading with DirectionDegrees = (double direction) * 360.0 / 16.0}
+        | DirectionSixteenths direction -> {reading with DirectionDegrees = sixteenthsToDegrees direction |> double}
 
     let createReading deviceReading = 
         let readingKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)
