@@ -51,8 +51,6 @@ module ReadingsTests =
             Expect.equal wundergroundParameters.Password weatherStation.WundergroundPassword "Unexpected Password"
             
             let wundergroundParametersCompare = set wundergroundParameters.Values
-            printfn "%A" wundergroundParametersCompare
-
             let expectedReadingsCompare = set expectedReadings
 
             Expect.equal wundergroundParametersCompare.Count expectedReadingsCompare.Count "Unexpected number of readings"
@@ -96,6 +94,7 @@ module ReadingsTests =
                         HumidityPercentBarometer (toPercent expectedReading.HumidityPercentBarometer)
                         PressurePascal (toPascal expectedReading.PressurePascal)
                         SpeedMetersPerSecond (toSpeed expectedReading.SpeedMetersPerSecond)
+                        GustMetersPerSecond (toSpeed expectedReading.GustMetersPerSecond)
                         DirectionSixteenths (toDirection (expectedReading.DirectionDegrees / (360.0 / 16.0)))
                     ]
                 

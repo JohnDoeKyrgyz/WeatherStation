@@ -30,6 +30,15 @@ module ProcessReadings =
                     |> decimal
                     |> LanguagePrimitives.DecimalWithMeasure
                 yield GustMetersPerSecond gust
+            else
+                let gustFromWindSpeed =
+                    seq{ 
+                        for reading in values do
+                            match reading with
+                            | SpeedMetersPerSecond speed -> yield GustMetersPerSecond speed
+                            | _ -> ()}
+                    |> Seq.tryHead
+                if gustFromWindSpeed.IsSome then yield gustFromWindSpeed.Value
 
             match readingTime, recentReadings with
             | Some readingTime, mostRecentWindReading :: _ ->

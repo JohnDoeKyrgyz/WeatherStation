@@ -16,6 +16,10 @@ module WundergroundForwarderTests =
             override this.Trace event =
                 printfn "%A" event }
 
+    let quietLog = {
+        new TraceWriter(TraceLevel.Verbose) with
+            override this.Trace event = Debug.WriteLine event }
+
     let weatherStation = {
         DeviceType = string DeviceType.Particle
         DeviceId = "1e0037000751363130333334"
@@ -111,7 +115,7 @@ module WundergroundForwarderTests =
                     HumidityPercentHydrometer = 86.5
                     HumidityPercentBarometer = 3.0
                     PressurePascal = 2.0
-                    GustMetersPerSecond = 0.0
+                    GustMetersPerSecond = 10.0
                     SpeedMetersPerSecond = 10.0
                     DirectionDegrees = 10.0 * double degreesPerSixteenth
                     SourceDevice = weatherStation.DeviceId
@@ -142,7 +146,7 @@ module WundergroundForwarderTests =
                             HumidityPercentHydrometer = 86.5
                             HumidityPercentBarometer = 3.0
                             PressurePascal = 2.0
-                            GustMetersPerSecond = 0.0
+                            GustMetersPerSecond = 10.0
                             SpeedMetersPerSecond = 10.0
                             DirectionDegrees = expectedWindDirection * float degreesPerSixteenth
                             SourceDevice = weatherStation.DeviceId
@@ -150,7 +154,7 @@ module WundergroundForwarderTests =
                         }
                         let data = sprintf "100:4.00:3640|b1.0:2.0:3.0d10.800000:86.500000a10.0:%f" windDirection
                         let weatherStation = {weatherStation with DirectionOffsetDegrees = Some (rotationDegrees)}
-                        do! particleDeviceReadingTest log expectedReading weatherStation readingTime data
+                        do! particleDeviceReadingTest quietLog expectedReading weatherStation readingTime data
 
                         Console.ForegroundColor <- ConsoleColor.Blue
                         printfn "Rotation %f, ReportedDirection %f, ActualDirection %f" rotationDegrees (windDirection * 22.5) (expectedWindDirection * 22.5)
@@ -197,7 +201,8 @@ module WundergroundForwarderTests =
                     HumidityPercentHydrometer 86.500000M<percent>
                     SpeedMetersPerSecond 1.700000M<meters/seconds>
                     DirectionSixteenths 15<sixteenths>
-                    ReadingTime readingTime]
+                    ReadingTime readingTime
+                    GustMetersPerSecond 1.700000M<meters/seconds>]
                 
                 let wundergroundParameters = ref None
                 do!
