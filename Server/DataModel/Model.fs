@@ -45,7 +45,7 @@ module Model =
         PressurePascal : double
         GustMetersPerSecond : double
         SpeedMetersPerSecond : double
-        DirectionSixteenths : double
+        DirectionDegrees : double
         [<PartitionKey>]
         SourceDevice : string
         [<RowKey>]
@@ -66,7 +66,7 @@ module Model =
             PressurePascal = 0.0
             GustMetersPerSecond = 0.0
             SpeedMetersPerSecond = 0.0
-            DirectionSixteenths = 0.0
+            DirectionDegrees = 0.0
             SourceDevice = null
             RowKey = null
         }

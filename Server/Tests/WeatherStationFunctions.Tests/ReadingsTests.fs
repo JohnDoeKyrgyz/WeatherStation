@@ -96,7 +96,7 @@ module ReadingsTests =
                         HumidityPercentBarometer (toPercent expectedReading.HumidityPercentBarometer)
                         PressurePascal (toPascal expectedReading.PressurePascal)
                         SpeedMetersPerSecond (toSpeed expectedReading.SpeedMetersPerSecond)
-                        DirectionSixteenths (toDirection expectedReading.DirectionSixteenths)
+                        DirectionSixteenths (toDirection (expectedReading.DirectionDegrees / (360.0 / 16.0)))
                     ]
                 
             Expect.equal reading.RefreshIntervalSeconds expectedReading.RefreshIntervalSeconds "Unexpected value"
@@ -112,6 +112,6 @@ module ReadingsTests =
             Expect.equal reading.PressurePascal expectedReading.PressurePascal "Unexpected value"
             Expect.equal reading.GustMetersPerSecond expectedReading.GustMetersPerSecond "Unexpected value"
             Expect.equal reading.SpeedMetersPerSecond expectedReading.SpeedMetersPerSecond "Unexpected value"
-            Expect.equal reading.DirectionSixteenths expectedReading.DirectionSixteenths "Unexpected value"
+            Expect.equal reading.DirectionDegrees expectedReading.DirectionDegrees "Unexpected value"
             Expect.equal reading.SourceDevice expectedReading.SourceDevice "Unexpected value"
         }

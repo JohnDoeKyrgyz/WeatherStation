@@ -113,7 +113,7 @@ module WundergroundForwarderTests =
                     PressurePascal = 2.0
                     GustMetersPerSecond = 0.0
                     SpeedMetersPerSecond = 10.0
-                    DirectionSixteenths = 10.0
+                    DirectionDegrees = 10.0 * (360.0 / 16.0)
                     SourceDevice = weatherStation.DeviceId
                     RowKey = String.Empty
                 }
@@ -145,7 +145,7 @@ module WundergroundForwarderTests =
                             PressurePascal = 2.0
                             GustMetersPerSecond = 0.0
                             SpeedMetersPerSecond = 10.0
-                            DirectionSixteenths = expectedWindDirection
+                            DirectionDegrees = expectedWindDirection * (360.0 / 16.0)
                             SourceDevice = weatherStation.DeviceId
                             RowKey = String.Empty
                         }

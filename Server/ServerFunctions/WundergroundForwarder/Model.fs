@@ -72,7 +72,7 @@ module Model =
         | PressurePascal perc -> {reading with PressurePascal = toDouble(perc)}
         | SpeedMetersPerSecond speed -> {reading with SpeedMetersPerSecond = toDouble(speed)}
         | GustMetersPerSecond speed -> {reading with GustMetersPerSecond = toDouble(speed)}
-        | DirectionSixteenths direction -> {reading with DirectionSixteenths = double direction}
+        | DirectionSixteenths direction -> {reading with DirectionDegrees = (double direction) * 360.0 / 16.0}
 
     let createReading deviceReading = 
         let readingKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)
