@@ -1,10 +1,12 @@
 namespace WeatherStation
 module ParticleConnect =
-
     
     open FSharp.Data
     open System.Net
     open OtpNet
+    open Particle.SDK
+    open System
+    open System.Diagnostics
 
     type Secrets = JsonProvider< @"Secrets.json" >
 
@@ -81,5 +83,41 @@ module ParticleConnect =
         let secrets = Secrets.GetSample()
         getTokenWithMfa secrets (generateOtp secrets.ParticleAccountSecret)
 
+    let private tokenCache secrets otpGenerator =
 
+        let getNewToken =
+            async {
+                let! token = getTokenWithMfa secrets (otpGenerator())
+                let expires = DateTime.Now.AddSeconds(float token.ExpiresIn)
+                Debug.WriteLine(sprintf "New token generated. Expires at %A" expires)
+                return expires, token
+            }
 
+        let rec cache token (mailBox : MailboxProcessor<AsyncReplyChannel<string>>) =
+            async {
+                let! responseChannel = mailBox.Receive()
+                let! (expiration, token) =
+                    match token with
+                    | Some (expiration, token : TokenResponse.Root) ->
+                        if expiration > DateTime.Now
+                        then async { return expiration, token }
+                        else
+                            Debug.WriteLine(sprintf "Token expired on %A" expiration)
+                            getNewToken
+                    | None -> getNewToken
+
+                responseChannel.Reply token.AccessToken
+
+                do! cache (Some (expiration, token)) mailBox}
+
+        let mailBox = MailboxProcessor.Start (cache None)
+
+        fun () -> mailBox.PostAndAsyncReply id
+
+    let connect =
+        let secrets = Secrets.GetSample()
+        let token = tokenCache secrets (fun () -> generateOtp secrets.ParticleAccountSecret)
+        async {
+            let! token = getTokenWithDefaultMfa
+            return new ParticleCloud(token.AccessToken)
+        }
