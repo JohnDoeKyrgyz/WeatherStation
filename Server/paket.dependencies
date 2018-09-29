@@ -15,6 +15,7 @@ group Server
     nuget Fable.JsonConverter
     nuget FSharp.Azure.Storage
     nuget System.Configuration.ConfigurationManager
+	nuget Otp.NET
 
 group Client
     storage: none

@@ -5,3 +5,4 @@ Server/WebPortal/src/Server/App.config
 .vs
 obj/
 bin/
+Server/WebPortal/src/Server/secrets.json

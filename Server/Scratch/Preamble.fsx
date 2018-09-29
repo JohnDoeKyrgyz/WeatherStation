@@ -2,7 +2,7 @@
 #I __SOURCE_DIRECTORY__
 #I @"C:\Users\jatwood\.nuget\packages"
 #r @"Newtonsoft.Json\11.0.2\lib\net45\Newtonsoft.Json.dll"
-#r @"fsharp.data\3.0.0-beta4\lib\netstandard2.0\FSharp.Data.dll"
+#r @"fsharp.data\3.0.0-beta4\lib\net45\FSharp.Data.dll"
 #r @"fsharp.azure.storage\3.0.0\lib\netstandard2.0\FSharp.Azure.Storage.dll"
 #r @"system.spatial\5.8.4\lib\net40\System.Spatial.dll"
 

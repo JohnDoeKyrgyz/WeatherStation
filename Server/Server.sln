@@ -31,6 +31,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scratch", "Scratch", "{1E5E
 	ProjectSection(SolutionItems) = preProject
 		Scratch\DataConvertConvertSixteenthsToDegrees.fsx = Scratch\DataConvertConvertSixteenthsToDegrees.fsx
 		Scratch\Graph.fsx = Scratch\Graph.fsx
+		Scratch\ParticleApi.fsx = Scratch\ParticleApi.fsx
 		Scratch\Preamble.fsx = Scratch\Preamble.fsx
 	EndProjectSection
 EndProject
