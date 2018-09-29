@@ -15,7 +15,9 @@ group Server
     nuget Fable.JsonConverter
     nuget FSharp.Azure.Storage
     nuget System.Configuration.ConfigurationManager
+	nuget FSharp.Data prerelease
 	nuget Otp.NET
+	nuget Particle.SDK prerelease
 
 group Client
     storage: none

@@ -6,6 +6,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ParticleConnect.fs" />
     <Compile Include="..\Shared\Shared.fs" />
     <Compile Include="Logic.fs" />
     <Compile Include="Server.fs" />

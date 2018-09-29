@@ -3,3 +3,5 @@ Saturn
 Fable.JsonConverter
 System.Configuration.ConfigurationManager
 Otp.NET
+FSharp.Data
+Particle.SDK
