@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "WeatherStationFunctions.Tests": {
+      "commandName": "Project"
+    }
+  }
+}

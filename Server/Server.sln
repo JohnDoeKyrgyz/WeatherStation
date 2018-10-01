@@ -41,6 +41,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A9F745C3
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "WeatherStationFunctions.Tests", "Tests\WeatherStationFunctions.Tests\WeatherStationFunctions.Tests.fsproj", "{DB2285BA-2947-435E-83D4-E896F92805B7}"
 EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Server.Tests", "Tests\Server.Tests\Server.Tests.fsproj", "{B8E2CC11-8A90-4A64-97E4-216B4A3D1BB3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{DB2285BA-2947-435E-83D4-E896F92805B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB2285BA-2947-435E-83D4-E896F92805B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB2285BA-2947-435E-83D4-E896F92805B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8E2CC11-8A90-4A64-97E4-216B4A3D1BB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8E2CC11-8A90-4A64-97E4-216B4A3D1BB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8E2CC11-8A90-4A64-97E4-216B4A3D1BB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8E2CC11-8A90-4A64-97E4-216B4A3D1BB3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -79,6 +85,7 @@ Global
 		{825256A2-F28D-48E9-A4B3-95A7C48D02C1} = {CD58757D-EEAB-48E0-9F08-10159989293D}
 		{38D48DF1-2277-41CD-B692-3039C2AC663A} = {CD58757D-EEAB-48E0-9F08-10159989293D}
 		{DB2285BA-2947-435E-83D4-E896F92805B7} = {A9F745C3-F546-4D1F-A6F5-7AA1931E7064}
+		{B8E2CC11-8A90-4A64-97E4-216B4A3D1BB3} = {A9F745C3-F546-4D1F-A6F5-7AA1931E7064}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7A0AA30E-4CD9-4359-9513-BA68E2E85245}
