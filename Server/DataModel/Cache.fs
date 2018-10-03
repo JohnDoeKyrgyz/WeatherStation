@@ -1,10 +1,12 @@
 namespace WeatherStation
 
 module Cache =
+    
+    open System
 
     type private CacheOpperation<'TKey, 'TValue> = 'TKey * Async<'TValue> * AsyncReplyChannel<'TValue>
 
-    let private cache<'TKey, 'TValue when 'TKey : comparison> =
+    let private keyValueCache<'TKey, 'TValue when 'TKey : comparison> =
         let rec processor settings (mailBox : MailboxProcessor<CacheOpperation<'TKey, 'TValue>>)=
             async {
                 let! key, valueBuilder, reply = mailBox.Receive()
@@ -26,10 +28,44 @@ module Cache =
         MailboxProcessor<CacheOpperation<'TKey, 'TValue>>.Start (processor Map.empty)
 
     type Cache<'TKey, 'TValue when 'TKey : comparison>() =
-        let cache = cache<'TKey, 'TValue>
+        let cache = keyValueCache<'TKey, 'TValue>
         member this.GetOrCreate(key, defaultValueBuilder) =
             async {
                 let! value = cache.PostAndAsyncReply( fun replyChannel -> key, defaultValueBuilder, replyChannel)
                 return value
             }
+
+    let buildTimedCache<'TValue> load expiration refresh build = 
+    
+        let rec getNextValue currentDate cachedValue =
+            match cachedValue with
+            | Some value ->                        
+                if expiration value > currentDate
+                then async { return value }
+                else
+                    printfn "Value expired on %A" (expiration value)
+                    refresh value
+            | None -> 
+                async {
+                    let! (possibleValue : 'TValue option) = load
+                    return!
+                        if possibleValue.IsSome 
+                        then getNextValue currentDate possibleValue
+                        else
+                            async {
+                                let! builtValue = build
+                                return! getNextValue currentDate (Some builtValue) } }
+
+        let rec cache cachedValue (mailBox : MailboxProcessor<DateTime * AsyncReplyChannel<'TValue>>) =
+            async {
+                let! (currentDate, responseChannel) = mailBox.Receive()                
+                let! value = getNextValue currentDate cachedValue
+
+                responseChannel.Reply value
+
+                do! cache (Some value) mailBox}
+
+        let mailBox = MailboxProcessor.Start (cache None)
+
+        fun currentDate -> mailBox.PostAndAsyncReply (fun channel -> currentDate, channel)
 

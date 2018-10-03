@@ -1,11 +1,9 @@
 ﻿namespace WeatherStation.Tests.Server
 module ParticleConnectTests =
-    open System
     open Expecto
-    open WeatherStation
 
     [<Tests>]
-    let getTokenTests =
+    let tests =
 
         testList "Integration" [
             //testCaseAsync "Connect" (async {return ()})
