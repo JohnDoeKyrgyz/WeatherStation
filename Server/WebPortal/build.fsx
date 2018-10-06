@@ -14,6 +14,7 @@ open Fake.Core
 open Fake.DotNet
 open Fake.IO
 
+let serverTestsPath = Path.getFullName "../Tests/Server.Tests"
 let serverPath = Path.getFullName "./src/Server"
 let clientPath = Path.getFullName "./src/Client"
 let deployDir = Path.getFullName "./deploy"
@@ -86,9 +87,9 @@ Target.create "Build" (fun _ ->
 )
 
 Target.create "Run" (fun _ ->
-    let server = async {
-        runDotNet "watch run" serverPath
-    }
+    let server = async { runDotNet "watch run" serverPath }
+    let serverTests = async { runDotNet "watch run" serverTestsPath }
+
     let client = async {
         runDotNet "fable webpack-dev-server --port free" clientPath
     }
@@ -97,7 +98,7 @@ Target.create "Run" (fun _ ->
         openBrowser "http://localhost:8080"
     }
 
-    [ server; client; browser ]
+    [ server; serverTests; client; browser ]
     |> Async.Parallel
     |> Async.RunSynchronously
     |> ignore

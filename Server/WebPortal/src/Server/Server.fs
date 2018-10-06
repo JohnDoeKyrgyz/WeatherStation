@@ -27,11 +27,11 @@ module Server =
 
     let read reader next ctx =
         task {
-            let! data = reader
+            let! data = reader |> Async.StartAsTask
             return! Successful.OK data next ctx
         }
 
-    let getStations = task {
+    let getStations = async {
         let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
         let! activeThreshold = SystemSettings.activeThreshold systemSettingsRepository.GetSettingWithDefault
         let! stations =

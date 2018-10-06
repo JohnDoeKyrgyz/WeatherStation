@@ -24,7 +24,7 @@ module Logic =
                 for (station : WeatherStation) in stations do
                     let stationLastReadingTime = (defaultArg station.LastReading DateTime.MinValue)
                     let lastReadingAge = DateTime.Now.Subtract(stationLastReadingTime)
-                    let status = if lastReadingAge > activeThreshold then Active else Offline
+                    let status = if lastReadingAge < activeThreshold then Active else Offline
                     yield {
                         Name = station.DeviceId
                         WundergroundId = station.WundergroundStationId
