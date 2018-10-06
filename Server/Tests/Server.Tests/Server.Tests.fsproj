@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="paket.references" />
+    <Compile Include="LogicTests.fs" />
     <Compile Include="CacheTests.fs" />
     <Compile Include="ParticleConnectTests.fs" />
     <Compile Include="Main.fs" />
