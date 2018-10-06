@@ -14,6 +14,7 @@ module Server =
     open FSharp.Control.Tasks    
 
     open Logic
+    open Saturn.ControllerHelpers
 
     let publicPath = Path.GetFullPath "../Client/public"
     let port = 8085us
@@ -23,16 +24,30 @@ module Server =
     #endif
     
     let connectionString = ConfigurationManager.ConnectionStrings.["WeatherStationStorage"].ConnectionString
-    
-    let webApp = router {
-            
-        get "/api/stations" (fun next ctx ->
-            task {
-                let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
-                let! activeThreshold = SystemSettings.activeThreshold systemSettingsRepository.GetSettingWithDefault
-                let! stations = getWeatherStations connectionString activeThreshold
-                return! ctx.WriteJsonAsync stations
-            })        
+
+    let read reader next ctx =
+        task {
+            let! data = reader
+            return! Successful.OK data next ctx
+        }
+
+    let getStations = task {
+        let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
+        let! activeThreshold = SystemSettings.activeThreshold systemSettingsRepository.GetSettingWithDefault
+        let! stations =
+            allStations connectionString
+            |> getWeatherStations activeThreshold
+        return stations
+    }
+
+    let setSettings deviceId settings next ctx = task {
+        let! response = updateSettings deviceId settings
+        return! Successful.OK response next ctx
+    }
+
+    let webApp = router {            
+        get "/api/stations" (read getStations)
+        postf "api/stations/%s/settings" (fun deviceId -> bindJson (fun settings -> setSettings deviceId settings))
     }
 
     let configureSerialization (services:IServiceCollection) =
@@ -47,6 +62,7 @@ module Server =
         use_static publicPath
         service_config configureSerialization
         use_gzip
+        use_iis
     }
 
     run app

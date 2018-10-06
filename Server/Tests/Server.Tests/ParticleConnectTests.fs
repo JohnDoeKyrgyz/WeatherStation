@@ -6,7 +6,6 @@ module ParticleConnectTests =
     let tests =
 
         testList "Integration" [
-            //testCaseAsync "Connect" (async {return ()})
             
             testAsync "Connect" {
                 let! connection = WeatherStation.ParticleConnect.connect
