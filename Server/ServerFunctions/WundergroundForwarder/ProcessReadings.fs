@@ -48,11 +48,11 @@ module ProcessReadings =
 
         let transformedReadings =
             match weatherStation.DirectionOffsetDegrees with
-            | offset when offset.IsSome && offset.Value > 0.0 ->
+            | offset when offset.IsSome && offset.Value > 0 ->
                 [for reading in values ->
                     match reading with
                     | DirectionSixteenths direction ->                    
-                        let rotationOffset = offset.Value * 1.0<degrees>
+                        let rotationOffset = float offset.Value * 1.0<degrees>
                         let degrees = degreesPerSixteenth * (float direction) * 1.0<sixteenths>
                         let correctDegrees = degrees - rotationOffset
                         let correctDegrees = if correctDegrees < 0.0<degrees> then 360.0<degrees> + correctDegrees else correctDegrees

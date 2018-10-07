@@ -153,7 +153,7 @@ module WundergroundForwarderTests =
                             RowKey = String.Empty
                         }
                         let data = sprintf "100:4.00:3640|b1.0:2.0:3.0d10.800000:86.500000a10.0:%f" windDirection
-                        let weatherStation = {weatherStation with DirectionOffsetDegrees = Some (rotationDegrees)}
+                        let weatherStation = {weatherStation with DirectionOffsetDegrees = Some (int rotationDegrees)}
                         do! particleDeviceReadingTest quietLog expectedReading weatherStation readingTime data
 
                         Console.ForegroundColor <- ConsoleColor.Blue
