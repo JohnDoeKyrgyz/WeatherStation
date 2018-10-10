@@ -1,4 +1,4 @@
-namespace WeatherStation.Client
+namespace WeatherStation.Client.Pages
 module Pages =
 
     open Elmish.Browser.UrlParser
@@ -7,21 +7,18 @@ module Pages =
     [<RequireQualifiedAccess>]
     type Page =
         | Home
-        | Login
-        | WishList
+        | Device of string
 
     let toPath =
         function
         | Page.Home -> "/"
-        | Page.Login -> "/login"
-        | Page.WishList -> "/wishlist"
+        | Page.Device deviceId -> sprintf "/device/%s" deviceId
 
 
     /// The URL is turned into a Result.
     let pageParser : Parser<Page -> Page,_> =
         oneOf
             [ map Page.Home (s "")
-              map Page.Login (s "login")
-              map Page.WishList (s "wishlist") ]
+              map Page.Device (s "device" </> str)]
 
     let urlParser location = parsePath pageParser location

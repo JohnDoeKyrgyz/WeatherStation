@@ -4,9 +4,12 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Pages.fs" />
     <Compile Include="..\Shared\Shared.fs" />
     <Compile Include="Client.fs" />
+    <Compile Include="Pages\Pages.fs" />
+    <Compile Include="Pages\Device.fs" />
+    <Compile Include="Pages\Home.fs" />
+    <Compile Include="Application.fs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="public\Images\safe_favicon.png" />
