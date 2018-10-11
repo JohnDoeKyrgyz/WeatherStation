@@ -22,21 +22,27 @@ module Application =
 
     // VIEW
     open Fable.Helpers.React
+    open Fulma
     
     /// Constructs the view for a page given the model and dispatcher.
     let viewPage model dispatch =
         match model.PageModel with
         | HomeModel m -> Home.view dispatch m
-        | DeviceModel m -> Device.view dispatch m
-
-    /// Constructs the view for the application given the model.
+        | DeviceModel m -> Device.view dispatch m        
+        
     let view model dispatch =
-        div [] [
-            //Menu.view (Logout >> dispatch) model.User
-            hr []
-            //div [ centerStyle "column" ] (viewPage model dispatch)
-            viewPage model dispatch
-        ]
+        div []
+            [ Navbar.navbar [ Navbar.Color IsPrimary ]
+                [ Navbar.Item.div [ ]
+                    [ Heading.h2 [ ]
+                        [ str "Weather Stations" ] ] ]
+
+              viewPage model dispatch
+                  
+
+              Footer.footer [ ]
+                    [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
+                        [ str "Footer" ] ] ]
 
     let init() =
         let model, cmd = Home.init()
