@@ -1,4 +1,5 @@
 group Client
+Fable.Core
 Fable.Elmish.Debugger
 Fable.Elmish.React
 Fable.Elmish.HMR

@@ -48,4 +48,4 @@ module Particle =
                     let parseResult = valueParser regexMatch.Groups
                     if parseResult.IsSome then
                         yield parseResult.Value ]
-        { Readings = sensorValues @ [ReadingTime (particleReading.PublishedAt)]; DeviceId = particleReading.DeviceId}
+        { Readings = sensorValues @ [ReadingTime (particleReading.PublishedAt.UtcDateTime)]; DeviceId = particleReading.DeviceId}

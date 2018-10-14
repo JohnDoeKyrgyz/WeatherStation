@@ -176,20 +176,7 @@ module WundergroundForwarderTests =
                 do! loadWeatherStations [weatherStation]
                 do! clearReadings
 
-                let readingTime = (new DateTime(2018,9,14))
-
-                let message =
-                    sprintf
-                        """
-                        {
-                            "data": "100:4.006250:3864|b1.0:2.0:3.0d10.800000:86.500000a1.700000:15",
-                            "device_id": "%s",
-                            "event": "Reading",
-                            "published_at": "%s"
-                        }
-                        """
-                        weatherStation.DeviceId
-                        (readingTime.ToString())
+                let message = buildParticleMessage weatherStation readingTime "100:4.006250:3864|b1.0:2.0:3.0d10.800000:86.500000a1.700000:15"
 
                 let expectedReadings = [
                     BatteryChargeVoltage 4.006250M<volts>
@@ -225,7 +212,7 @@ module WundergroundForwarderTests =
                 match readings with
                 | [reading] ->
                     Expect.equal reading.SourceDevice weatherStation.DeviceId "Unexpected DeviceId"
-                    Expect.isGreaterThan reading.ReadingTime readingTime "Unexpected ReadingTime"
+                    Expect.isGreaterThanOrEqual reading.ReadingTime readingTime "Unexpected ReadingTime"
                     Expect.equal reading.SpeedMetersPerSecond 1.70 "Unexpected SpeedMetersPerSecond"
                 | _ -> failwith "Unexpected readings"
 

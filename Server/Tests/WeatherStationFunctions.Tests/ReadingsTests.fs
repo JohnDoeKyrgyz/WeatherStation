@@ -13,6 +13,7 @@ module ReadingsTests =
     }
 
     let buildParticleMessage weatherStation (readingTime : DateTime) data =
+        let readingTimeFormat = readingTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         sprintf
             """
             {
@@ -24,7 +25,7 @@ module ReadingsTests =
             """
             data
             weatherStation.DeviceId
-            (readingTime.ToString())
+            readingTimeFormat
 
     let readingTest log existingReadings readingTime weatherStation message expectedReadings =
         async {

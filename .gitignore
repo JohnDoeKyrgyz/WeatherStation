@@ -6,3 +6,4 @@ Server/WebPortal/src/Server/App.config
 obj/
 bin/
 Server/WebPortal/src/Server/secrets.json
+Server/ParticleToken.json
