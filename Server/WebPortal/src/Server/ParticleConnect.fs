@@ -121,7 +121,7 @@ module ParticleConnect =
             Debug.WriteLine(sprintf "Saved %s" savedTokenFile)
         }
 
-    let expiration (token : TokenResponse.Root) = DateTime.Now.AddSeconds(float token.ExpiresIn)
+    let expiration (token : TokenResponse.Root) = new DateTimeOffset(DateTime.UtcNow.AddSeconds(float token.ExpiresIn))
     let applyExpiration (token : TokenResponse.Root) = new Token.Root(token.TokenType, token.AccessToken, token.ExpiresIn, token.RefreshToken, expiration token)
 
     let tokenCache secrets otpGenerator =
@@ -140,7 +140,7 @@ module ParticleConnect =
                 let! token = refreshToken secrets otpGenerator token
                 return applyExpiration token }
 
-        buildTimedCache savedToken (fun token -> token.Expires) refreshToken getNewToken
+        buildTimedCache savedToken (fun token -> token.Expires.DateTime) refreshToken getNewToken
 
     let connect =
         let secrets = Secrets.GetSample()
