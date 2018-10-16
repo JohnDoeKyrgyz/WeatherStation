@@ -19,7 +19,7 @@ module Device =
 
     let loadStationCmd =
         Cmd.ofPromise
-            (fetchAs<Station> "/api/station")
+            (fetchAs "/api/station")
             []
             (Ok >> Loaded >> Station)
             (Error >> Loaded >> Station)    

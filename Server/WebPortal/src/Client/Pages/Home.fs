@@ -21,7 +21,7 @@ module Home =
 
     let loadStationsCmd =
         Cmd.ofPromise
-            (fetchAs<Station list> "/api/stations")
+            (fetchAs "/api/stations")
             []
             (Ok >> Loaded >> Stations)
             (Error >> Loaded >> Stations)    

@@ -11,8 +11,7 @@ module Client =
         | Loading
         | Loaded of Result<'T, exn>
 
-    let fetchAs<'TItem> url = fetchAs<'TItem> url Decode.Auto.unsafeFromString
-
+    let inline fetchAs url = fetchAs<'TItem> url Decode.Auto.unsafeFromString
 
     let button txt onClick =
         Button.button
