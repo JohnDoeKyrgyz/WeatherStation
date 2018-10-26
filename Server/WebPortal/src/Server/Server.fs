@@ -5,6 +5,7 @@ module Server =
     open System.IO    
     open System.Configuration
 
+    open Microsoft.Extensions.Logging
     open Microsoft.Extensions.DependencyInjection
 
     open Saturn
@@ -14,7 +15,6 @@ module Server =
     open FSharp.Control.Tasks    
 
     open Logic
-    open Saturn.ControllerHelpers
 
     let publicPath = Path.GetFullPath "../Client/public"
     let port = 8085us
@@ -62,7 +62,6 @@ module Server =
         use_static publicPath
         service_config configureSerialization
         use_gzip
-        use_iis
     }
 
     run app

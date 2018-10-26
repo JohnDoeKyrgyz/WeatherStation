@@ -1,5 +1,3 @@
-#I __SOURCE_DIRECTORY__
-#I @"..\"
 #r "paket: groupref build //"
 #load "./.fake/build.fsx/intellisense.fsx"
 
@@ -33,12 +31,6 @@ let platformTool tool winTool =
 let nodeTool = platformTool "node" "node.exe"
 let yarnTool = platformTool "yarn" "yarn.cmd"
 
-let install = lazy DotNet.install DotNet.Versions.FromGlobalJson
-
-let inline withWorkDir wd =
-    DotNet.Options.lift install.Value
-    >> DotNet.Options.withWorkingDirectory wd
-
 let runTool cmd args workingDir =
     let result =
         Process.execSimple (fun info ->
@@ -51,7 +43,7 @@ let runTool cmd args workingDir =
 
 let runDotNet cmd workingDir =
     let result =
-        DotNet.exec (withWorkDir workingDir) cmd ""
+        DotNet.exec (DotNet.Options.withWorkingDirectory workingDir) cmd ""
     if result.ExitCode <> 0 then failwithf "'dotnet %s' failed in %s" cmd workingDir
 
 let openBrowser url =
@@ -83,22 +75,21 @@ Target.create "RestoreServer" (fun _ ->
 
 Target.create "Build" (fun _ ->
     runDotNet "build" serverPath
-    runDotNet "fable webpack --port free -- -p --config src/Client/webpack.config.js" clientPath
+    runDotNet "fable webpack-cli -- --config src/Client/webpack.config.js -p" clientPath
 )
 
 Target.create "Run" (fun _ ->
-    let server = async { runDotNet "watch run" serverPath }
+    let server = async { runDotNet "watch run" serverPath }    
     let serverTests = async { runDotNet "watch run" serverTestsPath }
-
     let client = async {
-        runDotNet "fable webpack-dev-server --port free -- --config src/Client/webpack.config.js" clientPath
+        runDotNet "fable webpack-dev-server -- --config src/Client/webpack.config.js" clientPath
     }
     let browser = async {
         do! Async.Sleep 5000
         openBrowser "http://localhost:8080"
     }
 
-    [ server; serverTests; client; browser ]
+    [ serverTests; server; client; browser ]
     |> Async.Parallel
     |> Async.RunSynchronously
     |> ignore

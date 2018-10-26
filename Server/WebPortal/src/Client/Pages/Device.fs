@@ -5,7 +5,6 @@ module Device =
     open Elmish
 
     open Fable.Helpers.React
-    open Fable.Helpers.React.Props
     open Fulma
 
     open Client

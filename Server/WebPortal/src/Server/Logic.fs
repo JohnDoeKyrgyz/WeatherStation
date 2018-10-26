@@ -26,8 +26,8 @@ module Logic =
                     let lastReadingAge = DateTime.Now.Subtract(stationLastReadingTime)
                     let status = if lastReadingAge < activeThreshold then Active else Offline
                     yield {
-                        Name = station.DeviceId
-                        WundergroundId = station.WundergroundStationId
+                        Name = station.DeviceId.Trim()
+                        WundergroundId = station.WundergroundStationId.Trim()
                         Status = status
                         Location = {
                             Latitude = decimal station.Latitude

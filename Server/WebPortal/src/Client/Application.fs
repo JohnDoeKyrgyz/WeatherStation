@@ -27,18 +27,17 @@ module Application =
     /// Constructs the view for a page given the model and dispatcher.
     let viewPage model dispatch =
         match model.PageModel with
-        | HomeModel m -> Home.view dispatch m
-        | DeviceModel m -> Device.view dispatch m        
+        | HomeModel m -> Home.view (HomeMsg >> dispatch) m
+        | DeviceModel m -> Device.view (DeviceMsg >> dispatch) m        
         
     let view model dispatch =
         div []
             [ Navbar.navbar [ Navbar.Color IsPrimary ]
                 [ Navbar.Item.div [ ]
                     [ Heading.h2 [ ]
-                        [ str "Weather Stations" ] ] ]
+                        [ str "Weather Stations!" ] ] ]
 
-              viewPage model dispatch
-                  
+              viewPage model dispatch                  
 
               Footer.footer [ ]
                     [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
