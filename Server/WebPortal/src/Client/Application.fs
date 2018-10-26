@@ -3,7 +3,9 @@ namespace WeatherStation.Client
 module Application =
     
     open Elmish
-    open Elmish.React
+    open Elmish.React    
+    open Elmish.Browser.Navigation
+
     open WeatherStation.Client.Pages
     
     /// The composed model for the different possible page states of the application
@@ -23,6 +25,7 @@ module Application =
     // VIEW
     open Fable.Helpers.React
     open Fulma
+    open WeatherStation.Shared
     
     /// Constructs the view for a page given the model and dispatcher.
     let viewPage model dispatch =
@@ -43,13 +46,23 @@ module Application =
                     [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
                         [ str "Footer" ] ] ]
 
-    let init() =
+    let init _ =
         let model, cmd = Home.init()
         let applicationCommand = Cmd.map HomeMsg cmd
         {PageModel = PageModel.HomeModel model}, applicationCommand
 
     let update message model =
         match message, model.PageModel with
+        | HomeMsg (Home.Msg.Select station), PageModel.HomeModel _ ->
+            let url = Pages.toPath (Pages.Page.Device station.DeviceId)
+            let m, cmd = Device.init station.DeviceId
+            let command =
+                [
+                    Navigation.newUrl url
+                    cmd]
+                |> List.map (Cmd.map DeviceMsg)
+                |> Cmd.batch                
+            {model with PageModel = PageModel.DeviceModel m}, command
         | HomeMsg cmd, PageModel.HomeModel m ->
             let homeModel, homeMessage = Home.update cmd m
             {model with PageModel = PageModel.HomeModel homeModel}, Cmd.map HomeMsg homeMessage
@@ -59,13 +72,28 @@ module Application =
         | _ -> failwithf "Unexpected message"
 
 
+    let urlUpdate (result : Pages.Page option) (model: Model) =
+        match result with
+        | None -> failwith "Page not found"
+        | Some (Pages.Page.Device deviceId) ->
+            let m, cmd = Device.init deviceId
+            { model with PageModel = DeviceModel m }, Cmd.map DeviceMsg cmd
+        | Some Pages.Page.Home ->
+            let m, cmd = Home.init()
+            { model with PageModel = HomeModel m }, Cmd.map HomeMsg cmd
+
+    let pageParser : Parser<Pages.Page option> = Pages.Pages.urlParser
+
+
     #if DEBUG
     open Elmish.Debug
     open Elmish.HMR
 
     #endif
 
+    // App
     Program.mkProgram init update view
+    |> Program.toNavigable pageParser urlUpdate
     #if DEBUG
     |> Program.withConsoleTrace
     |> Program.withHMR

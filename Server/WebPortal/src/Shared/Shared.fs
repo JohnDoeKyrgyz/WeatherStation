@@ -17,6 +17,7 @@ type Status =
 type Station = {
     Name : string
     WundergroundId : string
+    DeviceId : string
     Location : Location
     Status : Status
 }

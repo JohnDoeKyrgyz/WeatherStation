@@ -12,7 +12,6 @@ module Home =
 
     type Model = {
         Stations : Loadable<Station list>
-        SelectedStation : Station option
     }
 
     type Msg =
@@ -28,7 +27,7 @@ module Home =
 
     // defines the initial state and initial command (= side-effect) of the application
     let init () : Model * Cmd<Msg> =
-        let initialModel = { Stations = Loading; SelectedStation = None}    
+        let initialModel = { Stations = Loading }    
         initialModel, loadStationsCmd
 
     let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
@@ -39,9 +38,9 @@ module Home =
         | Stations result ->
             let nextModel = { currentModel with Stations = result }
             nextModel, Cmd.none
-        | Select station ->
-            let nextModel = { currentModel with SelectedStation = Some station }
-            nextModel, Cmd.none
+        | Select _ ->
+            //This message is actually handled by the parent Application
+            currentModel, Cmd.none
 
     let stationsList dispatch stations =
         table [] [
@@ -54,10 +53,7 @@ module Home =
                     yield tr [] [
                         td [] [a [Href (sprintf "https://www.wunderground.com/personal-weather-station/dashboard?ID=%s" station.WundergroundId) ] [str station.Name]]
                         td [] [str (string station.Status)]
-                        td [] [
-                            Button.button [
-                                Button.IsFullWidth
-                                Button.Color IsPrimary] [str "Details"]]]]]
+                        td [] [button "Details" (fun _ -> dispatch (Select station))]]]]
     
     let show dispatch model = 
         match model.Stations with

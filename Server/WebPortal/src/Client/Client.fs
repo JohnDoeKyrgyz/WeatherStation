@@ -18,7 +18,6 @@ module Client =
             let! text = response.text()
             return Decode.Auto.unsafeFromString text
         }
-        
 
     let button txt onClick =
         Button.button

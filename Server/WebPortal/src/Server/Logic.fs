@@ -28,6 +28,7 @@ module Logic =
                     yield {
                         Name = station.DeviceId.Trim()
                         WundergroundId = station.WundergroundStationId.Trim()
+                        DeviceId = station.DeviceId.Trim()
                         Status = status
                         Location = {
                             Latitude = decimal station.Latitude
