@@ -1,4 +1,5 @@
 namespace WeatherStation
+
 module Logic =
 
     open System
@@ -8,14 +9,7 @@ module Logic =
 
     open WeatherStation.Model
     open WeatherStation.Shared
-    open WeatherStation
-
-    open AzureStorage
-
-    let allStations connectionString = async {
-        let! repository = weatherStationRepository connectionString
-        return! repository.GetAll()
-    }        
+    open WeatherStation    
 
     let getWeatherStations activeThreshold allStations = 
         async {
@@ -35,6 +29,36 @@ module Logic =
                             Longitude = decimal station.Longitude
                         }
                     }] }
+
+    let getWeatherStationDetails data = async {
+        match! data with
+        | Some (station : WeatherStation, readings : Model.Reading list ) ->
+            return
+                Some {
+                    Name = station.WundergroundStationId
+                    WundergroundId = station.WundergroundStationId
+                    DeviceId = station.DeviceId
+                    Location = {Latitude = 0.0m; Longitude = 0.0m}
+                    LastReading = None
+                    Readings = [
+                        for reading in readings -> {
+                            DeviceTime = reading.DeviceTime
+                            ReadingTime = reading.ReadingTime
+                            SupplyVoltage = reading.SupplyVoltage
+                            BatteryChargeVoltage = reading.BatteryChargeVoltage
+                            PanelVoltage = reading.PanelVoltage
+                            TemperatureCelciusHydrometer = reading.TemperatureCelciusHydrometer
+                            TemperatureCelciusBarometer = reading.TemperatureCelciusBarometer
+                            HumidityPercentHydrometer = reading.HumidityPercentHydrometer
+                            HumidityPercentBarometer = reading.HumidityPercentBarometer
+                            PressurePascal = reading.PressurePascal
+                            GustMetersPerSecond = reading.GustMetersPerSecond
+                            SpeedMetersPerSecond = reading.SpeedMetersPerSecond
+                            DirectionDegrees = reading.DirectionDegrees
+                        }]
+                }
+        | None -> return None
+    }
 
     [<Literal>]
     let particleSettingsJson = __SOURCE_DIRECTORY__ + "/../../../../DeviceFirmware/ParticleElectron/src/Settings.json"

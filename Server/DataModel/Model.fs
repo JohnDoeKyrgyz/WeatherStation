@@ -17,6 +17,12 @@ module Model =
         | Particle
         | Hologram
 
+    let parseDeviceType value =
+        match value with 
+        | "Particle" -> Particle
+        | "Hologram" -> Hologram
+        | _ -> failwithf "%s is not a valid DeviceType" value
+
     type WeatherStation = {
         [<PartitionKey>]
         DeviceType : string
@@ -28,8 +34,7 @@ module Model =
         Latitude : double
         Longitude : double
         LastReading : DateTime option
-    }        
-
+    }
 
     type Reading = {
         RefreshIntervalSeconds : int

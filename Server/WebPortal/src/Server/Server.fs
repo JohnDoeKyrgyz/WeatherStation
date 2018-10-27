@@ -14,7 +14,9 @@ module Server =
 
     open FSharp.Control.Tasks    
 
+    open WeatherStation.Data
     open Logic
+    open Model
 
     let publicPath = Path.GetFullPath "../Client/public"
     let port = 8085us
@@ -28,7 +30,9 @@ module Server =
     let read reader next ctx =
         task {
             let! data = reader |> Async.StartAsTask
-            return! Successful.OK data next ctx
+            match data with
+            | Result.Ok data -> return! Successful.OK data next ctx
+            | Result.Error error -> return! RequestErrors.NOT_FOUND (string error) next ctx
         }
 
     let getStations = async {
@@ -37,8 +41,19 @@ module Server =
         let! stations =
             allStations connectionString
             |> getWeatherStations activeThreshold
-        return stations
+        return Ok stations
     }
+
+    let getStationDetails deviceType deviceId = async {
+        let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
+        let! readingsCount = SystemSettings.readingsCount systemSettingsRepository.GetSettingWithDefault
+        let! stationDetails =
+            weatherStationDetails connectionString readingsCount deviceType deviceId
+            |> getWeatherStationDetails
+        return
+            match stationDetails with
+            | Some details -> Ok details
+            | None -> Error (sprintf "No device %A %s" deviceType deviceId) }
 
     let setSettings deviceId settings next ctx = task {
         let! response = updateSettings deviceId settings
@@ -47,7 +62,8 @@ module Server =
 
     let webApp = router {            
         get "/api/stations" (read getStations)
-        postf "api/stations/%s/settings" (fun deviceId -> bindJson (fun settings -> setSettings deviceId settings))
+        getf "/api/stations/%s/%s" (fun (deviceType, deviceId) -> (getStationDetails (parseDeviceType deviceType) deviceId) |> read)
+        postf "/api/stations/%s/settings" (fun deviceId -> bindJson (fun settings -> setSettings deviceId settings))
     }
 
     let configureSerialization (services:IServiceCollection) =

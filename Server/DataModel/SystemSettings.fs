@@ -22,11 +22,12 @@ module SystemSettings =
         }
         settingsCache.GetOrCreate(key, buildSetting)
 
-    let private objectSetting settingsGetter key defaultValue =
+    let private objectSetting settingsGetter parser key defaultValue = 
+        let serializedDefaultValue = defaultValue.ToString()
         async {
-            let! settingValue = getOrCreateSetting settingsGetter key (string (defaultValue))
-            return TimeSpan.Parse settingValue
-        }
+            let! setting = getOrCreateSetting settingsGetter key serializedDefaultValue
+            return parser setting }
 
-    let activeThreshold settingsGetter = objectSetting settingsGetter "ActiveThreshold" (TimeSpan.FromHours(1.0))
-    let averageReadingsWindow settingsGetter = objectSetting settingsGetter "ReadingAveragingWindow" (TimeSpan.FromMinutes(10.0))
+    let readingsCount settingsGetter = objectSetting settingsGetter int "ReadingsCount" 100
+    let activeThreshold settingsGetter = objectSetting settingsGetter TimeSpan.Parse "ActiveThreshold" (TimeSpan.FromHours(1.0))    
+    let averageReadingsWindow settingsGetter = objectSetting settingsGetter TimeSpan.Parse "ReadingAveragingWindow" (TimeSpan.FromMinutes(10.0))
