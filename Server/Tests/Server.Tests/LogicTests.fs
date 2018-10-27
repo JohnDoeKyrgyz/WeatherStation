@@ -35,4 +35,17 @@ module LogicTests =
 
                 Expect.equal stations.[1].Status Status.Offline "Second station should not be active"
                 Expect.equal stations.[1].WundergroundId "1" "Unexpected station"
+            }
+            testAsync "Get WeatherStations Trimming" {
+                let activeStation = {
+                    weatherStation with 
+                        DeviceId = weatherStation.DeviceId + Environment.NewLine
+                        WundergroundStationId = weatherStation.WundergroundStationId + Environment.NewLine}
+                let stations = async { return [activeStation]}
+                let activeThreshold = TimeSpan.FromHours(1.0)
+                let! stations = getWeatherStations activeThreshold stations
+
+                Expect.equal stations.Length 1 "Should be two stations"
+                Expect.equal stations.[0].WundergroundId weatherStation.WundergroundStationId "Unexpected station"
+                Expect.equal stations.[0].DeviceId weatherStation.DeviceId "Unexpected device id"
             }]
