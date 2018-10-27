@@ -23,6 +23,7 @@ module Logic =
                         Name = station.DeviceId.Trim()
                         WundergroundId = station.WundergroundStationId.Trim()
                         DeviceId = station.DeviceId.Trim()
+                        DeviceType = station.DeviceType.Trim()
                         Status = status
                         Location = {
                             Latitude = decimal station.Latitude

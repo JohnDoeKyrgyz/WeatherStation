@@ -54,8 +54,8 @@ module Application =
     let update message model =
         match message, model.PageModel with
         | HomeMsg (Home.Msg.Select station), PageModel.HomeModel _ ->
-            let url = Pages.toPath (Pages.Page.Device station.DeviceId)
-            let m, cmd = Device.init station.DeviceId
+            let url = Pages.toPath (Pages.Page.Device(station.DeviceType, station.DeviceId))
+            let m, cmd = Device.init station.DeviceType station.DeviceId
             let command =
                 [
                     Navigation.newUrl url
@@ -75,8 +75,8 @@ module Application =
     let urlUpdate (result : Pages.Page option) (model: Model) =
         match result with
         | None -> failwith "Page not found"
-        | Some (Pages.Page.Device deviceId) ->
-            let m, cmd = Device.init deviceId
+        | Some (Pages.Page.Device(deviceType, deviceId)) ->
+            let m, cmd = Device.init deviceType deviceId
             { model with PageModel = DeviceModel m }, Cmd.map DeviceMsg cmd
         | Some Pages.Page.Home ->
             let m, cmd = Home.init()

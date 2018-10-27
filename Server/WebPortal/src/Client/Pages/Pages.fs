@@ -7,18 +7,17 @@ module Pages =
     [<RequireQualifiedAccess>]
     type Page =
         | Home
-        | Device of string
+        | Device of string * string
 
     let toPath =
         function
         | Page.Home -> "/"
-        | Page.Device deviceId -> sprintf "/device/%s" deviceId
-
+        | Page.Device (deviceType, deviceId) -> sprintf "/device/%s/%s" deviceType deviceId        
 
     /// The URL is turned into a Result.
     let pageParser : Parser<Page -> Page,_> =
         oneOf
             [ map Page.Home (s "")
-              map Page.Device (s "device" </> str)]
+              map (fun deviceType deviceId -> Page.Device(deviceType, deviceId)) (s "device" </> str </> str)]
 
     let urlParser location = parsePath pageParser location

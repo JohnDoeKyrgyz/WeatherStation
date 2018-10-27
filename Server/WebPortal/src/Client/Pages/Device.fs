@@ -10,30 +10,31 @@ module Device =
     open Client
 
     type Model = {
-        StationId : string
+        DeviceType : string
+        DeviceId : string
         Device : Loadable<Station>
     }
 
     type Msg =
         | Station of Loadable<Station>
 
-    let loadStationCmd stationId =
+    let loadStationCmd deviceType deviceId =
         Cmd.ofPromise
-            (fetchAs (sprintf "/api/stations/%s" stationId))
+            (fetchAs (sprintf "/api/stations/%s/%s" deviceType deviceId))
             []
             (Ok >> Loaded >> Station)
             (Error >> Loaded >> Station)    
 
     // defines the initial state and initial command (= side-effect) of the application
-    let init stationId : Model * Cmd<Msg> =
-        let initialModel = { Device = Loading; StationId = stationId }    
-        initialModel, loadStationCmd stationId
+    let init deviceType deviceId : Model * Cmd<Msg> =
+        let initialModel = { Device = Loading; DeviceId = deviceId; DeviceType = deviceType }    
+        initialModel, loadStationCmd deviceType deviceId
 
     let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         match msg with
         | Station Loading ->
             let nextModel = { currentModel with Device = Loading }
-            nextModel, loadStationCmd currentModel.StationId
+            nextModel, loadStationCmd currentModel.DeviceType currentModel.DeviceId
         | Station result ->
             let nextModel = { currentModel with Device = result }
             nextModel, Cmd.none
