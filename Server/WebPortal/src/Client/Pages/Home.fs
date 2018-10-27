@@ -43,7 +43,7 @@ module Home =
             currentModel, Cmd.none
 
     let stationsList dispatch stations =
-        table [] [
+        Table.table [] [
             thead [] [
                 th [] [str "Name"]
                 th [] [str "Status"]
