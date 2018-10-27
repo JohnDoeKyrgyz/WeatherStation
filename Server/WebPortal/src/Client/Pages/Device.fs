@@ -8,15 +8,16 @@ module Device =
     open Fulma
 
     open Client
+    open Fulma
 
     type Model = {
         DeviceType : string
         DeviceId : string
-        Device : Loadable<Station>
+        Device : Loadable<StationDetails>
     }
 
     type Msg =
-        | Station of Loadable<Station>
+        | Station of Loadable<StationDetails>
 
     let loadStationCmd deviceType deviceId =
         Cmd.ofPromise
@@ -39,16 +40,26 @@ module Device =
             let nextModel = { currentModel with Device = result }
             nextModel, Cmd.none
 
+    let showDeviceDetails deviceDetails =
+        div [] [
+            Table.table [] [
+                thead [] [
+                    th [] [str "Time"]
+                    th [] [str "BatteryVoltage"]]
+                tbody [] [
+                    for reading in deviceDetails.Readings do
+                        yield
+                            tr [] [
+                                td [] [str (string reading.ReadingTime)]
+                                td [] [str (string reading.BatteryChargeVoltage)]]]]]
+
 
     let view dispatch model =
-        Container.container
-            []
-            [Content.content [] [h1 [] [str "Hi!"]]]
-            (*
-            [ Content.content
-                [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
-                //        [ Heading.h3 [] [ show dispatch model ] ]
-                    Columns.columns []
-                        [ Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]
-                        *)
+        div [] [
+            yield Heading.h3 [] [str model.DeviceId]
+            yield
+                match model.Device with
+                | Loaded (Ok deviceDetails) -> showDeviceDetails deviceDetails
+                | Loaded (Error error) -> str (string error)
+                | Loading -> str "Loading..."]
 

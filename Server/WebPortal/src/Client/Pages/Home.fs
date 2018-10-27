@@ -62,16 +62,8 @@ module Home =
         | Loaded (Error error) -> str error.Message
 
     let view dispatch model =
-        Container.container [] [
-            Content.content [Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ]] [
-                Heading.h3 [] [show dispatch model]
-                Columns.columns []
-                        [ Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]]
-            (*
-            [ Content.content
-                [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
-                //        [ Heading.h3 [] [ show dispatch model ] ]
-                    Columns.columns []
-                        [ Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]
-                        *)
+        div [] [
+            show dispatch model
+            Columns.columns [] [
+                Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]
 

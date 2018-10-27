@@ -25,7 +25,6 @@ module Application =
     // VIEW
     open Fable.Helpers.React
     open Fulma
-    open WeatherStation.Shared
     
     /// Constructs the view for a page given the model and dispatcher.
     let viewPage model dispatch =
@@ -34,17 +33,19 @@ module Application =
         | DeviceModel m -> Device.view (DeviceMsg >> dispatch) m        
         
     let view model dispatch =
-        div []
-            [ Navbar.navbar [ Navbar.Color IsPrimary ]
-                [ Navbar.Item.div [ ]
-                    [ Heading.h2 [ ]
-                        [ str "Weather Stations!" ] ] ]
+        div [] [
+            Navbar.navbar [ Navbar.Color IsPrimary ] [
+                Navbar.Item.div [ ] [
+                    Heading.h2 [ ] [
+                        str "Weather Stations!" ] ] ]
 
-              viewPage model dispatch                  
+            Container.container [] [
+                Content.content [Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ]] [
+                    viewPage model dispatch ] ] 
 
-              Footer.footer [ ]
-                    [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
-                        [ str "Footer" ] ] ]
+            Footer.footer [] [
+                Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ] [
+                    str "Footer" ] ] ]
 
     let init _ =
         let model, cmd = Home.init()
@@ -83,7 +84,6 @@ module Application =
             { model with PageModel = HomeModel m }, Cmd.map HomeMsg cmd
 
     let pageParser : Parser<Pages.Page option> = Pages.Pages.urlParser
-
 
     #if DEBUG
     open Elmish.Debug
