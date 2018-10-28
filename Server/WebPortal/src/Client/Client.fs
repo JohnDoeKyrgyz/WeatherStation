@@ -61,6 +61,6 @@ module Client =
     let loader loadable onLoaded =
         match loadable with
         | Loaded (Error error) -> str (string error)
-        | Loading -> str "Loading..."
+        | Loading -> div [Class "loading"] [str "Loading..."]
         | Loaded (Ok data) -> onLoaded data
         
