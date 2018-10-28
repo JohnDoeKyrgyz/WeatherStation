@@ -54,15 +54,9 @@ module Home =
                         td [] [a [Href (sprintf "https://www.wunderground.com/personal-weather-station/dashboard?ID=%s" station.WundergroundId) ] [str station.Name]]
                         td [] [str (string station.Status)]
                         td [] [button "Details" (fun _ -> dispatch (Select station))]]]]
-    
-    let show dispatch model = 
-        match model.Stations with
-        | Loading -> str "Loading..."
-        | Loaded (Ok data) -> stationsList dispatch data
-        | Loaded (Error error) -> str error.Message
 
     let view dispatch model = [
-        show dispatch model
+        loader model.Stations (stationsList dispatch)
         Columns.columns [] [
             Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]
 

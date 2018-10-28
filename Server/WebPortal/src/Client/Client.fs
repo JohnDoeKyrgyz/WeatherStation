@@ -56,4 +56,11 @@ module Client =
             for tabDef in tabs do
                 let isActive = (activeTab = tabDef.Key)
                 yield div [Hidden (not isActive)] tabDef.Content]
+
+    ///Displays feedback to the user for loadable content
+    let loader loadable onLoaded =
+        match loadable with
+        | Loaded (Error error) -> str (string error)
+        | Loading -> str "Loading..."
+        | Loaded (Ok data) -> onLoaded data
         

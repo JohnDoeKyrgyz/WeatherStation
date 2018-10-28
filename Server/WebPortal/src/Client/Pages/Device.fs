@@ -70,42 +70,32 @@ module Device =
     module R = Fable.Helpers.React
     module P = R.Props                        
 
-    let graph model =       
-        match model.Device with
-        | Loaded (Error error) -> str (string error)
-        | Loading -> str "Loading..."
-        | Loaded (Ok deviceDetails) ->
-            let data = [|for reading in deviceDetails.Readings -> reading.BatteryChargeVoltage|] 
-            lineChart
-                [ margin 5. 20. 5. 0.
-                  Chart.Width 600.
-                  Chart.Height 300.
-                  Chart.Data data ]
-                [ line
-                    [ Cartesian.Type Monotone
-                      Cartesian.DataKey "uv"
-                      P.Stroke "#8884d8"
-                      P.StrokeWidth 2. ]
-                    []
-                  cartesianGrid
-                    [ P.Stroke "#ccc"
-                      P.StrokeDasharray "5 5" ]
-                    []
-                  xaxis [Cartesian.DataKey "name"] []
-                  yaxis [] []
-                  tooltip [] [] ]
-
-    let readingsTable model =
-        match model.Device with
-        | Loaded (Ok deviceDetails) -> showDeviceDetails deviceDetails
-        | Loaded (Error error) -> str (string error)
-        | Loading -> str "Loading..."
+    let graph deviceDetails =
+        let data = [|for reading in deviceDetails.Readings -> reading.BatteryChargeVoltage|] 
+        lineChart
+            [ margin 5. 20. 5. 0.
+              Chart.Width 600.
+              Chart.Height 300.
+              Chart.Data data ]
+            [ line
+                [ Cartesian.Type Monotone
+                  Cartesian.DataKey "uv"
+                  P.Stroke "#8884d8"
+                  P.StrokeWidth 2. ]
+                []
+              cartesianGrid
+                [ P.Stroke "#ccc"
+                  P.StrokeDasharray "5 5" ]
+                []
+              xaxis [Cartesian.DataKey "name"] []
+              yaxis [] []
+              tooltip [] [] ]
 
     let view dispatch model = [
         Client.tabs
             (SelectTab >> dispatch) [
-                {Name = "Data"; Key = Data; Content = [readingsTable model]; Icon = Some FontAwesome.Fa.I.Table}
-                {Name = "Graph"; Key = Graph; Content = [graph model]; Icon = Some FontAwesome.Fa.I.LineChart}
+                {Name = "Data"; Key = Data; Content = [loader model.Device showDeviceDetails]; Icon = Some FontAwesome.Fa.I.Table}
+                {Name = "Graph"; Key = Graph; Content = [loader model.Device graph]; Icon = Some FontAwesome.Fa.I.LineChart}
                 {Name = "Settings"; Key = Settings; Content = [str "Settings"]; Icon = Some FontAwesome.Fa.I.Gear}
             ]
             model.ActiveTab
