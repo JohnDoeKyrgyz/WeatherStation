@@ -49,20 +49,27 @@ module Application =
         match page with
         | Pages.Page.Home -> gotoPage HomeMsg HomeModel (Home.init())
         | Pages.Page.Device(deviceType, deviceId) -> gotoPage DeviceMsg DeviceModel (Device.init deviceType deviceId)
-        
+
     let view model dispatch =
+        let homeCrumb active = Breadcrumb.item [Breadcrumb.Item.IsActive active] [a [OnClick (fun _ -> dispatch (Msg.Navigate Pages.Page.Home))] [ str "Home" ]]
+
         div [] [
             Navbar.navbar [ Navbar.Color IsPrimary ] [
-                Navbar.Item.a [
-                    Navbar.Item.Option.IsTab
-                    Navbar.Item.Option.Props [OnClick (fun _ -> dispatch (Msg.Navigate Pages.Page.Home))]] [str "Home"] ]
+                Navbar.Item.div [Navbar.Item.Option.IsTab] [
+                    Breadcrumb.breadcrumb [Breadcrumb.HasBulletSeparator] [
+                        match model.PageModel with
+                        | PageModel.HomeModel _ ->
+                            yield homeCrumb true
+                        | PageModel.DeviceModel deviceModel ->
+                            yield homeCrumb false
+                            yield Breadcrumb.item [Breadcrumb.Item.IsActive true ][ a [ ] [ str deviceModel.DeviceId ] ] ] ] ]
 
             Container.container [] [
                 Content.content [Content.Modifiers [Modifier.TextAlignment (Screen.All, TextAlignment.Centered)]] (viewPage model dispatch) ]  
 
             Footer.footer [] [
                 Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ] [
-                    str "Footer" ] ] ]
+                    str "By John Atwood" ] ] ]
 
     let init _ =
         let model, cmd = Home.init()
