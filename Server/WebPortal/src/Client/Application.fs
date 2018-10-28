@@ -6,6 +6,9 @@ module Application =
     open Elmish.React    
     open Elmish.Browser.Navigation
 
+    open Fable.Helpers.React
+    open Fable.Helpers.React.Props
+
     open WeatherStation.Client.Pages
     
     /// The composed model for the different possible page states of the application
@@ -21,27 +24,41 @@ module Application =
     type Msg =
         | HomeMsg of Home.Msg
         | DeviceMsg of Device.Msg
+        | Navigate of Pages.Page
 
     // VIEW
-    open Fable.Helpers.React
     open Fulma
+    open Client
     
     /// Constructs the view for a page given the model and dispatcher.
     let viewPage model dispatch =
         match model.PageModel with
         | HomeModel m -> Home.view (HomeMsg >> dispatch) m
-        | DeviceModel m -> Device.view (DeviceMsg >> dispatch) m        
+        | DeviceModel m -> Device.view (DeviceMsg >> dispatch) m
+
+    let navigate page model =
+        let url = Pages.toPath page
+        let gotoPage message toPageModel (pageModel, pageCommand) =            
+            let command =
+                [
+                    Navigation.newUrl url
+                    pageCommand]
+                |> List.map (Cmd.map message)
+                |> Cmd.batch
+            {model with PageModel = toPageModel pageModel}, command
+        match page with
+        | Pages.Page.Home -> gotoPage HomeMsg HomeModel (Home.init())
+        | Pages.Page.Device(deviceType, deviceId) -> gotoPage DeviceMsg DeviceModel (Device.init deviceType deviceId)
         
     let view model dispatch =
         div [] [
             Navbar.navbar [ Navbar.Color IsPrimary ] [
-                Navbar.Item.div [ ] [
-                    Heading.h2 [ ] [
-                        str "Weather Stations!" ] ] ]
+                Navbar.Item.a [
+                    Navbar.Item.Option.IsTab
+                    Navbar.Item.Option.Props [OnClick (fun _ -> dispatch (Msg.Navigate Pages.Page.Home))]] [str "Home"] ]
 
             Container.container [] [
-                Content.content [Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ]] [
-                    viewPage model dispatch ] ] 
+                Content.content [Content.Modifiers [Modifier.TextAlignment (Screen.All, TextAlignment.Centered)]] (viewPage model dispatch) ]  
 
             Footer.footer [] [
                 Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ] [
@@ -55,18 +72,12 @@ module Application =
     let update message model =
         match message, model.PageModel with
         | HomeMsg (Home.Msg.Select station), PageModel.HomeModel _ ->
-            let url = Pages.toPath (Pages.Page.Device(station.DeviceType, station.DeviceId))
-            let m, cmd = Device.init station.DeviceType station.DeviceId
-            let command =
-                [
-                    Navigation.newUrl url
-                    cmd]
-                |> List.map (Cmd.map DeviceMsg)
-                |> Cmd.batch                
-            {model with PageModel = PageModel.DeviceModel m}, command
+            let page = Pages.Page.Device(station.DeviceType, station.DeviceId)
+            navigate page model
         | HomeMsg cmd, PageModel.HomeModel m ->
             let homeModel, homeMessage = Home.update cmd m
             {model with PageModel = PageModel.HomeModel homeModel}, Cmd.map HomeMsg homeMessage
+        | Navigate page, _ -> navigate page model
         | DeviceMsg cmd, PageModel.DeviceModel m ->
             let deviceModel, deviceMessage = Device.update cmd m
             {model with PageModel = PageModel.DeviceModel deviceModel}, Cmd.map DeviceMsg deviceMessage

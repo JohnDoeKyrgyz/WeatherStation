@@ -61,9 +61,8 @@ module Home =
         | Loaded (Ok data) -> stationsList dispatch data
         | Loaded (Error error) -> str error.Message
 
-    let view dispatch model =
-        div [] [
-            show dispatch model
-            Columns.columns [] [
-                Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]
+    let view dispatch model = [
+        show dispatch model
+        Columns.columns [] [
+            Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]
 

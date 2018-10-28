@@ -72,14 +72,13 @@ module Device =
         | Loaded (Error error) -> str (string error)
         | Loading -> str "Loading..."
 
-    let view dispatch model =
-        div [] [
-            Heading.h3 [] [str model.DeviceId]
-            Client.tabs
-                (SelectTab >> dispatch) [
-                    {Name = "Data"; Key = Data; Content = [readingsTable model]; Icon = Some FontAwesome.Fa.I.Table}
-                    {Name = "Graph"; Key = Graph; Content = [str "Graph"]; Icon = Some FontAwesome.Fa.I.LineChart}
-                    {Name = "Settings"; Key = Settings; Content = [str "Settings"]; Icon = Some FontAwesome.Fa.I.Gear}
-                ]
-                model.ActiveTab
-                [Tabs.IsFullWidth; Tabs.IsBoxed]]
+    let view dispatch model = [
+        Heading.h3 [] [str model.DeviceId]
+        Client.tabs
+            (SelectTab >> dispatch) [
+                {Name = "Data"; Key = Data; Content = [readingsTable model]; Icon = Some FontAwesome.Fa.I.Table}
+                {Name = "Graph"; Key = Graph; Content = [str "Graph"]; Icon = Some FontAwesome.Fa.I.LineChart}
+                {Name = "Settings"; Key = Settings; Content = [str "Settings"]; Icon = Some FontAwesome.Fa.I.Gear}
+            ]
+            model.ActiveTab
+            [Tabs.IsFullWidth; Tabs.IsBoxed]]
