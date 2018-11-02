@@ -45,15 +45,17 @@ module Home =
     let stationsList dispatch stations =
         Table.table [] [
             thead [] [
-                th [] [str "Name"]
-                th [] [str "Status"]
-                th [] [button "Reload" (fun _ -> dispatch (Stations Loading))]]
+                tr [] [
+                    td [] [str "Name"]
+                    td [] [str "Status"]
+                    td [] [button "Reload" (fun _ -> dispatch (Stations Loading))]]]
             tbody [] 
                 [for station in stations do
-                    yield tr [] [
-                        td [] [a [Href (sprintf "https://www.wunderground.com/personal-weather-station/dashboard?ID=%s" station.WundergroundId) ] [str station.Name]]
-                        td [] [str (string station.Status)]
-                        td [] [button "Details" (fun _ -> dispatch (Select station))]]]]
+                    yield
+                        tr [] [
+                            td [] [a [Href (sprintf "https://www.wunderground.com/personal-weather-station/dashboard?ID=%s" station.WundergroundId) ] [str station.Name]]
+                            td [] [str (string station.Status)]
+                            td [] [button "Details" (fun _ -> dispatch (Select station))]]]]
 
     let view dispatch model = [
         loader model.Stations (stationsList dispatch)

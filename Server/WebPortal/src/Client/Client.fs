@@ -30,8 +30,10 @@ module Client =
 
     let table headers data formatter =
         Table.table [Table.IsBordered; Table.IsFullWidth; Table.IsStriped] [
-            thead [] [for header in headers -> th [] [str header]]
-            tbody [] [for row in data -> tableRow (formatter row)]]
+            thead [] [
+                tr [] [for header in headers -> th [] [str header]]]
+            tbody [] [
+                for row in data -> tableRow (formatter row)]]
 
     let date (date : DateTime) = sprintf "%s %s" (date.ToString("MM/dd hh:mm:ss")) (if date.Hour >= 12 then "PM" else "AM")
     let number value = sprintf "%.2f" value
