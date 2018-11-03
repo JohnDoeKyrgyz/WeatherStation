@@ -70,9 +70,8 @@ module Server =
     let setSettings key next (ctx : HttpContext) = task {
         let! formContents = ctx.ReadBodyFromRequestAsync()
         let settings = ParticleSettings.Parse formContents
+        do! updateWeatherStationSettings connectionString key formContents
         let! response = updateParticleDeviceSettings key settings
-        let saveSettings = string settings
-        do! updateWeatherStationSettings connectionString key saveSettings
         return! Successful.OK response next ctx
     }
 
