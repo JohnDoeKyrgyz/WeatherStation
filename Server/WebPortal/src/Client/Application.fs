@@ -48,7 +48,7 @@ module Application =
             {model with PageModel = toPageModel pageModel}, command
         match page with
         | Pages.Page.Home -> gotoPage HomeMsg HomeModel (Home.init())
-        | Pages.Page.Device(deviceType, deviceId) -> gotoPage DeviceMsg DeviceModel (Device.init deviceType deviceId)
+        | Pages.Page.Device key -> gotoPage DeviceMsg DeviceModel (Device.init key)
 
     let view model dispatch =
         let today = DateTime.Now
@@ -64,7 +64,7 @@ module Application =
                             yield homeCrumb true
                         | PageModel.DeviceModel deviceModel ->
                             yield homeCrumb false
-                            yield Breadcrumb.item [Breadcrumb.Item.IsActive true ][ a [ ] [ str deviceModel.DeviceId ] ] ] ] ]
+                            yield Breadcrumb.item [Breadcrumb.Item.IsActive true ][ a [ ] [ str deviceModel.Key.DeviceId ] ] ] ] ]
 
             Container.container [] [
                 Content.content [Content.Modifiers [Modifier.TextAlignment (Screen.All, TextAlignment.Centered)]] (viewPage model dispatch) ]  
@@ -81,7 +81,7 @@ module Application =
     let update message model =
         match message, model.PageModel with
         | HomeMsg (Home.Msg.Select station), PageModel.HomeModel _ ->
-            let page = Pages.Page.Device(station.DeviceType, station.DeviceId)
+            let page = Pages.Page.Device(station.Key)
             navigate page model
         | HomeMsg cmd, PageModel.HomeModel m ->
             let homeModel, homeMessage = Home.update cmd m
@@ -96,8 +96,8 @@ module Application =
     let urlUpdate (result : Pages.Page option) (model: Model) =
         match result with
         | None -> failwith "Page not found"
-        | Some (Pages.Page.Device(deviceType, deviceId)) ->
-            let m, cmd = Device.init deviceType deviceId
+        | Some (Pages.Page.Device(key)) ->
+            let m, cmd = Device.init key
             { model with PageModel = DeviceModel m }, Cmd.map DeviceMsg cmd
         | Some Pages.Page.Home ->
             let m, cmd = Home.init()

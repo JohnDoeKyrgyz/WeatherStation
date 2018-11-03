@@ -20,10 +20,9 @@ module Logic =
                     let lastReadingAge = DateTime.Now.Subtract(stationLastReadingTime)
                     let status = if lastReadingAge < activeThreshold then Active else Offline
                     yield {
+                        Key = {DeviceId = station.DeviceId.Trim(); DeviceType = station.DeviceType.Trim()}
                         Name = station.DeviceId.Trim()
                         WundergroundId = station.WundergroundStationId.Trim()
-                        DeviceId = station.DeviceId.Trim()
-                        DeviceType = station.DeviceType.Trim()
                         Status = status
                         Location = {
                             Latitude = decimal station.Latitude
@@ -36,9 +35,9 @@ module Logic =
         | Some (station : WeatherStation, readings : Model.Reading list ) ->
             return
                 Some {
+                    Key = {DeviceId = station.DeviceId; DeviceType = station.DeviceType}
                     Name = station.WundergroundStationId
                     WundergroundId = station.WundergroundStationId
-                    DeviceId = station.DeviceId
                     Location = {Latitude = 0.0m; Longitude = 0.0m}
                     LastReading = None
                     Readings = [
@@ -65,12 +64,15 @@ module Logic =
     let particleSettingsJson = __SOURCE_DIRECTORY__ + "/../../../../DeviceFirmware/ParticleElectron/src/Settings.json"
     type ParticleSettings = JsonProvider< particleSettingsJson >
 
-    let updateSettings deviceId (settings : ParticleSettings.Root) =
+    let updateParticleDeviceSettings key (settings : ParticleSettings.Root) =
+        if parseDeviceType key.DeviceType <> Particle then failwithf "DeviceType %s is not supported" key.DeviceType
         task {
             let! particleCloud = ParticleConnect.connect |> Async.StartAsTask
-            let! device = particleCloud.GetDeviceAsync deviceId
+            let! device = particleCloud.GetDeviceAsync key.DeviceId
             let serializedSettings = settings.JsonValue.ToString()
-            let! result = device.RunFunctionAsync("Settings", serializedSettings)
+            let! result = device.RunFunctionAsync("Settings", serializedSettings)            
             return result
         }
+
+    
 

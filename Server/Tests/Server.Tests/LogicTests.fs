@@ -16,6 +16,7 @@ module LogicTests =
         Latitude = 0.0
         Longitude = 0.0
         LastReading = None
+        Settings = null
     }   
 
     [<Tests>]
@@ -47,5 +48,5 @@ module LogicTests =
 
                 Expect.equal stations.Length 1 "Should be two stations"
                 Expect.equal stations.[0].WundergroundId weatherStation.WundergroundStationId "Unexpected station"
-                Expect.equal stations.[0].DeviceId weatherStation.DeviceId "Unexpected device id"
+                Expect.equal stations.[0].Key.DeviceId weatherStation.DeviceId "Unexpected device id"
             }]

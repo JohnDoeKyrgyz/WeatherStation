@@ -15,8 +15,10 @@ module Server =
     open FSharp.Control.Tasks    
 
     open WeatherStation.Data
+    open WeatherStation.Shared
     open Logic
     open Model
+    open Microsoft.AspNetCore.Http
 
     let publicPath = Path.GetFullPath "../Client/public"
     let port = 8085us
@@ -44,27 +46,43 @@ module Server =
         return Ok stations
     }
 
-    let getStationDetails deviceType deviceId = async {
+    let getStationDetails key = async {
         let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
         let! readingsCount = SystemSettings.readingsCount systemSettingsRepository.GetSettingWithDefault
         let! stationDetails =
-            weatherStationDetails connectionString readingsCount deviceType deviceId
+            weatherStationDetails connectionString readingsCount key
             |> getWeatherStationDetails
         return
             match stationDetails with
             | Some details -> Ok details
-            | None -> Error (sprintf "No device %A %s" deviceType deviceId) }
+            | None -> Error (sprintf "No device %A" key) }
 
-    let setSettings deviceId settings next ctx = task {
-        let! response = updateSettings deviceId settings
+    let getSettings key = async {
+        let! settings = weatherStationSettings connectionString key
+        let settings =
+            match settings with
+            | Some null -> String.Empty
+            | None -> String.Empty
+            | Some v -> v
+        return Ok settings
+    }
+
+    let setSettings key next (ctx : HttpContext) = task {
+        let! formContents = ctx.ReadBodyFromRequestAsync()
+        let settings = ParticleSettings.Parse formContents
+        let! response = updateParticleDeviceSettings key settings
+        let saveSettings = string settings
+        do! updateWeatherStationSettings connectionString key saveSettings
         return! Successful.OK response next ctx
     }
 
-    let webApp = router {            
-        get "/api/stations" (read getStations)
-        getf "/api/stations/%s/%s" (fun (deviceType, deviceId) -> (getStationDetails (parseDeviceType deviceType) deviceId) |> read)
-        postf "/api/stations/%s/settings" (fun deviceId -> bindJson (fun settings -> setSettings deviceId settings))
-    }
+    let webApp =
+        choose [        
+            GET >=> route "/api/stations" >=> (read getStations)
+            GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}" (getStationDetails >> read)
+            GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (getSettings >> read)
+            POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" setSettings
+        ]            
 
     let configureSerialization (services:IServiceCollection) =
         let fableJsonSettings = Newtonsoft.Json.JsonSerializerSettings()

@@ -31,21 +31,25 @@ type Reading = {
     SpeedMetersPerSecond : double
     DirectionDegrees : double
 }
+[<CLIMutable>]
+type StationKey = {
+    DeviceId : string
+    DeviceType : string
+}
 
 type StationDetails = {
+    Key : StationKey
     Name : string
     WundergroundId : string
-    DeviceId : string
     Location : Location
     LastReading : DateTime option
     Readings : Reading list
 }
 
 type Station = {
+    Key : StationKey
     Name : string
     WundergroundId : string
-    DeviceType : string
-    DeviceId : string
     Location : Location
     Status : Status
 }

@@ -34,6 +34,7 @@ module Model =
         Latitude : double
         Longitude : double
         LastReading : DateTime option
+        Settings : string
     }
 
     type Reading = {
