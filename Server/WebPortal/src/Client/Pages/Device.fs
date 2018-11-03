@@ -71,9 +71,7 @@ module Device =
     type Point = {x: DateTime; y: float}
     
     let graph data  =
-        let data = [|for reading in data.Readings -> {x = reading.ReadingTime; y = reading.BatteryChargeVoltage}|]
-        let width = 900.0
-        //responsiveContainer [Chart.Height 300.] [
+        let data = [|for reading in data.Readings -> {x = reading.ReadingTime; y = reading.BatteryChargeVoltage}|]        
         readingsChart data
 
     let view dispatch model = [
