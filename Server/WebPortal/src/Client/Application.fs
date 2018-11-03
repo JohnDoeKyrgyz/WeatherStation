@@ -1,7 +1,7 @@
 namespace WeatherStation.Client
 
 module Application =
-    
+    open System
     open Elmish
     open Elmish.React    
     open Elmish.Browser.Navigation
@@ -51,9 +51,11 @@ module Application =
         | Pages.Page.Device(deviceType, deviceId) -> gotoPage DeviceMsg DeviceModel (Device.init deviceType deviceId)
 
     let view model dispatch =
+        let today = DateTime.Now
+        
         let homeCrumb active = Breadcrumb.item [Breadcrumb.Item.IsActive active] [a [OnClick (fun _ -> dispatch (Msg.Navigate Pages.Page.Home))] [ str "Home" ]]
 
-        div [] [
+        div [] [            
             Navbar.navbar [ Navbar.Color IsPrimary ] [
                 Navbar.Item.div [Navbar.Item.Option.IsTab] [
                     Breadcrumb.breadcrumb [Breadcrumb.HasBulletSeparator] [

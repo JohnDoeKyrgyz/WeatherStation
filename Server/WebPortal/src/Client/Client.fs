@@ -5,6 +5,8 @@ module Client =
     open Fable.PowerPack
     open Fable.PowerPack.Fetch
     open Fable.Helpers.React.Props
+    open Fable.Recharts
+    open Fable.Recharts.Props
 
     open Fulma
     open Thoth.Json
@@ -65,4 +67,12 @@ module Client =
         | Loaded (Error error) -> str (string error)
         | Loading -> div [Class "loading"] [str "Loading..."]
         | Loaded (Ok data) -> onLoaded data
-        
+
+    module P = Fable.Helpers.React.Props
+    let readingsChart data =    
+        lineChart [ Chart.Height 300.0; Chart.Width 900.0; Chart.Data data ] [
+            xaxis [Cartesian.DataKey "x"; Cartesian.Label "x"] []
+            yaxis [] []
+            tooltip [][]
+            cartesianGrid [][]
+            line [Cartesian.DataKey "y"; P.Fill "#88c188"] [] ]

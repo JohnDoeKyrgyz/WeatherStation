@@ -1,13 +1,15 @@
 namespace WeatherStation.Client.Pages
-open Fable.Recharts
-open Fable.Recharts.Props
 module Device =
+    open System
 
     open WeatherStation.Client
     open WeatherStation.Shared
     open Elmish
 
+    open Fable.Recharts
+    open Fable.Recharts.Props
     open Fable.Helpers.React
+    
     open Fulma
 
     open Client
@@ -40,6 +42,9 @@ module Device =
         let initialModel = { Device = Loading; DeviceId = deviceId; DeviceType = deviceType; ActiveTab = Data }    
         initialModel, loadStationCmd deviceType deviceId
 
+    module P = Fable.Helpers.React.Props
+    module R = Fable.Helpers.React
+
     let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         match msg with
         | SelectTab tab ->
@@ -63,40 +68,21 @@ module Device =
                 string reading.DirectionDegrees
                 number reading.TemperatureCelciusBarometer])
 
-    let margin t r b l =
-        Chart.Margin { top = t; bottom = b; right = r; left = l }
-
+    type Point = {x: DateTime; y: float}
     
-    module R = Fable.Helpers.React
-    module P = R.Props                        
-
-    let graph deviceDetails =
-        let data = [|for reading in deviceDetails.Readings -> reading.BatteryChargeVoltage|] 
-        lineChart
-            [ margin 5. 20. 5. 0.
-              Chart.Width 600.
-              Chart.Height 300.
-              Chart.Data data ]
-            [ line
-                [ Cartesian.Type Monotone
-                  Cartesian.DataKey "uv"
-                  P.Stroke "#8884d8"
-                  P.StrokeWidth 2. ]
-                []
-              cartesianGrid
-                [ P.Stroke "#ccc"
-                  P.StrokeDasharray "5 5" ]
-                []
-              xaxis [Cartesian.DataKey "name"] []
-              yaxis [] []
-              tooltip [] [] ]
+    let graph data  =
+        let data = [|for reading in data.Readings -> {x = reading.ReadingTime; y = reading.BatteryChargeVoltage}|]
+        let width = 900.0
+        //responsiveContainer [Chart.Height 300.] [
+        readingsChart data
 
     let view dispatch model = [
-        Client.tabs
-            (SelectTab >> dispatch) [
-                {Name = "Data"; Key = Data; Content = [loader model.Device showDeviceDetails]; Icon = Some FontAwesome.Fa.I.Table}
-                {Name = "Graph"; Key = Graph; Content = [loader model.Device graph]; Icon = Some FontAwesome.Fa.I.LineChart}
-                {Name = "Settings"; Key = Settings; Content = [str "Settings"]; Icon = Some FontAwesome.Fa.I.Gear}
+        yield
+            Client.tabs
+                (SelectTab >> dispatch) [
+                    {Name = "Data"; Key = Data; Content = [loader model.Device showDeviceDetails]; Icon = Some FontAwesome.Fa.I.Table}
+                    {Name = "Graph"; Key = Graph; Content = [loader model.Device graph]; Icon = Some FontAwesome.Fa.I.LineChart}
+                    {Name = "Settings"; Key = Settings; Content = [str "Settings"]; Icon = Some FontAwesome.Fa.I.Gear}
             ]
             model.ActiveTab
             [Tabs.IsFullWidth; Tabs.IsBoxed]]
