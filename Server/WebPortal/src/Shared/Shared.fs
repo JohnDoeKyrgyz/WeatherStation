@@ -54,3 +54,11 @@ type Station = {
     Status : Status
 }
 
+type StationSettings = {
+    Brownout : bool
+    BrownoutMinutes : int
+    SleepTime : int
+    DiagnosticCycles : int
+    UseDeepSleep : bool    
+}
+

@@ -9,11 +9,15 @@ module ParticleConnectTests =
             
             testAsync "Connect" {
                 let! connection = WeatherStation.ParticleConnect.connect
-                Expect.isNotNull connection "No connection available"
+                match connection with
+                | Error _ ->
+                    Expect.isOk connection "Connection failed"    
+                | Ok connection ->
+                    Expect.isNotNull connection "No connection available"
 
-                let! devices = connection.GetDevicesAsync() |> Async.AwaitTask
-                Expect.isNotNull devices "No devices returned"
+                    let! devices = connection.GetDevicesAsync() |> Async.AwaitTask
+                    Expect.isNotNull devices "No devices returned"
 
-                for device in devices do printfn "%s" device.Id
+                    for device in devices do printfn "%s" device.Id
             }
         ]

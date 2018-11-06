@@ -1,4 +1,5 @@
 namespace WeatherStation
+open Particle.SDK
 module ParticleConnect =
 
     open System
@@ -98,7 +99,7 @@ module ParticleConnect =
         let secrets = Secrets.GetSample()
         getTokenWithMfa secrets (generateOtp secrets.ParticleAccountSecret)
 
-    let private savedTokenFile = "ParticleToken.json"
+    let private savedTokenFile = Path.Combine(Environment.CurrentDirectory, "ParticleToken.json")
 
     let savedToken = async {
         return!
@@ -147,5 +148,5 @@ module ParticleConnect =
         let getToken = tokenCache secrets (fun () -> generateOtp secrets.ParticleAccountSecret)
         async {
             let! token = getToken DateTime.Now
-            return new ParticleCloud(token.AccessToken)
+            return token |> Result.map (fun token -> new ParticleCloud(token.AccessToken))
         }

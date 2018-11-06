@@ -59,20 +59,16 @@ module Server =
 
     let getSettings key = async {
         let! settings = weatherStationSettings connectionString key
-        let settings =
-            match settings with
-            | Some null -> String.Empty
-            | None -> String.Empty
-            | Some v -> v
         return Ok settings
     }
 
-    let setSettings key next (ctx : HttpContext) = task {
-        let! formContents = ctx.ReadBodyFromRequestAsync()
-        let settings = ParticleSettings.Parse formContents
-        do! updateWeatherStationSettings connectionString key formContents
-        let! response = updateParticleDeviceSettings key settings
-        return! Successful.OK response next ctx
+    let setSettings key settings next (ctx : HttpContext) = task {
+        do! updateWeatherStationSettings connectionString key settings
+        match settings with
+        | Some settings ->
+            let! response = updateParticleDeviceSettings key settings
+            return! Successful.OK response next ctx
+        | None -> return! Successful.OK "Cleared settings" next ctx            
     }
 
     let webApp =
@@ -80,7 +76,7 @@ module Server =
             GET >=> route "/api/stations" >=> (read getStations)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}" (getStationDetails >> read)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (getSettings >> read)
-            POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" setSettings
+            POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (fun key -> bindJson (setSettings key))
         ]            
 
     let configureSerialization (services:IServiceCollection) =

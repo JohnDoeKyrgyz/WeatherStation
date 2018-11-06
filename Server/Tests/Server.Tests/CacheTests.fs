@@ -39,8 +39,8 @@ module CacheTests =
         let cacheTest = cacheTest now
         
         testList "Timed Cache Tests" [
-            testCaseAsync "Load initial value" (cacheTest (Some later) now now later true false false)
-            testCaseAsync "Load expired value" (cacheTest (Some before) now later later true false true)
-            testCaseAsync "Build initial value" (cacheTest None later now later true true false)
-            testCaseAsync "Build expired value" (cacheTest None before later later true true true)
-            testCaseAsync "Refresh" (cacheTest (Some before) before later later true false true)]
+            testCaseAsync "Load initial value" (cacheTest (Some later) now now (Ok later) true false false)
+            testCaseAsync "Load expired value" (cacheTest (Some before) now later (Ok later) true false true)
+            testCaseAsync "Build initial value" (cacheTest None later now (Ok later) true true false)
+            testCaseAsync "Build expired value" (cacheTest None before later (Ok later) true true true)
+            testCaseAsync "Refresh" (cacheTest (Some before) before later (Ok later) true false true)]

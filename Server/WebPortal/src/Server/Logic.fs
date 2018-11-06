@@ -1,15 +1,17 @@
 namespace WeatherStation
 
 module Logic =
-
+        
     open System
     
     open FSharp.Control.Tasks
     open FSharp.Data
 
+    open Particle.SDK
+
     open WeatherStation.Model
     open WeatherStation.Shared
-    open WeatherStation    
+    open WeatherStation
 
     let getWeatherStations activeThreshold allStations = 
         async {
@@ -64,14 +66,22 @@ module Logic =
     let particleSettingsJson = __SOURCE_DIRECTORY__ + "/../../../../DeviceFirmware/ParticleElectron/src/Settings.json"
     type ParticleSettings = JsonProvider< particleSettingsJson >
 
-    let updateParticleDeviceSettings key (settings : ParticleSettings.Root) =
+    let updateParticleDeviceSettings key (settings : StationSettings) =
         if parseDeviceType key.DeviceType <> Particle then failwithf "DeviceType %s is not supported" key.DeviceType
         task {
             let! particleCloud = ParticleConnect.connect |> Async.StartAsTask
-            let! device = particleCloud.GetDeviceAsync key.DeviceId
-            let serializedSettings = settings.JsonValue.ToString()
-            let! result = device.RunFunctionAsync("Settings", serializedSettings)            
-            return result
+            match particleCloud with
+            | Ok particleCloud ->
+                let! device = particleCloud.GetDeviceAsync key.DeviceId
+                let particleSettings = ParticleSettings.Root(1, settings.Brownout, settings.BrownoutMinutes, settings.SleepTime, settings.DiagnosticCycles, settings.UseDeepSleep)
+                let serializedSettings = particleSettings.JsonValue.ToString()
+                try
+                    let! result = device.RunFunctionAsync("Settings", serializedSettings)
+                    return Ok result
+                with
+                | :? ParticleRequestBadRequestException as ex ->
+                    return Error ex.Message
+            | Error error -> return Error error.Message
         }
 
     

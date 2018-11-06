@@ -6,11 +6,10 @@ module Device =
     open WeatherStation.Shared
     open Elmish
 
-    open Fable.Recharts
-    open Fable.Recharts.Props
+    open Fable.PowerPack
+    open Fable.Import.Browser
     open Fable.Helpers.React
     open Fable.PowerPack.Fetch
-    open Fable.PowerPack.PromiseImpl
     
     open Fulma
 
@@ -24,15 +23,17 @@ module Device =
     type Model = {
         Key : StationKey
         Device : Loadable<StationDetails>
-        Settings : Loadable<string>
+        Settings : Loadable<StationSettings>
         ActiveTab : Tab
     }
 
     type Msg =
         | Station of Loadable<StationDetails>
-        | Settings of Loadable<string>
+        | Settings of Loadable<StationSettings>
         | SelectTab of Tab
-        | UpdateSettings of string
+        | UpdateSettings
+        | SettingsUpdated of Result<Response, exn>
+        | SettingsChanged of StationSettings
 
     let loadStationCmd key =
         Cmd.ofPromise
@@ -43,19 +44,14 @@ module Device =
 
     let updateSettings key settings =
         Cmd.ofPromise
-            (fetchAs (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId))
+            (postRecord<StationSettings> (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId) settings) 
             []
-            (Ok >> Loaded >> Settings)
-            (Error >> Loaded >> Settings)
+            (Ok >> SettingsUpdated)
+            (Error >> SettingsUpdated)
 
     let loadSettings key =
-        let getSettings args = promise {
-            let! response = fetch (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId) args
-            let! text = response.text()
-            return text
-        }
         Cmd.ofPromise
-            getSettings
+            (fetchAs (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId))
             []
             (Ok >> Loaded >> Settings)
             (Error >> Loaded >> Settings)
@@ -81,7 +77,14 @@ module Device =
             let nextModel = { currentModel with Device = result }
             nextModel, Cmd.none
         | Settings settings ->
-            {currentModel with Settings = settings}, Cmd.none            
+            {currentModel with Settings = settings}, Cmd.none
+        | SettingsChanged contents ->
+            {currentModel with Settings = Loaded (Result.Ok contents)}, Cmd.none
+        | UpdateSettings ->
+            match currentModel.Settings with
+            | Loaded (Result.Ok settings) ->
+                currentModel, updateSettings currentModel.Key settings
+            | _ -> failwith "Settings not loaded"                
 
     let showDeviceDetails deviceDetails =
         table
@@ -101,8 +104,18 @@ module Device =
         let data = [|for reading in data.Readings -> {x = reading.ReadingTime; y = reading.BatteryChargeVoltage}|]        
         readingsChart data
 
-    let settings settings =
-        textarea [] [str settings]
+    let settings dispatch settings =
+        form [] [
+            Field.div [] [
+                Label.label [] [str "Brownout"]
+                Control.div [] [
+                    Checkbox.checkbox [] []]]
+            Field.div [] [
+                Label.label [] [str "Brownout Minutes"]
+                Control.div [] []]
+            //textarea [OnChange (fun ev -> dispatch (SettingsChanged ev.Value))] [Text settings]
+            button "Save" (fun _ -> dispatch UpdateSettings)]
+        
 
     let view dispatch model = [
         yield
@@ -110,7 +123,7 @@ module Device =
                 (SelectTab >> dispatch) [
                     {Name = "Data"; Key = Data; Content = [loader model.Device showDeviceDetails]; Icon = Some FontAwesome.Fa.I.Table}
                     {Name = "Graph"; Key = Graph; Content = [loader model.Device graph]; Icon = Some FontAwesome.Fa.I.LineChart}
-                    {Name = "Settings"; Key = Tab.Settings; Content = [loader model.Settings settings]; Icon = Some FontAwesome.Fa.I.Gear}
+                    {Name = "Settings"; Key = Tab.Settings; Content = [loader model.Settings (settings dispatch)]; Icon = Some FontAwesome.Fa.I.Gear}
             ]
             model.ActiveTab
             [Tabs.IsFullWidth; Tabs.IsBoxed]]

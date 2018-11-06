@@ -56,14 +56,19 @@ module Cache =
                                 let! builtValue = build
                                 return! getNextValue currentDate (Some builtValue) } }
 
-        let rec cache cachedValue (mailBox : MailboxProcessor<DateTime * AsyncReplyChannel<'TValue>>) =
+        let rec cache cachedValue (mailBox : MailboxProcessor<DateTime * AsyncReplyChannel<Result<'TValue, exn>>>) =
             async {
                 let! (currentDate, responseChannel) = mailBox.Receive()                
-                let! value = getNextValue currentDate cachedValue
-
-                responseChannel.Reply value
-
-                do! cache (Some value) mailBox}
+                let! value = 
+                    getNextValue currentDate cachedValue
+                    |> Async.Catch
+                
+                let nextValue, response =
+                    match value with
+                    | Choice1Of2 value -> Some value, Ok value
+                    | Choice2Of2 exn -> None, Error exn
+                responseChannel.Reply response
+                do! cache nextValue mailBox}
 
         let mailBox = MailboxProcessor.Start (cache None)
 

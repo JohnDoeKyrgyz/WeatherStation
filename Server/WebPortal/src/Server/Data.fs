@@ -1,4 +1,5 @@
 namespace WeatherStation
+open Newtonsoft.Json
 module Data =
     open WeatherStation.Model
     open WeatherStation.Shared
@@ -21,13 +22,23 @@ module Data =
     let weatherStationSettings connectionString key = async {
         let! weatherStationRepository = weatherStationRepository connectionString
         match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
-        | Some station -> return Some station.Settings
+        | Some station -> 
+            return
+                if station.Settings = null 
+                then None 
+                else
+                    let settings = JsonConvert.DeserializeObject<StationSettings>(station.Settings)
+                    Some settings
         | None -> return None
     }
 
-    let updateWeatherStationSettings connectionString key settings = async {
+    let updateWeatherStationSettings connectionString key (settings : StationSettings option) = async {
         let! weatherStationRepository = weatherStationRepository connectionString
         match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
         | Some station ->
-            do! weatherStationRepository.Save {station with Settings = settings}
+            let serializedSettings = 
+                match settings with 
+                | Some settings -> JsonConvert.SerializeObject(settings)
+                | None -> null
+            do! weatherStationRepository.Save {station with Settings = serializedSettings}
         | None -> () }

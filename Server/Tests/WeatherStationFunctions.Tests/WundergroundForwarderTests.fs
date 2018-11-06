@@ -29,6 +29,7 @@ module WundergroundForwarderTests =
         Latitude = 0.0
         Longitude = 0.0
         LastReading = None
+        Settings = null
     }
 
     type LogMessageCompare =
