@@ -14,6 +14,7 @@ module Client =
     open Fulma.FontAwesome
     
     type Loadable<'T> =
+        | NotLoading
         | Loading
         | Loaded of Result<'T, exn>
 
@@ -61,12 +62,15 @@ module Client =
                 let isActive = (activeTab = tabDef.Key)
                 yield div [Hidden (not isActive)] tabDef.Content]
 
+    let spinner message = div [Class "loading"] [str message]
+
     ///Displays feedback to the user for loadable content
     let loader loadable onLoaded =
         match loadable with
-        | Loaded (Error error) -> str (string error)
-        | Loading -> div [Class "loading"] [str "Loading..."]
-        | Loaded (Ok data) -> onLoaded data
+        | Loaded (Error error) -> [str (string error)]
+        | Loading -> [spinner "Loading..."]
+        | Loaded (Ok data) -> [onLoaded data]
+        | NotLoading -> []
 
     module P = Fable.Helpers.React.Props
     let readingsChart data =    

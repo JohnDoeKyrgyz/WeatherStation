@@ -58,7 +58,8 @@ module Home =
                             td [] [button "Details" (fun _ -> dispatch (Select station))]]]]
 
     let view dispatch model = [
-        loader model.Stations (stationsList dispatch)
-        Columns.columns [] [
-            Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]
+        yield! loader model.Stations (stationsList dispatch)
+        yield 
+            Columns.columns [] [
+                Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]
 

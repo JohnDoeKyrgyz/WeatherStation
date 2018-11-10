@@ -27,7 +27,7 @@ module Device =
         | Settings
 
     type Model = {
-        UpdateResult : Result<Response, exn> option
+        UpdateResult : Loadable<string>
         Key : StationKey
         Device : Loadable<StationDetails>
         Settings : Loadable<StationSettings>
@@ -39,7 +39,7 @@ module Device =
         | Settings of Loadable<StationSettings>
         | SelectTab of Tab
         | UpdateSettings
-        | SettingsUpdated of Result<Response, exn>
+        | SettingsUpdated of Loadable<string>
         | SettingsChanged of StationSettings
         | ClearUpdateResult
 
@@ -52,10 +52,13 @@ module Device =
 
     let updateSettings key settings =
         Cmd.ofPromise
-            (postRecord<StationSettings> (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId) settings) 
+            (fun args -> promise {
+                let! result = postRecord<StationSettings> (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId) settings args
+                return! result.text()
+            }) 
             []
-            (Ok >> SettingsUpdated)
-            (Error >> SettingsUpdated)
+            (Ok >> Loaded >> SettingsUpdated)
+            (Error >> Loaded >> SettingsUpdated)
 
     let loadSettings key =
         Cmd.ofPromise
@@ -66,7 +69,7 @@ module Device =
 
     // defines the initial state and initial command (= side-effect) of the application
     let init key : Model * Cmd<Msg> =
-        let initialModel = { Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = None }    
+        let initialModel = { Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = NotLoading }    
         initialModel, loadStationCmd key
 
     module P = Fable.Helpers.React.Props
@@ -91,12 +94,12 @@ module Device =
         | UpdateSettings ->
             match currentModel.Settings with
             | Loaded (Result.Ok settings) ->
-                currentModel, updateSettings currentModel.Key settings
+                {currentModel with  UpdateResult = Loading}, updateSettings currentModel.Key settings
             | _ -> failwith "Settings not loaded"
         | SettingsUpdated result ->
-            {currentModel with UpdateResult = Some result}, Cmd.none
+            {currentModel with UpdateResult = result}, Cmd.none
         | ClearUpdateResult ->
-            {currentModel with UpdateResult = None}, Cmd.none                            
+            {currentModel with UpdateResult = NotLoading}, Cmd.none                            
 
     let showDeviceDetails deviceDetails =
         table
@@ -117,22 +120,24 @@ module Device =
         readingsChart data
 
     let settings dispatch model = [
-        match model.UpdateResult with
-        | Some result ->
-            let color, header, message =
-                match result with
-                | Ok _ -> Color.IsSuccess, "Success", "Settings updated"
-                | Error exn -> Color.IsDanger, "Error", exn.Message
-            yield Message.message [Message.Option.Color color][
-                Message.header [] [
-                    str header
-                    Delete.delete [Delete.OnClick (fun _ -> dispatch ClearUpdateResult)][]]
-                Message.body [] [str message]]
-        | None -> ()                
+        yield!
+            match model.UpdateResult with
+            | Loading -> [spinner "Saving Settings..."]
+            | Loaded result ->
+                let color, header, message =
+                    match result with
+                    | Ok response -> Color.IsSuccess, "Success", response
+                    | Error exn -> Color.IsDanger, "Error", exn.Message
+                [Message.message [Message.Option.Color color][
+                    Message.header [] [
+                        str header
+                        Delete.delete [Delete.OnClick (fun _ -> dispatch ClearUpdateResult)][]]
+                    Message.body [] [str message]]]
+            | NotLoading -> []
 
-        yield loader model.Settings (fun settings ->
+        yield! loader model.Settings (fun settings ->
             let onChange builder value = builder value |> SettingsChanged |> dispatch
-            form [] [
+            div [] [
                 simpleFormControl "Brownout" <| checkBoxInput settings.Brownout (onChange (fun value -> {settings with Brownout = value}))
                 simpleFormControl "Brownout Minutes" <| numberInput settings.BrownoutMinutes (onChange (fun value -> {settings with BrownoutMinutes = value}))
                 formControl 
@@ -143,13 +148,13 @@ module Device =
                 simpleFormControl "Use Deep Sleep" <| Checkbox.checkbox [] [ Checkbox.input [ ]]
                 button "Save" (fun _ -> dispatch UpdateSettings)])
     ]
-    
+
     let view dispatch model = [
         yield
             Client.tabs
                 (SelectTab >> dispatch) [
-                    {Name = "Data"; Key = Data; Content = [loader model.Device showDeviceDetails]; Icon = Some FontAwesome.Fa.I.Table}
-                    {Name = "Graph"; Key = Graph; Content = [loader model.Device graph]; Icon = Some FontAwesome.Fa.I.LineChart}
+                    {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Fa.I.Table}
+                    {Name = "Graph"; Key = Graph; Content = loader model.Device graph; Icon = Some FontAwesome.Fa.I.LineChart}
                     {Name = "Settings"; Key = Tab.Settings; Content = settings dispatch model; Icon = Some FontAwesome.Fa.I.Gear}
             ]
             model.ActiveTab
