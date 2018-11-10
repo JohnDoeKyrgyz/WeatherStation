@@ -73,13 +73,29 @@ module Client =
         | NotLoading -> []
 
     module P = Fable.Helpers.React.Props
-    let readingsChart data =    
-        lineChart [ Chart.Height 300.0; Chart.Width 900.0; Chart.Data data ] [
+    
+    type Point = {x: string; y: float}
+    type Voltage = {time: string; battery: float; pannel: float}
+
+    let readingsChart (data : seq<Point>) =    
+        lineChart [ Chart.Height 300.0; Chart.Width 900.0; Chart.Data (data |> Array.ofSeq) ] [
             xaxis [Cartesian.DataKey "x"; Cartesian.Label "x"] []
             yaxis [] []
             tooltip [][]
             cartesianGrid [][]
             line [Cartesian.DataKey "y"; P.Fill "#88c188"] [] ]
+
+    let margin t r b l =
+        Chart.Margin { top = t; bottom = b; right = r; left = l }            
+
+    let voltageChart (data : seq<Voltage>) =
+        lineChart [ margin 0. 50. 120. 0.; Chart.Height 300.0; Chart.Width 900.0; Chart.Data (data |> Array.ofSeq) ] [            
+            xaxis [Cartesian.DataKey "time"; Cartesian.Custom("angle", 67.5); Cartesian.Custom("textAnchor", "begin")] []
+            yaxis [] []
+            tooltip [][]
+            cartesianGrid [][]
+            line [Cartesian.DataKey "battery"; P.Fill "#88c188"] []
+            line [Cartesian.DataKey "pannel"; P.Fill "#88c188"] [] ]            
 
     let formControl label control additionalControls =
         Field.div [Field.Option.IsHorizontal] [

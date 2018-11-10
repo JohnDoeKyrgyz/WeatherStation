@@ -112,12 +112,15 @@ module Device =
                 number reading.SpeedMetersPerSecond
                 string reading.DirectionDegrees
                 number reading.TemperatureCelciusBarometer])
-
-    type Point = {x: DateTime; y: float}
-    
+   
     let graph data  =
-        let data = [|for reading in data.Readings -> {x = reading.ReadingTime; y = reading.BatteryChargeVoltage}|]        
-        readingsChart data
+        //let data = [|for reading in data.Readings -> {x = reading.ReadingTime; y = reading.BatteryChargeVoltage}|]        
+        let voltageData = [|for reading in data.Readings -> {time = date reading.ReadingTime; battery = reading.BatteryChargeVoltage; pannel = reading.PanelVoltage}|]        
+        div [] [
+            h2 [] [str "Voltage"]
+            voltageChart voltageData
+        ]
+        
 
     let settings dispatch model = [
         yield!
@@ -170,7 +173,7 @@ module Device =
                     (readValue (fun settings -> settings.UseDeepSleep))
                     (setValue (fun settings value -> {settings with UseDeepSleep = value}))
                 |> simpleFormControl "Use Deep Sleep"
-                
+
                 button "Save" (fun _ -> dispatch UpdateSettings)])
     ]
 
