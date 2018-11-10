@@ -76,3 +76,22 @@ module Client =
             tooltip [][]
             cartesianGrid [][]
             line [Cartesian.DataKey "y"; P.Fill "#88c188"] [] ]
+
+    let formControl label control additionalControls =
+        Field.div [Field.Option.IsHorizontal] [
+            div [P.Class "field-label"] [
+                Label.label [] [str label]]
+            div [P.Class "field-body"][
+                Field.div [][
+                    yield Control.div [] [control]
+                    yield! additionalControls]]]
+
+    let simpleFormControl label control = formControl label control []
+
+    let numberInput value onChange =
+        Input.number [
+            Input.Option.Value (string value)
+            Input.OnChange (fun event -> onChange (int event.Value))]
+            
+    let checkBoxInput value onChange =
+        Checkbox.checkbox [] [Checkbox.input [Props [Props.Checked value; OnChange (fun event -> onChange (unbox<bool> event.Value))]]]            

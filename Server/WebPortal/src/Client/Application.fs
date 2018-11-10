@@ -28,7 +28,6 @@ module Application =
 
     // VIEW
     open Fulma
-    open Client
     
     /// Constructs the view for a page given the model and dispatcher.
     let viewPage model dispatch =
@@ -67,10 +66,10 @@ module Application =
                             yield Breadcrumb.item [Breadcrumb.Item.IsActive true ][ a [ ] [ str deviceModel.Key.DeviceId ] ] ] ] ]
 
             Container.container [] [
-                Content.content [Content.Modifiers [Modifier.TextAlignment (Screen.All, TextAlignment.Centered)]] (viewPage model dispatch) ]  
+                Content.content [] (viewPage model dispatch) ]  
 
             Footer.footer [] [
-                Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ] [
+                Content.content [] [
                     str "By John Atwood" ] ] ]
 
     let init _ =

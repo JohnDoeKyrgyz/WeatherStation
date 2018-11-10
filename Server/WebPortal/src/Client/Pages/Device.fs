@@ -1,4 +1,10 @@
 namespace WeatherStation.Client.Pages
+open Fulma
+open Fulma
+open Fable.Recharts.Props
+open Fable.Recharts
+open Fable.Import.React
+open System.Drawing
 module Device =
     open System
 
@@ -21,6 +27,7 @@ module Device =
         | Settings
 
     type Model = {
+        UpdateResult : Result<Response, exn> option
         Key : StationKey
         Device : Loadable<StationDetails>
         Settings : Loadable<StationSettings>
@@ -34,6 +41,7 @@ module Device =
         | UpdateSettings
         | SettingsUpdated of Result<Response, exn>
         | SettingsChanged of StationSettings
+        | ClearUpdateResult
 
     let loadStationCmd key =
         Cmd.ofPromise
@@ -58,7 +66,7 @@ module Device =
 
     // defines the initial state and initial command (= side-effect) of the application
     let init key : Model * Cmd<Msg> =
-        let initialModel = { Device = Loading; Key = key; ActiveTab = Data; Settings = Loading }    
+        let initialModel = { Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = None }    
         initialModel, loadStationCmd key
 
     module P = Fable.Helpers.React.Props
@@ -84,7 +92,11 @@ module Device =
             match currentModel.Settings with
             | Loaded (Result.Ok settings) ->
                 currentModel, updateSettings currentModel.Key settings
-            | _ -> failwith "Settings not loaded"                
+            | _ -> failwith "Settings not loaded"
+        | SettingsUpdated result ->
+            {currentModel with UpdateResult = Some result}, Cmd.none
+        | ClearUpdateResult ->
+            {currentModel with UpdateResult = None}, Cmd.none                            
 
     let showDeviceDetails deviceDetails =
         table
@@ -104,26 +116,41 @@ module Device =
         let data = [|for reading in data.Readings -> {x = reading.ReadingTime; y = reading.BatteryChargeVoltage}|]        
         readingsChart data
 
-    let settings dispatch settings =
-        form [] [
-            Field.div [] [
-                Label.label [] [str "Brownout"]
-                Control.div [] [
-                    Checkbox.checkbox [] []]]
-            Field.div [] [
-                Label.label [] [str "Brownout Minutes"]
-                Control.div [] []]
-            //textarea [OnChange (fun ev -> dispatch (SettingsChanged ev.Value))] [Text settings]
-            button "Save" (fun _ -> dispatch UpdateSettings)]
-        
+    let settings dispatch model = [
+        match model.UpdateResult with
+        | Some result ->
+            let color, header, message =
+                match result with
+                | Ok _ -> Color.IsSuccess, "Success", "Settings updated"
+                | Error exn -> Color.IsDanger, "Error", exn.Message
+            yield Message.message [Message.Option.Color color][
+                Message.header [] [
+                    str header
+                    Delete.delete [Delete.OnClick (fun _ -> dispatch ClearUpdateResult)][]]
+                Message.body [] [str message]]
+        | None -> ()                
 
+        yield loader model.Settings (fun settings ->
+            let onChange builder value = builder value |> SettingsChanged |> dispatch
+            form [] [
+                simpleFormControl "Brownout" <| checkBoxInput settings.Brownout (onChange (fun value -> {settings with Brownout = value}))
+                simpleFormControl "Brownout Minutes" <| numberInput settings.BrownoutMinutes (onChange (fun value -> {settings with BrownoutMinutes = value}))
+                formControl 
+                    "Sleep Time" 
+                    (numberInput settings.SleepTime (onChange (fun value -> {settings with SleepTime = value}))) [
+                        Help.help [][str "Measured in seconds"]]
+                simpleFormControl "Diagnostic Cycles" <| (numberInput settings.DiagnosticCycles (onChange (fun value -> {settings with DiagnosticCycles = value})))
+                simpleFormControl "Use Deep Sleep" <| Checkbox.checkbox [] [ Checkbox.input [ ]]
+                button "Save" (fun _ -> dispatch UpdateSettings)])
+    ]
+    
     let view dispatch model = [
         yield
             Client.tabs
                 (SelectTab >> dispatch) [
                     {Name = "Data"; Key = Data; Content = [loader model.Device showDeviceDetails]; Icon = Some FontAwesome.Fa.I.Table}
                     {Name = "Graph"; Key = Graph; Content = [loader model.Device graph]; Icon = Some FontAwesome.Fa.I.LineChart}
-                    {Name = "Settings"; Key = Tab.Settings; Content = [loader model.Settings (settings dispatch)]; Icon = Some FontAwesome.Fa.I.Gear}
+                    {Name = "Settings"; Key = Tab.Settings; Content = settings dispatch model; Icon = Some FontAwesome.Fa.I.Gear}
             ]
             model.ActiveTab
             [Tabs.IsFullWidth; Tabs.IsBoxed]]
