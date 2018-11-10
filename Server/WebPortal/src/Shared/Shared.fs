@@ -61,4 +61,5 @@ type StationSettings = {
     DiagnosticCycles : int
     UseDeepSleep : bool    
 }
-
+with
+    static member Default = {Brownout = true; BrownoutMinutes = 2880; SleepTime = 360; DiagnosticCycles = 0; UseDeepSleep = true}

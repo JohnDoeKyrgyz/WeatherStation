@@ -92,10 +92,13 @@ module Client =
 
     let simpleFormControl label control = formControl label control []
 
-    let numberInput value onChange =
+    let numberInput (value : int option) onChange =
         Input.number [
-            Input.Option.Value (string value)
-            Input.OnChange (fun event -> onChange (int event.Value))]
+            if value.IsSome then
+                yield Input.Option.Value (string value)
+            yield Input.OnChange (fun event -> onChange (int event.Value))]
             
-    let checkBoxInput value onChange =
-        Checkbox.checkbox [] [Checkbox.input [Props [Props.Checked value; OnChange (fun event -> onChange (unbox<bool> event.Value))]]]            
+    let checkBoxInput (value : bool option) onChange =
+        Checkbox.checkbox [] [Checkbox.input [Props [
+            if value.IsSome then yield Props.Checked value.Value;
+            yield OnChange (fun event -> onChange (event.Value = "on"))]]]            

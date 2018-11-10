@@ -30,17 +30,17 @@ module Device =
         UpdateResult : Loadable<string>
         Key : StationKey
         Device : Loadable<StationDetails>
-        Settings : Loadable<StationSettings>
+        Settings : Loadable<StationSettings option>
         ActiveTab : Tab
     }
 
     type Msg =
         | Station of Loadable<StationDetails>
-        | Settings of Loadable<StationSettings>
+        | Settings of Loadable<StationSettings option>
         | SelectTab of Tab
         | UpdateSettings
         | SettingsUpdated of Loadable<string>
-        | SettingsChanged of StationSettings
+        | SettingsChanged of StationSettings option
         | ClearUpdateResult
 
     let loadStationCmd key =
@@ -93,7 +93,7 @@ module Device =
             {currentModel with Settings = Loaded (Result.Ok contents)}, Cmd.none
         | UpdateSettings ->
             match currentModel.Settings with
-            | Loaded (Result.Ok settings) ->
+            | Loaded (Result.Ok (Some settings)) ->
                 {currentModel with  UpdateResult = Loading}, updateSettings currentModel.Key settings
             | _ -> failwith "Settings not loaded"
         | SettingsUpdated result ->
@@ -136,16 +136,41 @@ module Device =
             | NotLoading -> []
 
         yield! loader model.Settings (fun settings ->
-            let onChange builder value = builder value |> SettingsChanged |> dispatch
+            let readValue f = FSharp.Core.Option.map f settings
+            let setValue builder value =
+                match settings with
+                | Some settings -> Some (builder settings value)
+                | None -> Some (builder StationSettings.Default value)
+                |> SettingsChanged
+                |> dispatch                
             div [] [
-                simpleFormControl "Brownout" <| checkBoxInput settings.Brownout (onChange (fun value -> {settings with Brownout = value}))
-                simpleFormControl "Brownout Minutes" <| numberInput settings.BrownoutMinutes (onChange (fun value -> {settings with BrownoutMinutes = value}))
+                checkBoxInput 
+                    (readValue (fun settings -> settings.Brownout)) 
+                    (setValue (fun settings value -> {settings with Brownout = value}))
+                |> simpleFormControl "Brownout"
+
+                numberInput 
+                    (readValue (fun settings -> settings.BrownoutMinutes))
+                    (setValue (fun settings value -> {settings with BrownoutMinutes = value}))
+                |> simpleFormControl "Brownout Minutes"
+
                 formControl 
                     "Sleep Time" 
-                    (numberInput settings.SleepTime (onChange (fun value -> {settings with SleepTime = value}))) [
+                    (numberInput 
+                        (readValue (fun settings -> settings.SleepTime))
+                        (setValue (fun settings value -> {settings with SleepTime = value})))[                         
                         Help.help [][str "Measured in seconds"]]
-                simpleFormControl "Diagnostic Cycles" <| (numberInput settings.DiagnosticCycles (onChange (fun value -> {settings with DiagnosticCycles = value})))
-                simpleFormControl "Use Deep Sleep" <| Checkbox.checkbox [] [ Checkbox.input [ ]]
+
+                (numberInput 
+                    (readValue (fun settings -> settings.DiagnosticCycles))
+                    (setValue (fun settings value -> {settings with DiagnosticCycles = value})))
+                |> simpleFormControl "Diagnostic Cycles"
+
+                checkBoxInput
+                    (readValue (fun settings -> settings.UseDeepSleep))
+                    (setValue (fun settings value -> {settings with UseDeepSleep = value}))
+                |> simpleFormControl "Use Deep Sleep"
+                
                 button "Save" (fun _ -> dispatch UpdateSettings)])
     ]
 
