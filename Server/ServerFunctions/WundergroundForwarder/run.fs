@@ -2,8 +2,9 @@ namespace WeatherStation.Functions
 
 module WundergroundForwarder =
     open System
-    open System.Threading.Tasks
+    open System.Threading.Tasks    
     
+    open Microsoft.Extensions.Logging
     open Microsoft.Azure.WebJobs
     open Microsoft.Azure.WebJobs.Host    
 
@@ -25,7 +26,7 @@ module WundergroundForwarder =
         if ex.InnerException <> null then innerMostException ex.InnerException else ex
 
     let processEventHubMessage 
-        (log: TraceWriter) 
+        (log: ILogger) 
         postToWunderground 
         getWeatherStation
         saveWeatherStation
@@ -34,7 +35,7 @@ module WundergroundForwarder =
         settingsGetter
         eventHubMessage =
 
-        log.Info(eventHubMessage)
+        log.LogInformation(eventHubMessage)
 
         let parseAttempts = [
             for (key, parser) in parsers do
@@ -49,13 +50,13 @@ module WundergroundForwarder =
         match successfulAttempts with
         | (deviceType, deviceReading) :: _ ->
             async {
-                log.Info(sprintf "%A" deviceReading)
-                log.Info(sprintf "Searching for device %A %s in registry" deviceType deviceReading.DeviceId)
+                log.LogInformation(sprintf "%A" deviceReading)
+                log.LogInformation(sprintf "Searching for device %A %s in registry" deviceType deviceReading.DeviceId)
                         
                 let! (weatherStation : WeatherStation option) = getWeatherStation deviceType deviceReading.DeviceId
 
                 if weatherStation.IsNone then
-                    log.Error(sprintf "Device [%s] is not provisioned" deviceReading.DeviceId)
+                    log.LogError(sprintf "Device [%s] is not provisioned" deviceReading.DeviceId)
                 else
                     let weatherStation = weatherStation.Value
                     let! settingsRepository = settingsGetter
@@ -64,26 +65,26 @@ module WundergroundForwarder =
                             
                     let! recentReadings = getReadings deviceReading.DeviceId readingCutOff
                     let values = fixReadings recentReadings weatherStation deviceReading.Readings
-                    log.Info(sprintf "Fixed Values %A" values)
+                    log.LogInformation(sprintf "Fixed Values %A" values)
                     
                     try
                         let valuesSeq = values |> Seq.ofList
                         let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
-                        log.Info(sprintf "%A" wundergroundResponse)
+                        log.LogInformation(sprintf "%A" wundergroundResponse)
                     with
-                    | ex -> log.Error("Error while posting to Wunderground", ex)
+                    | ex -> log.LogError("Error while posting to Wunderground", ex)
                             
                     let deviceReading = {deviceReading with Readings = values}
                     let reading = Model.createReading deviceReading                        
 
-                    log.Info(sprintf "Saving Reading %A" reading)
+                    log.LogInformation(sprintf "Saving Reading %A" reading)
                     do! saveReading reading
 
                     let updatedWeatherStation = { weatherStation with LastReading = Some( reading.ReadingTime ) }
                     do! saveWeatherStation updatedWeatherStation }
         | _ ->
             async {
-                log.Info("No values parsed")
+                log.LogInformation("No values parsed")
                 for (key, attempt) in parseAttempts do
                     let message =
                         match attempt with
@@ -91,8 +92,8 @@ module WundergroundForwarder =
                             string (innerMostException ex)
                         | _ -> "no exception"
 
-                    log.Info(string key)
-                    log.Error(message)}
+                    log.LogInformation(string key)
+                    log.LogError(message)}
 
     let processEventHubMessageWithAzureStorage postToWunderground log eventHubMessage =
         let connectionString = Environment.GetEnvironmentVariable("WeatherStationStorage")
@@ -126,7 +127,7 @@ module WundergroundForwarder =
             eventHubMessage
 
     [<FunctionName("WundergroundForwarder")>]
-    let Run ([<EventHubTrigger("weatherstationsiot", Connection="WeatherStationsIoT")>] eventHubMessage: string) (log: TraceWriter) =        
+    let Run ([<EventHubTrigger("weatherstationsiot", Connection="WeatherStationsIoT")>] eventHubMessage: string) (log: ILogger) =        
         processEventHubMessageWithAzureStorage
             postToWunderground
             log

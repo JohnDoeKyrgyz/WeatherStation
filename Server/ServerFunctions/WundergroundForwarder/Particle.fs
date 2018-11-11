@@ -5,7 +5,8 @@ module Particle =
     open System
     open System.Text.RegularExpressions
 
-    open Microsoft.Azure.WebJobs.Host
+    open Microsoft.Azure.WebJobs.Host    
+    open Microsoft.Extensions.Logging
 
     open FSharp.Data
     open Model
@@ -16,15 +17,15 @@ module Particle =
 
     let readingParser = new Regex(@"(?<SettingsCounter>\d+):(?<BatteryVoltage>\d+\.\d+):(?<PanelVoltage>\d+)\|(b(?<BmeTemperature>\d+\.\d+):(?<BmePressure>\d+.\d+):(?<BmeHumidity>\d+.\d+))(d(?<DhtTemperature>\d+\.\d+):(?<DhtHumidity>\d+.\d+))?(a(?<AnemometerWindSpeed>\d+\.\d+):(?<AnemometerDirection>\d+))?")
 
-    let readRegexGroups (log: TraceWriter) key builder (regexGroups : GroupCollection) =
+    let readRegexGroups (log: ILogger) key builder (regexGroups : GroupCollection) =
         let value = regexGroups.[key : string]
         if value <> null && not (String.IsNullOrWhiteSpace(value.Value)) then 
-            log.Info(sprintf "RegexValue %s %s" key value.Value)
+            log.LogInformation(sprintf "RegexValue %s %s" key value.Value)
             Some (builder value.Value) else None
 
     let convertPanelVoltage rawValue = (rawValue / 4095.0m<_>) * 18.0m<_>
 
-    let valueParsers (log: TraceWriter) = 
+    let valueParsers (log: ILogger) = 
         let read = readRegexGroups log    
         [
             read "BatteryVoltage" (decimal >> LanguagePrimitives.DecimalWithMeasure<volts> >> BatteryChargeVoltage)
@@ -38,9 +39,9 @@ module Particle =
             read "AnemometerDirection" (int >> LanguagePrimitives.Int32WithMeasure<sixteenths> >> DirectionSixteenths)
         ]
 
-    let parseValues (log: TraceWriter) content =
+    let parseValues (log: ILogger) content =
         let particleReading = ParticlePayload.Parse content
-        log.Info(sprintf "Parsed particle reading for device %s" particleReading.DeviceId)
+        log.LogInformation(sprintf "Parsed particle reading for device %s" particleReading.DeviceId)
         let matches = readingParser.Matches(particleReading.Data)
         let sensorValues = [
             for regexMatch in matches do                

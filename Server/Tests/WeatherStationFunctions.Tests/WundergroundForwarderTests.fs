@@ -1,8 +1,8 @@
 ﻿namespace WeatherStation.Tests.Functions
 module WundergroundForwarderTests =
     open System
-    open System.Diagnostics    
-    open Microsoft.Azure.WebJobs.Host
+    open System.Diagnostics  
+    open Microsoft.Extensions.Logging
     open Expecto    
     open WeatherStation.Functions.Model
     open WeatherStation.Model
@@ -11,14 +11,17 @@ module WundergroundForwarderTests =
     open WeatherStation
     open ReadingsTests
 
-    let log = {
-        new TraceWriter(TraceLevel.Verbose) with
-            override this.Trace event =
-                printfn "%A" event }
+    let buildLog onMessage = { 
+        new ILogger with
+            member this.BeginScope(state: 'TState): IDisposable = raise (System.NotImplementedException())
+            member this.IsEnabled(logLevel: LogLevel): bool = true
+            member this.Log<'TState>(logLevel: LogLevel, eventId: EventId, state: 'TState, exToLog: exn, formatter: Func<'TState,exn,string>): unit = 
+                let message = formatter.Invoke(state, exToLog)
+                onMessage logLevel message}
 
-    let quietLog = {
-        new TraceWriter(TraceLevel.Verbose) with
-            override this.Trace event = Debug.WriteLine event }
+    let quietLog = buildLog (fun level message -> Debug.WriteLine(level, message))
+
+    let log = buildLog (fun level message -> printfn "%A" (level, message))
 
     let weatherStation = {
         DeviceType = string DeviceType.Particle
@@ -38,18 +41,16 @@ module WundergroundForwarderTests =
         | Test of (string -> bool)
     let logExpectations expectedMessages =                     
         let messageIndex = ref 0
-        {   
-            new TraceWriter(TraceLevel.Verbose) with
-                override this.Trace event =
-                    printfn "%A" event
-                    let index = !messageIndex
-                    let level, messageCompare = index |> Array.get expectedMessages
-                    Expect.equal level event.Level "Unexpected log level"
-                    match messageCompare with
-                    | Exact message -> Expect.equal message event.Message "Unexpected message"
-                    | Test test -> Expect.isTrue (test event.Message) "Unexpected message"
-                    | Ignore -> ()
-                    messageIndex := index + 1 }
+        buildLog (fun actualLevel actualMessage->
+            printfn "%A" (actualLevel, actualMessage)
+            let index = !messageIndex
+            let level, messageCompare = index |> Array.get expectedMessages
+            Expect.equal level actualLevel "Unexpected log level"
+            match messageCompare with
+            | Exact message -> Expect.equal message actualMessage "Unexpected message"
+            | Test test -> Expect.isTrue (test actualMessage) "Unexpected message"
+            | Ignore -> ()
+            messageIndex := index + 1 )
 
     [<Tests>]
     let errorHandlingTests =
@@ -80,11 +81,11 @@ module WundergroundForwarderTests =
                     """
 
                 let log = logExpectations [|
-                    TraceLevel.Info, Exact message
-                    TraceLevel.Info, Exact "Parsed particle reading for device 1e0037000751363130333334"
-                    TraceLevel.Info, Ignore
-                    TraceLevel.Info, Exact "Searching for device Particle 1e0037000751363130333334 in registry"
-                    TraceLevel.Error, Exact "Device [1e0037000751363130333334] is not provisioned"|]
+                    LogLevel.Information, Exact message
+                    LogLevel.Information, Exact "Parsed particle reading for device 1e0037000751363130333334"
+                    LogLevel.Information, Ignore
+                    LogLevel.Information, Exact "Searching for device Particle 1e0037000751363130333334 in registry"
+                    LogLevel.Error, Exact "Device [1e0037000751363130333334] is not provisioned"|]
                 
                 do!
                     processEventHubMessage log None [] message

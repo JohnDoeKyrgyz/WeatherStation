@@ -2,10 +2,10 @@ namespace WeatherStation.Functions
 
 module WundergroundPost =
 
-    open Model
-    open Microsoft.Azure.WebJobs.Host
     open FSharp.Data
-
+    open Microsoft.Extensions.Logging
+    open Model
+    
     let queryParameter value =
         match value with
         | ReadingTime time -> Some( "dateutc", time.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss") )
@@ -22,7 +22,7 @@ module WundergroundPost =
             let queryParameter = queryParameter value
             if queryParameter.IsSome then yield queryParameter.Value]
 
-    let postToWunderground wundergroundId wundergroundPassword values (log : TraceWriter) =
+    let postToWunderground wundergroundId wundergroundPassword values (log : ILogger) =
         async {
         
             //http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
@@ -33,10 +33,10 @@ module WundergroundPost =
                     "PASSWORD", wundergroundPassword
                 ] @ queryParameters values
 
-            log.Info( sprintf "Wunderground Request: %A" queryParameters )
+            log.LogInformation( sprintf "Wunderground Request: %A" queryParameters )
     
             let! wundergroundResponse = Http.AsyncRequest( url, queryParameters )
-            log.Info( sprintf "Wunderground Response: %A" wundergroundResponse )
+            log.LogInformation( sprintf "Wunderground Response: %A" wundergroundResponse )
 
             return wundergroundResponse
         }

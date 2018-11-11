@@ -3,15 +3,16 @@ namespace WeatherStation.Functions
 module Hologram =
     open System
 
-    open FSharp.Data
-    open Microsoft.Azure.WebJobs.Host
+    open Microsoft.Extensions.Logging
+
+    open FSharp.Data    
     open Model
 
     [<Literal>]
     let HologramSample = __SOURCE_DIRECTORY__ + @"/HologramStatusUpdate.json"
     type HologramPayload = JsonProvider<HologramSample, SampleIsList = true>
 
-    let parseValues (log: TraceWriter) content =
+    let parseValues (log: ILogger) content =
 
         let parsePayload (data : string) =
 
@@ -52,5 +53,5 @@ module Hologram =
                 | None -> ()]
 
         let payload = HologramPayload.Parse content
-        log.Info(sprintf "Parsed Hologram reading for device %d" payload.SourceDevice)
+        log.LogInformation(sprintf "Parsed Hologram reading for device %d" payload.SourceDevice)
         {Readings = parsePayload payload.Body; DeviceId = (string payload.SourceDevice)}
