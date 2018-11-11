@@ -1,7 +1,38 @@
 # WeatherStation Functions
 
-Server side logic to maitnain connections between multiple devices.
+Server side logic to handle incomming messages from weather stations. Messages are logged in an Azure Storage table, as well as forwarded on to Wunderground.
 
-## Notes
+## Development
 
-Attempting to update functions.....
+To run functions locally you need to:
+
+1. Install the [azure functions 2.0 core tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local#install-the-azure-functions-core-tools)
+
+```command
+npm install -g azure-functions-core-tools
+```
+
+2. Install the azure cli (az cli)
+3. Change into the build output directory.
+
+```command
+bin\Debug\netstandard2.0
+```
+
+4. Download the settings from the azure functions installation
+
+```command
+func azure functionapp fetch-app-settings WeatherStations
+```
+
+5. Register the extensions
+
+```command
+func extensions install
+```
+
+6. Run the functions
+
+```command
+func host start
+```
