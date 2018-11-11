@@ -3,6 +3,7 @@ open FSharp.Data
 open Microsoft.Azure.Devices.Client
 open WeatherStation
 open WeatherStation.Model
+open WeatherStation.Repository
 
 type Secrets = JsonProvider< "Secrets.Template.json" >
 
@@ -12,10 +13,9 @@ let secrets = async {
     return secrets
 }
 
-let connect (secrets : Secrets.Root) = async {    
+let connect (secrets : Secrets.Root) =
     let connectionString = secrets.DeviceConnectionString
-    return DeviceClient.CreateFromConnectionString(connectionString, TransportType.Mqtt)
-}
+    DeviceClient.CreateFromConnectionString(connectionString, TransportType.Mqtt)
 
 let sampleMessage =
     """
@@ -27,25 +27,58 @@ let sampleMessage =
     }
     """
 
+let deviceId = "TestDevice"
+
 let sendDeviceToCloudMessages (client : DeviceClient) messageString = async {
     let message = new Message(Encoding.ASCII.GetBytes(messageString : string));
     do! client.SendEventAsync(message) |> Async.AwaitTask
 }
 
-let getLastReadingTime (secrets : Secrets.Root) = async {
-    let! deviceRepository = AzureStorage.weatherStationRepository secrets.StorageConnectionString
-    match! deviceRepository.Get DeviceType.Test "TestDevice" with
-    | Some device -> return Some device.LastReading
+let getLastReadingTime (repository : IWeatherStationsRepository) = async {
+    match! repository.Get DeviceType.Test deviceId with
+    | Some device -> return device.LastReading
     | None -> return None
 }
 
-let runTest settings
+let createTestWeatherStation (repository : IWeatherStationsRepository) = async {
+    do! repository.Save {
+        DeviceType = string DeviceType.Test
+        DeviceId = deviceId
+        WundergroundStationId = "NA"
+        WundergroundPassword = "NA"
+        DirectionOffsetDegrees = None
+        Latitude = 0.0
+        Longitude = 0.0
+        LastReading = None
+        Settings = null}
+}
+
+let runTest (client : DeviceClient) (repository : IWeatherStationsRepository) = async {
+
+    let! initialReadingTime = getLastReadingTime repository
+    
+    if initialReadingTime.IsNone then do! createTestWeatherStation repository
+
+    do! sendDeviceToCloudMessages client sampleMessage
+    do! Async.Sleep 1000
+    let! subsequentReadingTime = getLastReadingTime repository
+    
+    return initialReadingTime, subsequentReadingTime
+}
     
 
 [<EntryPoint>]
 let main argv =
 
-    sendDeviceToCloudMessagesAsync
+    async {
+        let! secrets = Secrets.AsyncLoad "Secrets.json"
+        let deviceClient = connect secrets
+        let! deviceRepository = AzureStorage.weatherStationRepository secrets.StorageConnectionString
+
+        while true do
+            let! (initialTime, subsequentTime) = runTest deviceClient deviceRepository
+            printfn "%b %A" (subsequentTime > initialTime) (initialTime, subsequentTime)
+    }
     |> Async.RunSynchronously
     |> ignore
 

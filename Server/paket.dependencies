@@ -24,11 +24,9 @@ group Client
     storage: none
     source https://api.nuget.org/v3/index.json
 
-    nuget Fable.Core
     nuget Fable.Elmish.Debugger
     nuget Fable.Elmish.React
     nuget Fable.Elmish.HMR
-	nuget Fable.Elmish.Browser
     nuget Fulma
     github fable-compiler/fable-react src/Fable.Recharts/Fable.Recharts.fs
     clitool dotnet-fable
@@ -36,7 +34,6 @@ group Client
 group Test
 	storage: none
     source https://api.nuget.org/v3/index.json
-	nuget Expecto
 	nuget Expecto.VisualStudio.TestAdapter
     nuget Microsoft.Azure.Devices.Client
     nuget FSharp.Data
@@ -45,8 +42,6 @@ group Build
     storage: none
     source https://api.nuget.org/v3/index.json
 
-    nuget FSharp.Core
     nuget Fake.Core.Target
     nuget Fake.DotNet.Cli
-    nuget Fake.IO.FileSystem
     
