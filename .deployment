@@ -1,2 +1,2 @@
 [config]
-project = Server\ServerFunctions\WeatherSationFunctions.sln
+project = Server\ServerFunctions\deploy.cmd
