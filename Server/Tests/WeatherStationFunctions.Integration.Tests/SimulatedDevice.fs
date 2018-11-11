@@ -60,7 +60,7 @@ let runTest (client : DeviceClient) (repository : IWeatherStationsRepository) = 
     if initialReadingTime.IsNone then do! createTestWeatherStation repository
 
     do! sendDeviceToCloudMessages client sampleMessage
-    do! Async.Sleep 1000
+    do! Async.Sleep 5000
     let! subsequentReadingTime = getLastReadingTime repository
     
     return initialReadingTime, subsequentReadingTime
