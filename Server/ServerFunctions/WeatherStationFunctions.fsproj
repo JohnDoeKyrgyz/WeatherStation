@@ -16,11 +16,7 @@
     <Compile Include="WundergroundForwarder\Particle.fs" />
     <Compile Include="WundergroundForwarder\ProcessReadings.fs" />
     <Compile Include="WundergroundForwarder\WundergroundPost.fs" />
-    <Compile Include="WundergroundForwarder\run.fs" />
-    <Content Include="local.settings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <None Include=".deployment" />
+    <Compile Include="WundergroundForwarder\run.fs" />    
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataModel\DataModel.fsproj" />
