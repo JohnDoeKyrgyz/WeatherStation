@@ -1,5 +1,5 @@
-dotnet restore extensions.csproj
-dotnet build extensions.csproj
+dotnet restore Server\ServerFunctions\extensions.csproj
+dotnet build Server\ServerFunctions\extensions.csproj
 
-dotnet restore WeatherStationFunctions.fsproj
-dotnet build WeatherStationFunctions.fsproj
+dotnet restore Server\ServerFunctions\WeatherStationFunctions.fsproj
+dotnet build Server\ServerFunctions\WeatherStationFunctions.fsproj
