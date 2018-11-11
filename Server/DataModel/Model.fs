@@ -16,11 +16,13 @@ module Model =
     type DeviceType =
         | Particle
         | Hologram
+        | Test
 
     let parseDeviceType value =
         match value with 
         | "Particle" -> Particle
         | "Hologram" -> Hologram
+        | "Test" -> Test
         | _ -> failwithf "%s is not a valid DeviceType" value
 
     type WeatherStation = {

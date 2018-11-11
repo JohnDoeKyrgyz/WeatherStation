@@ -1,10 +1,11 @@
+framework: netstandard2.0
 group Functions
 	storage: none
     source https://api.nuget.org/v3/index.json
 
-	nuget Microsoft.NET.Sdk.Functions prerelease
-	nuget FSharp.Data prerelease
-	nuget Microsoft.Azure.WebJobs.Extensions.EventHubs prerelease	
+	nuget Microsoft.NET.Sdk.Functions
+	nuget FSharp.Data
+	nuget Microsoft.Azure.WebJobs.Extensions.EventHubs	
     nuget FSharp.Azure.Storage
 
 group Server
@@ -15,15 +16,15 @@ group Server
     nuget Fable.JsonConverter
     nuget FSharp.Azure.Storage
     nuget System.Configuration.ConfigurationManager
-	nuget FSharp.Data prerelease
+	nuget FSharp.Data
 	nuget Otp.NET
-	nuget Particle.SDK prerelease
+	nuget Particle.SDK
 
 group Client
     storage: none
     source https://api.nuget.org/v3/index.json
 
-    nuget Fable.Core 2.0
+    nuget Fable.Core
     nuget Fable.Elmish.Debugger
     nuget Fable.Elmish.React
     nuget Fable.Elmish.HMR
@@ -37,12 +38,14 @@ group Test
     source https://api.nuget.org/v3/index.json
 	nuget Expecto
 	nuget Expecto.VisualStudio.TestAdapter
+    nuget Microsoft.Azure.Devices.Client
+    nuget FSharp.Data
 
 group Build
     storage: none
     source https://api.nuget.org/v3/index.json
 
-    nuget FSharp.Core 4.3.4 // https://github.com/fsharp/FAKE/issues/2001
+    nuget FSharp.Core
     nuget Fake.Core.Target
     nuget Fake.DotNet.Cli
     nuget Fake.IO.FileSystem

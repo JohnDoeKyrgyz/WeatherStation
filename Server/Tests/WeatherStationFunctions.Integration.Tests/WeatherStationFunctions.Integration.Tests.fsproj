@@ -5,15 +5,14 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="Secrets.json" />
+    <Content Include="Secrets.Template.json" />
     <None Include="paket.references" />
-    <Compile Include="DataSetup.fs" />
-    <Compile Include="ReadingsTests.fs" />
-    <Compile Include="WundergroundForwarderTests.fs" />
-    <Compile Include="Main.fs" />
+    <Compile Include="SimulatedDevice.fs" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\..\DataModel\DataModel.fsproj" />
-    <ProjectReference Include="..\..\ServerFunctions\WeatherStationFunctions.fsproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
