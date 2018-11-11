@@ -1,2 +1,2 @@
 [config]
-project = Server\ServerFunctions\deploy.cmd
+command = Server\ServerFunctions\deploy.cmd
