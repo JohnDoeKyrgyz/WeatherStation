@@ -115,7 +115,7 @@ module Device =
    
     let graph data  =
         //let data = [|for reading in data.Readings -> {x = reading.ReadingTime; y = reading.BatteryChargeVoltage}|]        
-        let voltageData = [|for reading in data.Readings -> {time = date reading.ReadingTime; battery = reading.BatteryChargeVoltage; pannel = reading.PanelVoltage}|]        
+        let voltageData = [|for reading in data.Readings -> {time = date reading.ReadingTime; battery = reading.BatteryChargeVoltage; panel = reading.PanelVoltage}|]        
         div [] [
             h2 [] [str "Voltage"]
             voltageChart voltageData

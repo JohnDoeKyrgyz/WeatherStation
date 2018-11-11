@@ -35,6 +35,7 @@ module Logic =
     let getWeatherStationDetails data = async {
         match! data with
         | Some (station : WeatherStation, readings : Model.Reading list ) ->
+            let readings = readings |> List.sortByDescending (fun reading -> reading.ReadingTime)
             return
                 Some {
                     Key = {DeviceId = station.DeviceId; DeviceType = station.DeviceType}
