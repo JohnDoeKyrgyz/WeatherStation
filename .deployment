@@ -1,5 +1,2 @@
 [config]
-command = Server\ServerFunctions\deploy.cmd
-
-[config]
 project = Server\ServerFunctions\WeatherStationFunctions.fsproj
