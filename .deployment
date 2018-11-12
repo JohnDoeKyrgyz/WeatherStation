@@ -1,0 +1,2 @@
+[config]
+command = Server\ServerFunctions\deploy.cmd
