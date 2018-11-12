@@ -9,4 +9,4 @@ Azure function backend to forward messages from device manufacturer clouds to Wu
 
 ### Particle
 
-Deploy Attemtps ..
+Deploy Attemtps ...
