@@ -1,4 +1,6 @@
 [config]
 command = Server\ServerFunctions\deploy.cmd
 
+project = Server\ServerFunctions\WeatherStationFunctions.fsproj
+
 SCM_COMMAND_IDLE_TIMEOUT=600
