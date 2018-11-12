@@ -24,8 +24,6 @@ module Home =
             []
             (Ok >> Loaded >> Stations)
             (Error >> Loaded >> Stations)    
-
-    // defines the initial state and initial command (= side-effect) of the application
     let init () : Model * Cmd<Msg> =
         let initialModel = { Stations = Loading }    
         initialModel, loadStationsCmd
@@ -51,10 +49,15 @@ module Home =
                     td [] [button "Reload" (fun _ -> dispatch (Stations Loading))]]]
             tbody [] 
                 [for station in stations do
+                    let statusColor =
+                        match station.Status with
+                        | Active -> Color.IsSuccess
+                        | Offline -> Color.IsWarning
                     yield
                         tr [] [
                             td [] [a [Href (sprintf "https://www.wunderground.com/personal-weather-station/dashboard?ID=%s" station.WundergroundId) ] [str station.Name]]
-                            td [] [str (string station.Status)]
+                            td [] [
+                                Tag.tag [Tag.Color statusColor] [str (string station.Status)]]
                             td [] [button "Details" (fun _ -> dispatch (Select station))]]]]
 
     let view dispatch model = [
