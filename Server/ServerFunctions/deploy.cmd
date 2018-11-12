@@ -1,2 +1,2 @@
-dotnet restore WeatherStationFunctions.fsproj
-dotnet build WeatherStationFunctions.fsproj
+dotnet restore Server\ServerFunctions\WeatherStationFunctions.fsproj
+dotnet build Server\ServerFunctions\WeatherStationFunctions.fsproj
