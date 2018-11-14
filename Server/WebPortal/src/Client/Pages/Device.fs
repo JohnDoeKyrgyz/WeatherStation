@@ -1,19 +1,11 @@
 namespace WeatherStation.Client.Pages
-open Fulma
-open Fulma
-open Fable.Recharts.Props
-open Fable.Recharts
-open Fable.Import.React
-open System.Drawing
 module Device =
-    open System
 
     open WeatherStation.Client
     open WeatherStation.Shared
     open Elmish
 
     open Fable.PowerPack
-    open Fable.Import.Browser
     open Fable.Helpers.React
     open Fable.PowerPack.Fetch
     
@@ -67,7 +59,6 @@ module Device =
             (Ok >> Loaded >> Settings)
             (Error >> Loaded >> Settings)
 
-    // defines the initial state and initial command (= side-effect) of the application
     let init key : Model * Cmd<Msg> =
         let initialModel = { Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = NotLoading }    
         initialModel, loadStationCmd key
@@ -119,8 +110,7 @@ module Device =
         div [] [
             h2 [] [str "Voltage"]
             voltageChart voltageData
-        ]
-        
+        ]        
 
     let settings dispatch model = [
         yield!
