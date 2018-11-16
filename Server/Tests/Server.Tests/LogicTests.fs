@@ -32,10 +32,10 @@ module LogicTests =
 
                 Expect.equal stations.Length 2 "Should be two stations"
                 Expect.equal stations.[0].Status Status.Active "First station should be active"
-                Expect.equal stations.[0].WundergroundId "0" "Unexpected station"
+                Expect.equal stations.[0].WundergroundId (Some "0") "Unexpected station"
 
                 Expect.equal stations.[1].Status Status.Offline "Second station should not be active"
-                Expect.equal stations.[1].WundergroundId "1" "Unexpected station"
+                Expect.equal stations.[1].WundergroundId (Some "1") "Unexpected station"
             }
             testAsync "Get WeatherStations Trimming" {
                 let activeStation = {
@@ -47,6 +47,19 @@ module LogicTests =
                 let! stations = getWeatherStations activeThreshold stations
 
                 Expect.equal stations.Length 1 "Should be two stations"
-                Expect.equal stations.[0].WundergroundId weatherStation.WundergroundStationId "Unexpected station"
+                Expect.equal stations.[0].WundergroundId (Some weatherStation.WundergroundStationId) "Unexpected station"
                 Expect.equal stations.[0].Key.DeviceId weatherStation.DeviceId "Unexpected device id"
-            }]
+            }
+            testAsync "Optional WundergroundId" {
+                let activeStation = {
+                    weatherStation with 
+                        DeviceId = weatherStation.DeviceId + Environment.NewLine
+                        WundergroundStationId = null}
+                let stations = async { return [activeStation]}
+                let activeThreshold = TimeSpan.FromHours(1.0)
+                let! stations = getWeatherStations activeThreshold stations
+
+                Expect.equal stations.Length 1 "Should be two stations"
+                Expect.isNone stations.[0].WundergroundId "Unexpected station"
+                Expect.equal stations.[0].Key.DeviceId weatherStation.DeviceId "Unexpected device id"}
+            ]

@@ -24,7 +24,9 @@ module Logic =
                     yield {
                         Key = {DeviceId = station.DeviceId.Trim(); DeviceType = station.DeviceType.Trim()}
                         Name = station.DeviceId.Trim()
-                        WundergroundId = station.WundergroundStationId.Trim()
+                        WundergroundId = 
+                            let value = station.WundergroundStationId
+                            if value <> null then Some (value.Trim()) else None
                         Status = status
                         Location = {
                             Latitude = decimal station.Latitude
