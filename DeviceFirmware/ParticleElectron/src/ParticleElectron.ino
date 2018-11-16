@@ -46,6 +46,8 @@ struct Reading
 #define DHT_INIT 1000
 #define ANEMOMETER_TIME 1000
 
+#define BROWNOUT 3.7
+
 DHT dht(DHT_IN, DHTTYPE);
 
 Adafruit_BME280 bme280;
@@ -57,6 +59,8 @@ Settings settings;
 unsigned long duration;
 
 Reading initialReading;
+
+char messageBuffer[255];
 
 char* serializeToJson(JsonObject& json)
 {
@@ -178,9 +182,35 @@ void onSettingsUpdate(const char* event, const char* data)
     digitalWrite(LED, LOW);
 }
 
+void checkBrownout()
+{
+    float voltage;
+    if(settings.brownout)
+    {
+        if (voltage = gauge.getVCell()) < BROWNOUT)
+        {
+            Serial.print("BROWNOUT ");
+            Serial.println(voltage);
+            System.sleep(SLEEP_MODE_SOFTPOWEROFF, settings.brownoutMinutes * 60);
+
+            Particle.connect();
+            char* buffer = messageBuffer;
+            sprintf(buffer, "%f:%d", voltage, settings.brownoutMinutes);
+            Particle.publish("Brownout", buffer, 60, PRIVATE);
+            Particle.process();
+        }
+        else 
+        {
+            Serial.println("NO BROWNOUT");
+        }
+    }
+}
+
 void setup()
 {
     Serial.begin(115200);
+    
+    checkBrownout();
 
     JsonObject& settingsJson = serialize(&settings);
     Serial.print("SETTINGS: ");
@@ -190,7 +220,7 @@ void setup()
     Particle.connect();
 }
 
-char messageBuffer[255];
+
 char* serialize(Reading *reading)
 {
     char* buffer = messageBuffer;
