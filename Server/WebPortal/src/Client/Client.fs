@@ -18,11 +18,11 @@ module Client =
         | Loading
         | Loaded of Result<'T, exn>
 
-    let inline fetchAs url parameters =
+    let inline fetchAs<'T> url parameters =
         promise {
             let! response = fetch url parameters
             let! text = response.text()
-            return Decode.Auto.unsafeFromString text
+            return Decode.Auto.unsafeFromString<'T> text
         }
 
     let button txt onClick =
