@@ -67,12 +67,15 @@ module WundergroundForwarder =
                     let values = fixReadings recentReadings weatherStation deviceReading.Readings
                     log.LogInformation(sprintf "Fixed Values %A" values)
                     
-                    try
-                        let valuesSeq = values |> Seq.ofList
-                        let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
-                        log.LogInformation(sprintf "%A" wundergroundResponse)
-                    with
-                    | ex -> log.LogError("Error while posting to Wunderground", ex)
+                    if weatherStation.WundergroundStationId <> null then
+                        try
+                            let valuesSeq = values |> Seq.ofList
+                            let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
+                            log.LogInformation(sprintf "%A" wundergroundResponse)
+                        with
+                        | ex -> log.LogError("Error while posting to Wunderground", ex)
+                    else
+                        log.LogWarning("No WundergroundId. No data posted to Wunderground.")                        
                             
                     let deviceReading = {deviceReading with Readings = values}
                     let reading = Model.createReading deviceReading                        

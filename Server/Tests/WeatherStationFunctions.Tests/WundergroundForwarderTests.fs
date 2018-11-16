@@ -1,4 +1,5 @@
 ﻿namespace WeatherStation.Tests.Functions
+open Expecto.Flip
 module WundergroundForwarderTests =
     open System
     open System.Diagnostics  
@@ -124,6 +125,29 @@ module WundergroundForwarderTests =
                     RowKey = String.Empty
                 }
                 do! particleDeviceReadingTest log expectedReading weatherStation readingTime "100:4.00:3640|b1.0:2.0:3.0d10.800000:86.500000a10.00:10"
+            }
+            testAsync "No WundergroundId" {
+                let weatherStation = {weatherStation with WundergroundStationId = null}
+                let data = "100:4.00:3640|b1.0:2.0:3.0d10.800000:86.500000a10.00:10"
+                let message = buildParticleMessage weatherStation readingTime data
+                let wundergroundParameters = ref None
+                let weatherStationSave = ref None
+                let readingSave = ref None
+                do!
+                    processEventHubMessage
+                        log
+                        (fun stationId password values traceWriter -> 
+                            async { wundergroundParameters := Some {StationId = stationId; Password = password; Values = values |> Seq.toList} })
+                        (fun _ _ -> async{ return Some weatherStation})
+                        (fun saveWeatherStation -> async {weatherStationSave := Some saveWeatherStation})
+                        (fun saveReading -> async {readingSave := Some saveReading})
+                        (fun _ _ -> async { return [] })
+                        (async {return fun key defaultValue -> async {return {Key = key; Value = defaultValue; Group = ""}}})
+                        message
+
+                Expect.isNone !wundergroundParameters "Wunderground should not have been called"
+                Expect.isSome !weatherStationSave "WeatherStation should have been saved"
+                Expect.isSome !readingSave "A reading should have been saved"
             }]
             
     [<Tests>]
