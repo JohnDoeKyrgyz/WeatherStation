@@ -1,4 +1,0 @@
-[config]
-command = Server\ServerFunctions\deploy.cmd
-
-SCM_COMMAND_IDLE_TIMEOUT=600

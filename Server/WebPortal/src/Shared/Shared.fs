@@ -49,7 +49,7 @@ type StationDetails = {
 type Station = {
     Key : StationKey
     Name : string
-    WundergroundId : string
+    WundergroundId : string option
     Location : Location
     Status : Status
 }
