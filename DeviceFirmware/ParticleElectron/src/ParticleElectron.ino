@@ -187,7 +187,7 @@ void checkBrownout()
     float voltage;
     if(settings.brownout)
     {
-        if (voltage = gauge.getVCell()) < BROWNOUT)
+        if (voltage = gauge.getVCell() < BROWNOUT)
         {
             Serial.print("BROWNOUT ");
             Serial.println(voltage);
