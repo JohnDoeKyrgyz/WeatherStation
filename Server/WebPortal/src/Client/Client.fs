@@ -127,4 +127,4 @@ module Client =
     let checkBoxInput (value : bool option) onChange =
         Checkbox.checkbox [] [Checkbox.input [Props [
             if value.IsSome then yield Props.Checked value.Value;
-            yield OnChange (fun event -> onChange (event.Value = "on"))]]]            
+            yield OnChange (fun event -> onChange  event.Checked)]]]            
