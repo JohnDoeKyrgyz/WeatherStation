@@ -26,7 +26,7 @@ module Logic =
                         Name = station.DeviceId.Trim()
                         WundergroundId = 
                             let value = station.WundergroundStationId
-                            if value <> null then Some (value.Trim()) else None
+                            if value = null then Some "" else Some (value.Trim())
                         Status = status
                         Location = {
                             Latitude = decimal station.Latitude
@@ -75,11 +75,10 @@ module Logic =
             let! particleCloud = ParticleConnect.connect |> Async.StartAsTask
             match particleCloud with
             | Ok particleCloud ->
-                let! device = particleCloud.GetDeviceAsync key.DeviceId
-                let particleSettings = ParticleSettings.Root(1, settings.Brownout, settings.BrownoutMinutes, settings.SleepTime, settings.DiagnosticCycles, settings.UseDeepSleep)
+                let particleSettings = ParticleSettings.Root(1, settings.BrownoutVoltage, settings.Brownout, settings.BrownoutMinutes, settings.SleepTime, settings.DiagnosticCycles, settings.UseDeepSleep)
                 let serializedSettings = particleSettings.JsonValue.ToString()
                 try
-                    let! result = device.RunFunctionAsync("Settings", serializedSettings)
+                    let! result = particleCloud.PublishEventAsync("Settings", serializedSettings)
                     return Ok result
                 with
                 | :? ParticleRequestBadRequestException as ex ->

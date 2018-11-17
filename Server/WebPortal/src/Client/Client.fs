@@ -18,11 +18,11 @@ module Client =
         | Loading
         | Loaded of Result<'T, exn>
 
-    let inline fetchAs url parameters =
+    let inline fetchAs<'T> url parameters =
         promise {
             let! response = fetch url parameters
             let! text = response.text()
-            return Decode.Auto.unsafeFromString text
+            return Decode.Auto.unsafeFromString<'T> text
         }
 
     let button txt onClick =
@@ -110,13 +110,21 @@ module Client =
 
     let simpleFormControl label control = formControl label control []
 
-    let numberInput (value : int option) onChange =
+    let numberInput<'T> converter value onChange =
         Input.number [
-            if value.IsSome then
-                yield Input.Option.Value (string value)
-            yield Input.OnChange (fun event -> onChange (int event.Value))]
+            match value with
+            | Some (value : 'T) ->
+                yield Input.Option.Value (value.ToString())
+            | None -> ()                
+            yield Input.OnChange (fun event -> 
+                let stringValue = event.Value
+                let actualValue : 'T = converter stringValue
+                onChange actualValue)]
+
+    let intInput value onChange = numberInput int value onChange
+    let decimalInput value onChange = numberInput decimal value onChange
             
     let checkBoxInput (value : bool option) onChange =
         Checkbox.checkbox [] [Checkbox.input [Props [
             if value.IsSome then yield Props.Checked value.Value;
-            yield OnChange (fun event -> onChange (event.Value = "on"))]]]            
+            yield OnChange (fun event -> onChange  event.Checked)]]]            

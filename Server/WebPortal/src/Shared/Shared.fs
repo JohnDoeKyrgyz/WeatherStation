@@ -56,10 +56,11 @@ type Station = {
 
 type StationSettings = {
     Brownout : bool
+    BrownoutVoltage : decimal
     BrownoutMinutes : int
     SleepTime : int
     DiagnosticCycles : int
     UseDeepSleep : bool    
 }
 with
-    static member Default = {Brownout = true; BrownoutMinutes = 2880; SleepTime = 360; DiagnosticCycles = 0; UseDeepSleep = true}
+    static member Default = {Brownout = true; BrownoutVoltage = 4.7m; BrownoutMinutes = 2880; SleepTime = 360; DiagnosticCycles = 0; UseDeepSleep = true}

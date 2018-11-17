@@ -142,19 +142,24 @@ module Device =
                     (setValue (fun settings value -> {settings with Brownout = value}))
                 |> simpleFormControl "Brownout"
 
-                numberInput 
+                decimalInput 
+                    (readValue (fun settings -> settings.BrownoutVoltage))
+                    (setValue (fun settings value -> {settings with BrownoutVoltage = value}))
+                |> simpleFormControl "Brownout Voltage"
+
+                intInput 
                     (readValue (fun settings -> settings.BrownoutMinutes))
                     (setValue (fun settings value -> {settings with BrownoutMinutes = value}))
                 |> simpleFormControl "Brownout Minutes"
 
                 formControl 
                     "Sleep Time" 
-                    (numberInput 
+                    (intInput 
                         (readValue (fun settings -> settings.SleepTime))
                         (setValue (fun settings value -> {settings with SleepTime = value})))[                         
                         Help.help [][str "Measured in seconds"]]
 
-                (numberInput 
+                (intInput 
                     (readValue (fun settings -> settings.DiagnosticCycles))
                     (setValue (fun settings value -> {settings with DiagnosticCycles = value})))
                 |> simpleFormControl "Diagnostic Cycles"

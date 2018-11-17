@@ -60,6 +60,6 @@ module LogicTests =
                 let! stations = getWeatherStations activeThreshold stations
 
                 Expect.equal stations.Length 1 "Should be two stations"
-                Expect.isNone stations.[0].WundergroundId "Unexpected station"
+                Expect.equal stations.[0].WundergroundId (Some "") "Unexpected station"
                 Expect.equal stations.[0].Key.DeviceId weatherStation.DeviceId "Unexpected device id"}
             ]
