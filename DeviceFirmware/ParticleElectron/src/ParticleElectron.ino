@@ -46,8 +46,6 @@ struct Reading
 #define DHT_INIT 1000
 #define ANEMOMETER_TIME 1000
 
-#define BROWNOUT 3.7
-
 DHT dht(DHT_IN, DHTTYPE);
 
 Adafruit_BME280 bme280;
@@ -187,7 +185,7 @@ void checkBrownout()
     float voltage;
     if(settings.brownout)
     {
-        if (voltage = gauge.getVCell() < BROWNOUT)
+        if (voltage = gauge.getVCell() < settings.brownoutVoltage)
         {
             Serial.print("BROWNOUT ");
             Serial.println(voltage);
