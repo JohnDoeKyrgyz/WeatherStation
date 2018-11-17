@@ -6,6 +6,7 @@
 Settings DefaultSettings = {
     0, //version
     false, //brownout
+    4.6,
     0, //brownoutMinutes
     30, //sleepTime
     1, //diagnositicCycles
@@ -19,6 +20,7 @@ JsonObject& serialize(Settings* settings)
     JsonObject& root = jsonBuffer.createObject();
     root["version"] = settings->version;
     root["brownout"] = settings->brownout;
+    root["brownoutVoltage"] = settings->brownoutVoltage;
     root["brownoutMinutes"] = settings->brownoutMinutes;
     root["sleepTime"] = settings->sleepTime;
     root["diagnositicCycles"] = settings->diagnositicCycles;
@@ -37,6 +39,7 @@ Settings* deserialize(const char* json)
 
     result->version = root["version"];
     result->brownout = root["brownout"];
+    result->brownoutVoltage = root["brownoutVoltage"];
     result->brownoutMinutes = root["brownoutMinutes"];
     result->sleepTime = root["sleepTime"];
     result->diagnositicCycles = root["diagnositicCycles"];

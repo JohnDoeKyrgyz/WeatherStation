@@ -1,7 +1,8 @@
 {
     "version": 1,
+    "brownoutVoltage": 5.0,
     "brownout": true,
-    "brownoutMinutes": 360,
+    "brownoutMinutes": 1,
     "sleepTime": 160,
     "diagnositicCycles": 2,
     "useDeepSleep": true

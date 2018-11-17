@@ -58,6 +58,8 @@ unsigned long duration;
 
 Reading initialReading;
 
+char messageBuffer[255];
+
 char* serializeToJson(JsonObject& json)
 {
     int length = json.measureLength() + 1;
@@ -178,9 +180,35 @@ void onSettingsUpdate(const char* event, const char* data)
     digitalWrite(LED, LOW);
 }
 
+void checkBrownout()
+{
+    float voltage;
+    if(settings.brownout)
+    {
+        if (voltage = gauge.getVCell() < settings.brownoutVoltage)
+        {
+            Serial.print("BROWNOUT ");
+            Serial.println(voltage);
+            System.sleep(SLEEP_MODE_SOFTPOWEROFF, settings.brownoutMinutes * 60);
+
+            Particle.connect();
+            char* buffer = messageBuffer;
+            sprintf(buffer, "%f:%d", voltage, settings.brownoutMinutes);
+            Particle.publish("Brownout", buffer, 60, PRIVATE);
+            Particle.process();
+        }
+        else 
+        {
+            Serial.println("NO BROWNOUT");
+        }
+    }
+}
+
 void setup()
 {
     Serial.begin(115200);
+    
+    checkBrownout();
 
     JsonObject& settingsJson = serialize(&settings);
     Serial.print("SETTINGS: ");
@@ -190,7 +218,7 @@ void setup()
     Particle.connect();
 }
 
-char messageBuffer[255];
+
 char* serialize(Reading *reading)
 {
     char* buffer = messageBuffer;
