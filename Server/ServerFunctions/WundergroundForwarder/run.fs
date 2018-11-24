@@ -18,7 +18,7 @@ module WundergroundForwarder =
         with ex -> Choice2Of2 ex
 
     let parsers = 
-        [Particle, Particle.parseValues; Hologram, Hologram.parseValues; Test, Particle.parseValues]
+        [Particle, Particle.parseValues; Hologram, Hologram.parseValues]
 
     let rec innerMostException (ex : exn) =
         printfn "%A" ex
@@ -53,7 +53,12 @@ module WundergroundForwarder =
                     log.LogInformation(sprintf "%A" deviceReading)
                     log.LogInformation(sprintf "Searching for device %A %s in registry" deviceType deviceReading.DeviceId)
                         
-                    let! (weatherStation : WeatherStation option) = getWeatherStation deviceType deviceReading.DeviceId
+                    let! (weatherStation : WeatherStation option) = 
+                        async {
+                            match! getWeatherStation deviceType deviceReading.DeviceId with
+                            | None -> return! getWeatherStation DeviceType.Test deviceReading.DeviceId
+                            | value -> return value
+                        }                        
 
                     if weatherStation.IsNone then
                         log.LogError(sprintf "Device [%s] is not provisioned" deviceReading.DeviceId)
