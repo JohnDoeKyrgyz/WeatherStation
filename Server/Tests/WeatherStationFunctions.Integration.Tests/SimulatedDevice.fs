@@ -1,4 +1,5 @@
-﻿open System.Text
+﻿open System
+open System.Text
 open FSharp.Data
 open Microsoft.Azure.Devices.Client
 open WeatherStation
@@ -18,16 +19,20 @@ let connect (secrets : Secrets.Root) =
     DeviceClient.CreateFromConnectionString(connectionString, TransportType.Mqtt)
 
 let sampleMessage =
-    """
-    {
-        "data": "100:4.006250:3864|d10.800000:86.500000a1.700000:15",
-        "device_id": "TestDevice",
-        "event": "Reading",
-        "published_at": "2018-06-04T23:35:04.892Z"
-    }
-    """
+    let date = DateTimeOffset.UtcNow.ToString()
+    sprintf
+        """
+        {
+            "data": "100:4.006250:3864|d10.800000:86.500000a1.700000:15",
+            "device_id": "TestDevice",
+            "event": "Reading",
+            "published_at": "%s"
+        }
+        """
+        date
 
 let deviceId = "TestDevice"
+let deviceType = DeviceType.Test
 
 let sendDeviceToCloudMessages (client : DeviceClient) messageString = async {
     let message = new Message(Encoding.ASCII.GetBytes(messageString : string));
@@ -35,17 +40,17 @@ let sendDeviceToCloudMessages (client : DeviceClient) messageString = async {
 }
 
 let getLastReadingTime (repository : IWeatherStationsRepository) = async {
-    match! repository.Get DeviceType.Test deviceId with
+    match! repository.Get deviceType deviceId with
     | Some device -> return device.LastReading
     | None -> return None
 }
 
 let createTestWeatherStation (repository : IWeatherStationsRepository) = async {
     do! repository.Save {
-        DeviceType = string DeviceType.Test
+        DeviceType = string deviceType
         DeviceId = deviceId
-        WundergroundStationId = "NA"
-        WundergroundPassword = "NA"
+        WundergroundStationId = null
+        WundergroundPassword = null
         DirectionOffsetDegrees = None
         Latitude = 0.0
         Longitude = 0.0
@@ -73,6 +78,7 @@ let main argv =
     async {
         let! secrets = Secrets.AsyncLoad "Secrets.json"
         let deviceClient = connect secrets
+
         let! deviceRepository = AzureStorage.weatherStationRepository secrets.StorageConnectionString
 
         while true do

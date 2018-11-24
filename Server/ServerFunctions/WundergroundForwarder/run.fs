@@ -5,8 +5,7 @@ module WundergroundForwarder =
     open System.Threading.Tasks    
     
     open Microsoft.Extensions.Logging
-    open Microsoft.Azure.WebJobs
-    open Microsoft.Azure.WebJobs.Host    
+    open Microsoft.Azure.WebJobs 
 
     open WeatherStation.Model
     open ProcessReadings
@@ -19,7 +18,7 @@ module WundergroundForwarder =
         with ex -> Choice2Of2 ex
 
     let parsers = 
-        [Particle, Particle.parseValues; Hologram, Hologram.parseValues]
+        [Particle, Particle.parseValues; Hologram, Hologram.parseValues; Test, Particle.parseValues]
 
     let rec innerMostException (ex : exn) =
         printfn "%A" ex
@@ -47,45 +46,48 @@ module WundergroundForwarder =
                 | Choice1Of2 result -> yield key, result
                 | _ -> ()]
 
-        match successfulAttempts with
-        | (deviceType, deviceReading) :: _ ->
-            async {
-                log.LogInformation(sprintf "%A" deviceReading)
-                log.LogInformation(sprintf "Searching for device %A %s in registry" deviceType deviceReading.DeviceId)
+        if successfulAttempts.Length > 0 
+        then
+            [for (deviceType, deviceReading) in successfulAttempts do
+                yield async {
+                    log.LogInformation(sprintf "%A" deviceReading)
+                    log.LogInformation(sprintf "Searching for device %A %s in registry" deviceType deviceReading.DeviceId)
                         
-                let! (weatherStation : WeatherStation option) = getWeatherStation deviceType deviceReading.DeviceId
+                    let! (weatherStation : WeatherStation option) = getWeatherStation deviceType deviceReading.DeviceId
 
-                if weatherStation.IsNone then
-                    log.LogError(sprintf "Device [%s] is not provisioned" deviceReading.DeviceId)
-                else
-                    let weatherStation = weatherStation.Value
-                    let! settingsRepository = settingsGetter
-                    let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
-                    let readingCutOff = DateTime.Now.Subtract(readingsWindow)
-                            
-                    let! recentReadings = getReadings deviceReading.DeviceId readingCutOff
-                    let values = fixReadings recentReadings weatherStation deviceReading.Readings
-                    log.LogInformation(sprintf "Fixed Values %A" values)
-                    
-                    if weatherStation.WundergroundStationId <> null then
-                        try
-                            let valuesSeq = values |> Seq.ofList
-                            let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
-                            log.LogInformation(sprintf "%A" wundergroundResponse)
-                        with
-                        | ex -> log.LogError("Error while posting to Wunderground", ex)
+                    if weatherStation.IsNone then
+                        log.LogError(sprintf "Device [%s] is not provisioned" deviceReading.DeviceId)
                     else
-                        log.LogWarning("No WundergroundId. No data posted to Wunderground.")                        
+                        let weatherStation = weatherStation.Value
+                        let! settingsRepository = settingsGetter
+                        let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
+                        let readingCutOff = DateTime.Now.Subtract(readingsWindow)
                             
-                    let deviceReading = {deviceReading with Readings = values}
-                    let reading = Model.createReading deviceReading                        
+                        let! recentReadings = getReadings deviceReading.DeviceId readingCutOff
+                        let values = fixReadings recentReadings weatherStation deviceReading.Readings
+                        log.LogInformation(sprintf "Fixed Values %A" values)
+                    
+                        if weatherStation.WundergroundStationId <> null then
+                            try
+                                let valuesSeq = values |> Seq.ofList
+                                let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
+                                log.LogInformation(sprintf "%A" wundergroundResponse)
+                            with
+                            | ex -> log.LogError("Error while posting to Wunderground", ex)
+                        else
+                            log.LogWarning("No WundergroundId. No data posted to Wunderground.")                        
+                            
+                        let deviceReading = {deviceReading with Readings = values}
+                        let reading = Model.createReading deviceReading                        
 
-                    log.LogInformation(sprintf "Saving Reading %A" reading)
-                    do! saveReading reading
+                        log.LogInformation(sprintf "Saving Reading %A" reading)
+                        do! saveReading reading
 
-                    let updatedWeatherStation = { weatherStation with LastReading = Some( reading.ReadingTime ) }
-                    do! saveWeatherStation updatedWeatherStation }
-        | _ ->
+                        let updatedWeatherStation = { weatherStation with LastReading = Some( reading.ReadingTime ) }
+                        do! saveWeatherStation updatedWeatherStation }]
+                |> Async.Parallel
+                |> Async.Ignore        
+        else
             async {
                 log.LogInformation("No values parsed")
                 for (key, attempt) in parseAttempts do
