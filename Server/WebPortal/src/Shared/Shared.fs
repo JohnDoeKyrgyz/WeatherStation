@@ -40,7 +40,7 @@ type StationKey = {
 type StationDetails = {
     Key : StationKey
     Name : string
-    WundergroundId : string
+    WundergroundId : string option
     Location : Location
     LastReading : DateTime option
     Readings : Reading list

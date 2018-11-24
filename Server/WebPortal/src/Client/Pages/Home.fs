@@ -56,8 +56,9 @@ module Home =
                     yield
                         tr [] [
                             td [] [
-                                if station.WundergroundId.IsSome then 
-                                    yield a [Href (sprintf "https://www.wunderground.com/personal-weather-station/dashboard?ID=%s" station.WundergroundId.Value) ] [str station.Name]]
+                                if station.WundergroundId.IsSome
+                                then yield a [Href (sprintf "https://www.wunderground.com/personal-weather-station/dashboard?ID=%s" station.WundergroundId.Value) ] [str station.Name]
+                                else yield str station.Name]
                             td [] [
                                 Tag.tag [Tag.Color statusColor] [str (string station.Status)]]
                             td [] [button "Details" (fun _ -> dispatch (Select station))]]]]

@@ -13,6 +13,8 @@ module Logic =
     open WeatherStation.Shared
     open WeatherStation
 
+    let toOption value = if isNull value then None else Some value
+
     let getWeatherStations activeThreshold allStations = 
         async {
             let! stations = allStations
@@ -24,9 +26,7 @@ module Logic =
                     yield {
                         Key = {DeviceId = station.DeviceId.Trim(); DeviceType = station.DeviceType.Trim()}
                         Name = station.DeviceId.Trim()
-                        WundergroundId = 
-                            let value = station.WundergroundStationId
-                            if value = null then Some "" else Some (value.Trim())
+                        WundergroundId = station.WundergroundStationId |> toOption |> Option.map (fun v -> v.Trim())
                         Status = status
                         Location = {
                             Latitude = decimal station.Latitude
@@ -41,8 +41,8 @@ module Logic =
             return
                 Some {
                     Key = {DeviceId = station.DeviceId; DeviceType = station.DeviceType}
-                    Name = station.WundergroundStationId
-                    WundergroundId = station.WundergroundStationId
+                    Name = station.DeviceId
+                    WundergroundId = toOption station.WundergroundStationId
                     Location = {Latitude = 0.0m; Longitude = 0.0m}
                     LastReading = None
                     Readings = [
