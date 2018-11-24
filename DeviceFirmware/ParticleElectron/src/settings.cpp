@@ -1,7 +1,7 @@
 #include "settings.h"
 #include "Particle.h"
 
-#define SERIALIZED_SETTINGS_SIZE JSON_OBJECT_SIZE(6) + 110
+#define SERIALIZED_SETTINGS_SIZE JSON_OBJECT_SIZE(7) + 110
 
 Settings DefaultSettings = {
     0, //version
