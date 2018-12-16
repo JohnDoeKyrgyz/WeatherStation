@@ -104,12 +104,13 @@ module Device =
                 string reading.DirectionDegrees
                 number reading.TemperatureCelciusBarometer])
    
-    let graph data  =
+    let graph dispatch data  =
         //let data = [|for reading in data.Readings -> {x = reading.ReadingTime; y = reading.BatteryChargeVoltage}|]        
         let voltageData = [|for reading in data.Readings -> {time = date reading.ReadingTime; battery = reading.BatteryChargeVoltage; panel = reading.PanelVoltage}|]        
         div [] [
             h2 [] [str "Voltage"]
             voltageChart voltageData
+            paginator (fun _ -> (dispatch (Station Loading))) (fun _ -> ()) (fun _ -> ()) (fun _ -> ())
         ]        
 
     let settings dispatch model = [
@@ -177,7 +178,7 @@ module Device =
             Client.tabs
                 (SelectTab >> dispatch) [
                     {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Fa.I.Table}
-                    {Name = "Graph"; Key = Graph; Content = loader model.Device graph; Icon = Some FontAwesome.Fa.I.LineChart}
+                    {Name = "Graph"; Key = Graph; Content = loader model.Device (graph dispatch); Icon = Some FontAwesome.Fa.I.LineChart}
                     {Name = "Settings"; Key = Tab.Settings; Content = settings dispatch model; Icon = Some FontAwesome.Fa.I.Gear}
             ]
             model.ActiveTab

@@ -1,4 +1,5 @@
 namespace WeatherStation.Client
+open Fulma
 module Client =
     open System
     open Fable.Helpers.React
@@ -48,6 +49,16 @@ module Client =
         Icon : Fa.I.FontAwesomeIcons option
     }
 
+    let paginator first back forward last =
+        let buttonDefinitions = [
+            FontAwesome.Fa.I.FastBackward, first
+            FontAwesome.Fa.I.Backward, back
+            FontAwesome.Fa.I.Forward, forward
+            FontAwesome.Fa.I.FastForward, last ]
+        div [] [
+            for icon, action in buttonDefinitions do
+            yield Button.button [ Button.Color IsPrimary; Button.OnClick action] [Icon.faIcon [] [Fa.icon icon]]]
+
     let tabs dispatch tabs activeTab options =
         div [] [
             yield
@@ -78,7 +89,7 @@ module Client =
     type Voltage = {time: string; battery: float; panel: float}
 
     let readingsChart (data : seq<Point>) =    
-        lineChart [ Chart.Height 300.0; Chart.Width 900.0; Chart.Data (data |> Array.ofSeq) ] [
+        lineChart [Chart.Height 300.0; Chart.Width 900.0; Chart.Data (data |> Array.ofSeq)] [
             xaxis [Cartesian.DataKey "x"; Cartesian.Label "x"] []
             yaxis [] []
             tooltip [][]
@@ -90,7 +101,7 @@ module Client =
 
     let voltageChart (data : seq<Voltage>) =
         responsiveContainer [Chart.Height 300.0] [
-            lineChart [ margin 0. 50. 120. 0.; Chart.Data (data |> Array.ofSeq) ] [            
+            lineChart [margin 0. 50. 120. 0.; Chart.Data (data |> Array.ofSeq)] [            
                 xaxis [Cartesian.DataKey "time"; Cartesian.Custom("angle", 67.5); Cartesian.Custom("textAnchor", "start")] []
                 yaxis [] []
                 tooltip [][]
