@@ -1,6 +1,8 @@
 namespace WeatherStation.Client.Pages
 module Device =
 
+    open System
+
     open WeatherStation.Client
     open WeatherStation.Shared
     open Elmish
@@ -24,10 +26,11 @@ module Device =
         Device : Loadable<StationDetails>
         Settings : Loadable<StationSettings option>
         ActiveTab : Tab
+        Page : PageKey<DateTime>
     }
 
     type Msg =
-        | Station of Loadable<StationDetails>
+        | Station of DateTime option * Loadable<StationDetails>
         | Settings of Loadable<StationSettings option>
         | SelectTab of Tab
         | UpdateSettings
@@ -35,12 +38,19 @@ module Device =
         | SettingsChanged of StationSettings option
         | ClearUpdateResult
 
-    let loadStationCmd key =
+    let loadStationCmd (key : StationKey) fromDate =
+        let url =
+            match fromDate with
+            | Some (fromDate : DateTime) ->
+                let formattedDate = UrlDateTime.toUrlDate fromDate
+                sprintf "/api/stations/%s/%s/%s" key.DeviceType key.DeviceId formattedDate
+            | None -> sprintf "/api/stations/%s/%s" key.DeviceType key.DeviceId
+        let stationResult response = Station (fromDate, response)
         Cmd.ofPromise
-            (fetchAs (sprintf "/api/stations/%s/%s" key.DeviceType key.DeviceId))
+            (fetchAs url)
             []
-            (Ok >> Loaded >> Station)
-            (Error >> Loaded >> Station)
+            (Ok >> Loaded >> stationResult)
+            (Error >> Loaded >> stationResult)
 
     let updateSettings key settings =
         Cmd.ofPromise
@@ -60,8 +70,10 @@ module Device =
             (Error >> Loaded >> Settings)
 
     let init key : Model * Cmd<Msg> =
-        let initialModel = { Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = NotLoading }    
-        initialModel, loadStationCmd key
+        let initialModel = {
+            Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = NotLoading;
+            Page = PageKey<DateTime>.Default }    
+        initialModel, loadStationCmd key None
 
     module P = Fable.Helpers.React.Props
     module R = Fable.Helpers.React
@@ -72,11 +84,20 @@ module Device =
             {currentModel with ActiveTab = Tab.Settings}, loadSettings currentModel.Key
         | SelectTab tab ->
             {currentModel with ActiveTab = tab}, Cmd.none                    
-        | Station Loading ->
+        | Station (fromDate, Loading) ->
             let nextModel = { currentModel with Device = Loading }
-            nextModel, loadStationCmd currentModel.Key
-        | Station result ->
-            let nextModel = { currentModel with Device = result }
+            nextModel, loadStationCmd currentModel.Key fromDate
+        | Station (fromDate, result) ->
+            printfn "FromDate %A" fromDate
+            printfn "PageKey %A" currentModel.Page
+            let pageInfo =
+                match result with
+                | Loaded (Result.Ok stationDetails) ->
+                    let lastReadingDate = (stationDetails.Readings |> List.last).ReadingTime
+                    let firstReadingDate = (stationDetails.Readings |> List.head).ReadingTime 
+                    {First = None; Current = Some firstReadingDate; Next = Some lastReadingDate; Previous = currentModel.Page.Current}
+                | _ -> currentModel.Page
+            let nextModel = { currentModel with Device = result; Page = pageInfo}
             nextModel, Cmd.none
         | Settings settings ->
             {currentModel with Settings = settings}, Cmd.none
@@ -104,13 +125,12 @@ module Device =
                 string reading.DirectionDegrees
                 number reading.TemperatureCelciusBarometer])
    
-    let graph dispatch data  =
-        //let data = [|for reading in data.Readings -> {x = reading.ReadingTime; y = reading.BatteryChargeVoltage}|]        
+    let graph dispatch pageKey data  =
         let voltageData = [|for reading in data.Readings -> {time = date reading.ReadingTime; battery = reading.BatteryChargeVoltage; panel = reading.PanelVoltage}|]        
         div [] [
             h2 [] [str "Voltage"]
             voltageChart voltageData
-            paginator (fun _ -> (dispatch (Station Loading))) (fun _ -> ()) (fun _ -> ()) (fun _ -> ())
+            paginator pageKey (fun fromDate _ -> (dispatch (Station (Some fromDate, Loading))))
         ]        
 
     let settings dispatch model = [
@@ -178,7 +198,7 @@ module Device =
             Client.tabs
                 (SelectTab >> dispatch) [
                     {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Fa.I.Table}
-                    {Name = "Graph"; Key = Graph; Content = loader model.Device (graph dispatch); Icon = Some FontAwesome.Fa.I.LineChart}
+                    {Name = "Graph"; Key = Graph; Content = loader model.Device (graph dispatch model.Page); Icon = Some FontAwesome.Fa.I.LineChart}
                     {Name = "Settings"; Key = Tab.Settings; Content = settings dispatch model; Icon = Some FontAwesome.Fa.I.Gear}
             ]
             model.ActiveTab

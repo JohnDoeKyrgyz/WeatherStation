@@ -49,15 +49,29 @@ module Client =
         Icon : Fa.I.FontAwesomeIcons option
     }
 
-    let paginator first back forward last =
+    type PageKey<'T> = {
+        First : option<'T>
+        Current : option<'T>
+        Next : option<'T>
+        Previous : option<'T>
+    }
+    with
+        static member Default = {First = None; Current = None; Next = None; Previous = None} :> PageKey<'T>
+
+    let paginator pageKey onNavigate =
         let buttonDefinitions = [
-            FontAwesome.Fa.I.FastBackward, first
-            FontAwesome.Fa.I.Backward, back
-            FontAwesome.Fa.I.Forward, forward
-            FontAwesome.Fa.I.FastForward, last ]
+            FontAwesome.Fa.I.FastBackward, pageKey.First
+            FontAwesome.Fa.I.Backward, pageKey.Previous
+            FontAwesome.Fa.I.Refresh, pageKey.Current
+            FontAwesome.Fa.I.Forward, pageKey.Next ]
         div [] [
-            for icon, action in buttonDefinitions do
-            yield Button.button [ Button.Color IsPrimary; Button.OnClick action] [Icon.faIcon [] [Fa.icon icon]]]
+            for icon, key in buttonDefinitions do
+            yield Button.button [
+                yield Button.Color IsPrimary
+                yield 
+                    if Option.isSome key
+                    then Button.OnClick (onNavigate key.Value)
+                    else Button.Disabled true] [Icon.faIcon [] [Fa.icon icon]]]
 
     let tabs dispatch tabs activeTab options =
         div [] [

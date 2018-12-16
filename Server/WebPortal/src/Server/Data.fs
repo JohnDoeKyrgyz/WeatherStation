@@ -9,7 +9,8 @@ module Data =
         let! repository = weatherStationRepository connectionString
         return! repository.GetAll()
     }
-    let weatherStationDetails connectionString readingsCount key = async {
+
+    let weatherStationDetails connectionString readingsCount (key : StationKey) = async {
         let! weatherStationRepository = weatherStationRepository connectionString
         match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
         | Some station ->
@@ -19,7 +20,17 @@ module Data =
         | None -> return None
     }
 
-    let weatherStationSettings connectionString key = async {
+    let weatherStationDetailsPage connectionString key fromDate readingsCount  = async {
+        let! weatherStationRepository = weatherStationRepository connectionString
+        match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
+        | Some station ->
+            let! readingsRepository = readingsRepository connectionString
+            let! readings = readingsRepository.GetPage key.DeviceId fromDate readingsCount
+            return Some (station, readings)
+        | None -> return None
+    }
+
+    let weatherStationSettings connectionString (key : StationKey) = async {
         let! weatherStationRepository = weatherStationRepository connectionString
         match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
         | Some station -> 
@@ -32,7 +43,7 @@ module Data =
         | None -> return None
     }
 
-    let updateWeatherStationSettings connectionString key (settings : StationSettings option) = async {
+    let updateWeatherStationSettings connectionString (key : StationKey) (settings : StationSettings option) = async {
         let! weatherStationRepository = weatherStationRepository connectionString
         match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
         | Some station ->

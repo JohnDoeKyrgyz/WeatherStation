@@ -69,7 +69,7 @@ module Logic =
     let particleSettingsJson = __SOURCE_DIRECTORY__ + "/../../../../DeviceFirmware/ParticleElectron/src/Settings.json"
     type ParticleSettings = JsonProvider< particleSettingsJson >
 
-    let updateParticleDeviceSettings key (settings : StationSettings) =
+    let updateParticleDeviceSettings (key : StationKey) (settings : StationSettings) =
         if parseDeviceType key.DeviceType <> Particle then failwithf "DeviceType %s is not supported" key.DeviceType
         task {
             let! particleCloud = ParticleConnect.connect |> Async.StartAsTask

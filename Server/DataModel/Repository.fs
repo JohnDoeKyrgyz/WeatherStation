@@ -23,6 +23,7 @@ module Repository =
     type IReadingsRepository =
         inherit IRepository<Reading>
         abstract member GetHistory : deviceId:string -> cutOff:DateTime -> Async<Reading list>
+        abstract member GetPage : deviceId:string -> from:DateTime -> count:int -> Async<Reading list>
         abstract member GetRecentReadings : deviceId:string -> count:int -> Async<Reading list>
 
     let createTableIfNecessary (connection : CloudTableClient) tableName =
@@ -106,6 +107,15 @@ module Repository =
         inherit AzureStorageRepository<Reading>(connection, tableName)        
 
         interface IReadingsRepository with
+            member this.GetPage(deviceId: string) (from: DateTime) (count: int): Async<Reading list> = 
+                async {
+                    let! readings =
+                        Query.all<Reading>
+                        |> Query.where <@ fun reading key -> key.PartitionKey = deviceId && reading.ReadingTime < from @>
+                        |> Query.take count
+                        |> runQuery connection tableName
+                    return readings
+                }
             member this.GetHistory deviceId cutOff =
                 async {
                     let! readings =

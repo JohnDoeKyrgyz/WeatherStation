@@ -46,11 +46,22 @@ module Server =
         return Ok stations
     }
 
-    let getStationDetails key = async {
+    let getStationDetails (key : StationKey) = async {
         let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
         let! readingsCount = SystemSettings.readingsCount systemSettingsRepository.GetSettingWithDefault
         let! stationDetails =
             weatherStationDetails connectionString readingsCount key
+            |> getWeatherStationDetails
+        return
+            match stationDetails with
+            | Some details -> Ok details
+            | None -> Error (sprintf "No device %A" key) }
+
+    let getStationDetailsPage key fromDate = async {
+        let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
+        let! readingsCount = SystemSettings.readingsCount systemSettingsRepository.GetSettingWithDefault
+        let! stationDetails =
+            weatherStationDetailsPage connectionString key fromDate readingsCount
             |> getWeatherStationDetails
         return
             match stationDetails with
@@ -62,7 +73,7 @@ module Server =
         return Ok settings
     }
 
-    let setSettings key settings next (ctx : HttpContext) = task {
+    let setSettings (key : StationKey) settings next (ctx : HttpContext) = task {
         do! updateWeatherStationSettings connectionString key settings
         match settings with
         | Some settings ->
@@ -71,10 +82,21 @@ module Server =
         | None -> return! Successful.OK "Cleared settings" next ctx            
     }
 
+    [<CLIMutable>]
+    type PageKey = {
+        DeviceType : string
+        DeviceId : string
+        FromDate : string
+    }
+
     let webApp =
         choose [        
             GET >=> route "/api/stations" >=> (read getStations)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}" (getStationDetails >> read)
+            GET >=>
+                routeBind<PageKey>
+                    "/api/stations/{DeviceType}/{DeviceId}/{FromDate}"
+                    (fun key -> getStationDetailsPage {DeviceType = key.DeviceType; DeviceId = key.DeviceId} (UrlDateTime.fromUrlDate key.FromDate) |> read)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (getSettings >> read)
             POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (fun key -> bindJson (setSettings key))
         ]            
