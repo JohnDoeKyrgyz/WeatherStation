@@ -34,6 +34,22 @@ module Logic =
                         }
                     }] }
 
+    let createReading (reading : Model.Reading) = {
+        DeviceTime = reading.DeviceTime
+        ReadingTime = reading.ReadingTime
+        SupplyVoltage = reading.SupplyVoltage
+        BatteryChargeVoltage = reading.BatteryChargeVoltage
+        PanelVoltage = reading.PanelVoltage
+        TemperatureCelciusHydrometer = reading.TemperatureCelciusHydrometer
+        TemperatureCelciusBarometer = reading.TemperatureCelciusBarometer
+        HumidityPercentHydrometer = reading.HumidityPercentHydrometer
+        HumidityPercentBarometer = reading.HumidityPercentBarometer
+        PressurePascal = reading.PressurePascal
+        GustMetersPerSecond = reading.GustMetersPerSecond
+        SpeedMetersPerSecond = reading.SpeedMetersPerSecond
+        DirectionDegrees = reading.DirectionDegrees
+    }
+
     let getWeatherStationDetails data = async {
         match! data with
         | Some (station : WeatherStation, readings : Model.Reading list ) ->
@@ -45,22 +61,7 @@ module Logic =
                     WundergroundId = toOption station.WundergroundStationId
                     Location = {Latitude = 0.0m; Longitude = 0.0m}
                     LastReading = None
-                    Readings = [
-                        for reading in readings -> {
-                            DeviceTime = reading.DeviceTime
-                            ReadingTime = reading.ReadingTime
-                            SupplyVoltage = reading.SupplyVoltage
-                            BatteryChargeVoltage = reading.BatteryChargeVoltage
-                            PanelVoltage = reading.PanelVoltage
-                            TemperatureCelciusHydrometer = reading.TemperatureCelciusHydrometer
-                            TemperatureCelciusBarometer = reading.TemperatureCelciusBarometer
-                            HumidityPercentHydrometer = reading.HumidityPercentHydrometer
-                            HumidityPercentBarometer = reading.HumidityPercentBarometer
-                            PressurePascal = reading.PressurePascal
-                            GustMetersPerSecond = reading.GustMetersPerSecond
-                            SpeedMetersPerSecond = reading.SpeedMetersPerSecond
-                            DirectionDegrees = reading.DirectionDegrees
-                        }]
+                    Readings = readings |> List.map createReading
                 }
         | None -> return None
     }

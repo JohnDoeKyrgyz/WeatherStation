@@ -57,16 +57,11 @@ module Server =
             | Some details -> Ok details
             | None -> Error (sprintf "No device %A" key) }
 
-    let getStationDetailsPage key fromDate = async {
+    let getReadingsPage key fromDate = async {
         let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
         let! readingsCount = SystemSettings.readingsCount systemSettingsRepository.GetSettingWithDefault
-        let! stationDetails =
-            weatherStationDetailsPage connectionString key fromDate readingsCount
-            |> getWeatherStationDetails
-        return
-            match stationDetails with
-            | Some details -> Ok details
-            | None -> Error (sprintf "No device %A" key) }
+        let! readings = readings connectionString key fromDate readingsCount
+        return Ok (readings |> List.map createReading) }
 
     let getSettings key = async {
         let! settings = weatherStationSettings connectionString key
@@ -96,7 +91,7 @@ module Server =
             GET >=>
                 routeBind<PageKey>
                     "/api/stations/{DeviceType}/{DeviceId}/{FromDate}"
-                    (fun key -> getStationDetailsPage {DeviceType = key.DeviceType; DeviceId = key.DeviceId} (UrlDateTime.fromUrlDate key.FromDate) |> read)
+                    (fun key -> getReadingsPage {DeviceType = key.DeviceType; DeviceId = key.DeviceId} (UrlDateTime.fromUrlDate key.FromDate) |> read)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (getSettings >> read)
             POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (fun key -> bindJson (setSettings key))
         ]            

@@ -20,14 +20,10 @@ module Data =
         | None -> return None
     }
 
-    let weatherStationDetailsPage connectionString key fromDate readingsCount  = async {
-        let! weatherStationRepository = weatherStationRepository connectionString
-        match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
-        | Some station ->
-            let! readingsRepository = readingsRepository connectionString
-            let! readings = readingsRepository.GetPage key.DeviceId fromDate readingsCount
-            return Some (station, readings)
-        | None -> return None
+    let readings connectionString key fromDate readingsCount  = async {
+        let! readingsRepository = readingsRepository connectionString
+        let! readings = readingsRepository.GetPage key.DeviceId fromDate readingsCount
+        return readings
     }
 
     let weatherStationSettings connectionString (key : StationKey) = async {
