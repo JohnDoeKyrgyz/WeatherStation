@@ -58,6 +58,7 @@ module Logic =
                 Some {
                     Key = {DeviceId = station.DeviceId; DeviceType = station.DeviceType}
                     Name = station.DeviceId
+                    CreatedOn = station.CreatedOn
                     WundergroundId = toOption station.WundergroundStationId
                     Location = {Latitude = 0.0m; Longitude = 0.0m}
                     LastReading = None

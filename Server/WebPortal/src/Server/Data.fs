@@ -20,13 +20,14 @@ module Data =
         | None -> return None
     }
 
-    let readings connectionString key fromDate readingsCount  = async {
+    let readings connectionString key fromDate tooDate  = async {
+        if fromDate >= tooDate then failwithf "fromDate %A should be less than tooDate %A" fromDate tooDate
         let! readingsRepository = readingsRepository connectionString
-        let! readings = readingsRepository.GetPage key.DeviceId fromDate readingsCount
+        let! readings = readingsRepository.GetPage key.DeviceId fromDate tooDate
         return readings
     }
 
-    let weatherStationSettings connectionString (key : StationKey) = async {
+    let weatherStationSettings connectionString key = async {
         let! weatherStationRepository = weatherStationRepository connectionString
         match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
         | Some station -> 

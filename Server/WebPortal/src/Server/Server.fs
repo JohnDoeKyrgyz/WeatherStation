@@ -17,7 +17,6 @@ module Server =
     open WeatherStation.Data
     open WeatherStation.Shared
     open Logic
-    open Model
     open Microsoft.AspNetCore.Http
 
     let publicPath = Path.GetFullPath "../Client/public"
@@ -57,10 +56,8 @@ module Server =
             | Some details -> Ok details
             | None -> Error (sprintf "No device %A" key) }
 
-    let getReadingsPage key fromDate = async {
-        let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
-        let! readingsCount = SystemSettings.readingsCount systemSettingsRepository.GetSettingWithDefault
-        let! readings = readings connectionString key fromDate readingsCount
+    let getReadingsPage key fromDate toDate = async {
+        let! readings = readings connectionString key fromDate toDate
         return Ok (readings |> List.map createReading) }
 
     let getSettings key = async {
@@ -82,6 +79,7 @@ module Server =
         DeviceType : string
         DeviceId : string
         FromDate : string
+        TooDate : string
     }
 
     let webApp =
@@ -90,8 +88,8 @@ module Server =
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}" (getStationDetails >> read)
             GET >=>
                 routeBind<PageKey>
-                    "/api/stations/{DeviceType}/{DeviceId}/{FromDate}"
-                    (fun key -> getReadingsPage {DeviceType = key.DeviceType; DeviceId = key.DeviceId} (UrlDateTime.fromUrlDate key.FromDate) |> read)
+                    "/api/stations/{DeviceType}/{DeviceId}/{FromDate}/{TooDate}"
+                    (fun key -> getReadingsPage {DeviceType = key.DeviceType; DeviceId = key.DeviceId} (UrlDateTime.fromUrlDate key.FromDate) (UrlDateTime.fromUrlDate key.TooDate) |> read)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (getSettings >> read)
             POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (fun key -> bindJson (setSettings key))
         ]            

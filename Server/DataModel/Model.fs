@@ -30,6 +30,7 @@ module Model =
         DeviceType : string
         [<RowKey>]
         DeviceId : string
+        CreatedOn : DateTime
         WundergroundStationId : string
         WundergroundPassword : string
         DirectionOffsetDegrees : int option

@@ -44,6 +44,7 @@ type StationDetails = {
     WundergroundId : string option
     Location : Location
     LastReading : DateTime option
+    CreatedOn : DateTime
     Readings : Reading list
 }
 

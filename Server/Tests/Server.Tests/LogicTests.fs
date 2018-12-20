@@ -13,6 +13,7 @@ module LogicTests =
         WundergroundStationId = "KSTAT"
         WundergroundPassword = "pass"
         DirectionOffsetDegrees = None
+        CreatedOn = DateTime.Now
         Latitude = 0.0
         Longitude = 0.0
         LastReading = None

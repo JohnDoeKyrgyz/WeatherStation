@@ -14,6 +14,7 @@ module Device =
     open Fulma
 
     open Client
+    open Fulma
 
     type Tab =
         | Data
@@ -27,11 +28,12 @@ module Device =
         Settings : Loadable<StationSettings option>
         ActiveTab : Tab
         Page : PageKey<DateTime>
+        PageSize : TimeSpan
     }
 
     type Msg =
         | Station of Loadable<StationDetails>
-        | Readings of DateTime * StationDetails * Loadable<Reading list>
+        | Readings of StationDetails * DateTime * Loadable<Reading list>
         | Settings of Loadable<StationSettings option>
         | SelectTab of Tab
         | UpdateSettings
@@ -39,11 +41,12 @@ module Device =
         | SettingsChanged of StationSettings option
         | ClearUpdateResult
 
-    let loadReadingsCmd (key : StationKey) stationDetails fromDate =
+    let loadReadingsCmd (key : StationKey) stationDetails fromDate tooDate =
         let url =
-            let formattedDate = UrlDateTime.toUrlDate fromDate
-            sprintf "/api/stations/%s/%s/%s" key.DeviceType key.DeviceId formattedDate
-        let result response = Readings (fromDate, stationDetails, response)
+            let formattedFromDate = UrlDateTime.toUrlDate fromDate
+            let formattedToDate = UrlDateTime.toUrlDate tooDate
+            sprintf "/api/stations/%s/%s/%s/%s" key.DeviceType key.DeviceId formattedFromDate formattedToDate
+        let result response = Readings (stationDetails, fromDate, response)
         Cmd.ofPromise
             (fetchAs url)
             []
@@ -74,21 +77,23 @@ module Device =
             (Ok >> Loaded >> Settings)
             (Error >> Loaded >> Settings)
 
+    let defaultPageSize = TimeSpan.FromDays 1.0
+
     let init key : Model * Cmd<Msg> =
+        let firstPage = Some DateTime.Now
         let initialModel = {
-            Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = NotLoading;
-            Page = PageKey<DateTime>.Default }    
+            Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = NotLoading;            
+            Page = {PageKey<DateTime>.Default with Current = firstPage; First = firstPage}
+            PageSize = defaultPageSize}    
         initialModel, loadStationCmd key
 
     module P = Fable.Helpers.React.Props
     module R = Fable.Helpers.React
 
-    let updatePagePosition currentPosition (currentModel : Model) =
-        match currentModel.Device with
-        | Loaded (Ok stationDetails) ->
-            let nextPosition = (stationDetails.Readings |> List.last).ReadingTime
-            {currentModel with Page = {currentModel.Page with Current = currentPosition; Next = Some nextPosition; Previous = currentModel.Page.Current}}
-        | _ -> currentModel
+    let updatePagePosition (fromDate : DateTime) (currentModel : Model) =
+        let nextPosition = fromDate - currentModel.PageSize
+        let previousPosition = if currentModel.Page.Current = currentModel.Page.First then None else currentModel.Page.Current
+        {currentModel with Page = {currentModel.Page with Current = Some fromDate; Next = Some nextPosition; Previous = previousPosition}}
 
     let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         match msg with
@@ -99,22 +104,28 @@ module Device =
         | Station Loading ->
             let nextModel = { currentModel with Device = Loading }
             nextModel, loadStationCmd currentModel.Key
-        | Readings (fromDate, stationDetails, Loading) ->
-            {currentModel with Device = Loading}, loadReadingsCmd currentModel.Key stationDetails fromDate
-        | Readings (fromDate, stationDetails, result) ->
-            let nextModel =
-                match result with
-                | Loaded (Ok readings) ->
-                    let deviceInfo = {stationDetails with Readings = readings}
-                    {currentModel with Device = Loaded (Ok deviceInfo)}
-                    |> updatePagePosition (Some fromDate)
-                | _ -> currentModel
-            nextModel, Cmd.none
         | Station (result) ->
+            let pageSize, fromDate =
+                match result with
+                | Loaded (Ok data) ->
+                    match data.Readings with
+                    | [singleReading] -> defaultPageSize, singleReading.ReadingTime
+                    | firstReading :: readings -> firstReading.ReadingTime - (readings |> List.last).ReadingTime, firstReading.ReadingTime
+                    | _ -> defaultPageSize, DateTime.Now
+                | _ -> currentModel.PageSize, DateTime.Now
             let nextModel =
-                { currentModel with Device = result }
-                |> updatePagePosition None
+                { currentModel with Device = result; PageSize = pageSize }
+                |> updatePagePosition fromDate
             nextModel, Cmd.none
+        | Readings (stationDetails, fromDate, readings) ->
+            match readings with
+            | Loading ->
+                let tooDate = fromDate - currentModel.PageSize
+                {currentModel with Device = Loading}, loadReadingsCmd currentModel.Key stationDetails tooDate fromDate
+            | Loaded (Ok readings) ->
+                let deviceInfo = {stationDetails with Readings = readings}
+                {currentModel with Device = Loaded (Ok deviceInfo)} |> updatePagePosition fromDate, Cmd.none
+            | _ -> currentModel, Cmd.none
         | Settings settings ->
             {currentModel with Settings = settings}, Cmd.none
         | SettingsChanged contents ->
@@ -141,13 +152,21 @@ module Device =
                 string reading.DirectionDegrees
                 number reading.TemperatureCelciusBarometer])
    
-    let graph dispatch pageKey data  =
+    let graph dispatch pageSize pageKey data =
+        let nextPage fromDate _ =
+            dispatch (Readings (data, fromDate, Loading))
         let voltageData = [|for reading in data.Readings -> {time = date reading.ReadingTime; battery = reading.BatteryChargeVoltage; panel = reading.PanelVoltage}|]        
         div [] [
             h2 [] [str "Voltage"]
             voltageChart voltageData
-            paginator pageKey (fun fromDate _ -> (dispatch (Readings (fromDate, data, Loading))))
-        ]        
+            paginator pageKey nextPage
+
+            ul [] [
+                li [][str (string pageSize)]
+                li [][str (string pageKey.First)]
+                li [][str (string pageKey.Previous)]
+                li [][str (string pageKey.Current)]
+                li [][str (string pageKey.Next)]]]        
 
     let settings dispatch model = [
         yield!
@@ -214,7 +233,7 @@ module Device =
             Client.tabs
                 (SelectTab >> dispatch) [
                     {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Fa.I.Table}
-                    {Name = "Graph"; Key = Graph; Content = loader model.Device (graph dispatch model.Page); Icon = Some FontAwesome.Fa.I.LineChart}
+                    {Name = "Graph"; Key = Graph; Content = loader model.Device (graph dispatch model.PageSize.TotalHours model.Page); Icon = Some FontAwesome.Fa.I.LineChart}
                     {Name = "Settings"; Key = Tab.Settings; Content = settings dispatch model; Icon = Some FontAwesome.Fa.I.Gear}
             ]
             model.ActiveTab
