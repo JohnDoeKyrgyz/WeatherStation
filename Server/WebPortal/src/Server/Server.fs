@@ -47,10 +47,10 @@ module Server =
 
     let getStationDetails (key : StationKey) = async {
         let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
-        let! readingsCount = SystemSettings.readingsCount systemSettingsRepository.GetSettingWithDefault
+        let! defaultPageSize = SystemSettings.defaultPageSize systemSettingsRepository.GetSettingWithDefault
         let! stationDetails =
-            weatherStationDetails connectionString readingsCount key
-            |> getWeatherStationDetails
+            weatherStationDetails connectionString defaultPageSize key
+            |> getWeatherStationDetails defaultPageSize.TotalHours
         return
             match stationDetails with
             | Some details -> Ok details

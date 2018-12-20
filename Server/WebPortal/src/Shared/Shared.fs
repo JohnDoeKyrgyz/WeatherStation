@@ -46,6 +46,7 @@ type StationDetails = {
     LastReading : DateTime option
     CreatedOn : DateTime
     Readings : Reading list
+    PageSizeHours : float
 }
 
 type Station = {

@@ -50,7 +50,7 @@ module Logic =
         DirectionDegrees = reading.DirectionDegrees
     }
 
-    let getWeatherStationDetails data = async {
+    let getWeatherStationDetails pageSizeHours data = async {
         match! data with
         | Some (station : WeatherStation, readings : Model.Reading list ) ->
             let readings = readings |> List.sortByDescending (fun reading -> reading.ReadingTime)
@@ -63,6 +63,7 @@ module Logic =
                     Location = {Latitude = 0.0m; Longitude = 0.0m}
                     LastReading = None
                     Readings = readings |> List.map createReading
+                    PageSizeHours = pageSizeHours
                 }
         | None -> return None
     }

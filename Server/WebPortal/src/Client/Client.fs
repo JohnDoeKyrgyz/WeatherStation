@@ -47,31 +47,25 @@ module Client =
         Key : 'T
         Name : string
         Icon : Fa.I.FontAwesomeIcons option
-    }
+    }    
 
-    type PageKey<'T> = {
-        First : option<'T>
-        Current : option<'T>
-        Next : option<'T>
-        Previous : option<'T>
-    }
-    with
-        static member Default = {First = None; Current = None; Next = None; Previous = None} :> PageKey<'T>
-
-    let paginator pageKey onNavigate =
+    let paginator (firstPage : DateTime) currentPage pageSize onNavigate =
+        let previousPage = if firstPage < currentPage then Some (currentPage - pageSize) else None
+        let nextPage = currentPage + pageSize
         let buttonDefinitions = [
-            FontAwesome.Fa.I.FastBackward, pageKey.First
-            FontAwesome.Fa.I.Backward, pageKey.Previous
-            FontAwesome.Fa.I.Refresh, pageKey.Current
-            FontAwesome.Fa.I.Forward, pageKey.Next ]
+            FontAwesome.Fa.I.FastBackward, Some firstPage
+            FontAwesome.Fa.I.Backward, previousPage
+            FontAwesome.Fa.I.Refresh, Some currentPage
+            FontAwesome.Fa.I.Forward, Some nextPage ]
         div [] [
             for icon, key in buttonDefinitions do
-            yield Button.button [
-                yield Button.Color IsPrimary
-                yield 
-                    if Option.isSome key
-                    then Button.OnClick (onNavigate key.Value)
-                    else Button.Disabled true] [Icon.faIcon [] [Fa.icon icon]]]
+                yield Button.button [
+                    yield Button.Color IsPrimary
+                    yield 
+                        if Option.isSome key
+                        then Button.OnClick (onNavigate key.Value)
+                        else Button.Disabled true] [Icon.faIcon [] [Fa.icon icon]]
+            yield Box.box' [][str (sprintf "%A - %A" currentPage nextPage)]]
 
     let tabs dispatch tabs activeTab options =
         div [] [

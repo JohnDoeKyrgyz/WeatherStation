@@ -24,7 +24,7 @@ module Repository =
         inherit IRepository<Reading>
         abstract member GetHistory : deviceId:string -> cutOff:DateTime -> Async<Reading list>
         abstract member GetPage : deviceId:string -> from:DateTime -> too:DateTime -> Async<Reading list>
-        abstract member GetRecentReadings : deviceId:string -> count:int -> Async<Reading list>
+        abstract member GetRecentReadings : deviceId:string -> cutOff:DateTime -> Async<Reading list>
 
     let createTableIfNecessary (connection : CloudTableClient) tableName =
         let tableReference = connection.GetTableReference(tableName)
@@ -123,12 +123,11 @@ module Repository =
                         |> runQuery connection tableName
                     return readings
                 }
-            member this.GetRecentReadings deviceId count =
+            member this.GetRecentReadings deviceId (too: DateTime) =
                 async {
                     let! readings =
                         Query.all<Reading>
-                        |> Query.where <@ fun reading key -> key.PartitionKey = deviceId @>
-                        |> Query.take count
+                        |> Query.where <@ fun reading key -> key.PartitionKey = deviceId && reading.ReadingTime <= too @>
                         |> runQuery connection tableName
                     return readings
                 }

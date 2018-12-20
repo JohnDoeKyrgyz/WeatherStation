@@ -28,6 +28,6 @@ module SystemSettings =
             let! setting = getOrCreateSetting settingsGetter key serializedDefaultValue
             return parser setting }
 
-    let readingsCount settingsGetter = objectSetting settingsGetter int "ReadingsCount" 100
+    let defaultPageSize settingsGetter = objectSetting settingsGetter TimeSpan.Parse "DefaultPageSize" (TimeSpan.FromDays 2.0)
     let activeThreshold settingsGetter = objectSetting settingsGetter TimeSpan.Parse "ActiveThreshold" (TimeSpan.FromHours(1.0))    
     let averageReadingsWindow settingsGetter = objectSetting settingsGetter TimeSpan.Parse "ReadingAveragingWindow" (TimeSpan.FromMinutes(10.0))

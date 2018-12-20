@@ -1,8 +1,11 @@
 namespace WeatherStation
 open Newtonsoft.Json
 module Data =
+    open System
+
     open WeatherStation.Model
     open WeatherStation.Shared
+
     open AzureStorage
 
     let allStations connectionString = async {
@@ -10,12 +13,14 @@ module Data =
         return! repository.GetAll()
     }
 
-    let weatherStationDetails connectionString readingsCount (key : StationKey) = async {
+    let weatherStationDetails connectionString pageSize (key : StationKey) = async {
         let! weatherStationRepository = weatherStationRepository connectionString
         match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
         | Some station ->
             let! readingsRepository = readingsRepository connectionString
-            let! readings = readingsRepository.GetRecentReadings key.DeviceId readingsCount
+            let lastReadingDate = defaultArg station.LastReading DateTime.Now
+            let cutOffDate = lastReadingDate - pageSize
+            let! readings = readingsRepository.GetRecentReadings key.DeviceId cutOffDate
             return Some (station, readings)
         | None -> return None
     }
