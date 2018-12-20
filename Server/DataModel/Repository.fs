@@ -123,11 +123,11 @@ module Repository =
                         |> runQuery connection tableName
                     return readings
                 }
-            member this.GetRecentReadings deviceId (too: DateTime) =
+            member this.GetRecentReadings deviceId (cutOff: DateTime) =
                 async {
                     let! readings =
                         Query.all<Reading>
-                        |> Query.where <@ fun reading key -> key.PartitionKey = deviceId && reading.ReadingTime <= too @>
+                        |> Query.where <@ fun reading key -> key.PartitionKey = deviceId && reading.ReadingTime > cutOff @>
                         |> runQuery connection tableName
                     return readings
                 }

@@ -9,12 +9,12 @@ module Device =
 
     open Fable.PowerPack
     open Fable.Helpers.React
-    open Fable.PowerPack.Fetch
-    
+    open Fable.PowerPack.Fetch    
+
     open Fulma
+    open Fulma.FontAwesome
 
     open Client
-    open Fulma
 
     type Tab =
         | Data
@@ -106,7 +106,7 @@ module Device =
                 {currentModel with Device = Loading}, loadReadingsCmd currentModel.Key stationDetails tooDate fromDate
             | Loaded (Ok readings) ->
                 let deviceInfo = {stationDetails with Readings = readings}
-                {currentModel with Device = Loaded (Ok deviceInfo)}, Cmd.none
+                {currentModel with Device = Loaded (Ok deviceInfo); CurrentPage = fromDate}, Cmd.none
             | _ -> currentModel, Cmd.none
         | Settings settings ->
             {currentModel with Settings = settings}, Cmd.none
@@ -133,8 +133,27 @@ module Device =
                 number reading.SpeedMetersPerSecond
                 string reading.DirectionDegrees
                 number reading.TemperatureCelciusBarometer])
+
+    let paginator (firstPage : DateTime) currentPage pageSize onNavigate =
+        let previousDate = currentPage + pageSize
+        let previousPage = if previousDate <= firstPage then Some previousDate else None
+        let nextPage = currentPage - pageSize
+        let buttonDefinitions = [
+            FontAwesome.Fa.I.FastBackward, Some firstPage
+            FontAwesome.Fa.I.Backward, previousPage
+            FontAwesome.Fa.I.Refresh, Some currentPage
+            FontAwesome.Fa.I.Forward, Some nextPage ]
+        div [] [
+            for icon, key in buttonDefinitions do
+                yield Button.button [
+                    yield Button.Color IsPrimary
+                    yield 
+                        if Option.isSome key
+                        then Button.OnClick (onNavigate key.Value)
+                        else Button.Disabled true] [Icon.faIcon [] [Fa.icon icon]]
+            yield Box.box' [][str (sprintf "%A - %A" currentPage nextPage)]]
    
-    let graph dispatch currentPage pageSize pageKey data =
+    let graph dispatch currentPage pageSize data =
         let nextPage fromDate _ =
             dispatch (Readings (data, fromDate, Loading))
         let voltageData = [|for reading in data.Readings -> {time = date reading.ReadingTime; battery = reading.BatteryChargeVoltage; panel = reading.PanelVoltage}|]        
@@ -209,7 +228,7 @@ module Device =
             Client.tabs
                 (SelectTab >> dispatch) [
                     {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Fa.I.Table}
-                    {Name = "Graph"; Key = Graph; Content = loader model.Device (graph dispatch model.CurrentPage model.PageSize model.CurrentPage); Icon = Some FontAwesome.Fa.I.LineChart}
+                    {Name = "Graph"; Key = Graph; Content = loader model.Device (graph dispatch model.CurrentPage model.PageSize); Icon = Some FontAwesome.Fa.I.LineChart}
                     {Name = "Settings"; Key = Tab.Settings; Content = settings dispatch model; Icon = Some FontAwesome.Fa.I.Gear}
             ]
             model.ActiveTab
