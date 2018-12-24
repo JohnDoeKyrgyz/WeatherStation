@@ -120,115 +120,115 @@ module Device =
         | SettingsUpdated result ->
             {currentModel with UpdateResult = result}, Cmd.none
         | ClearUpdateResult ->
-            {currentModel with UpdateResult = NotLoading}, Cmd.none                            
+            {currentModel with UpdateResult = NotLoading}, Cmd.none
 
-    let paginator (firstPage : DateTime) currentPage pageSize onNavigate =
-        let previousDate = currentPage + pageSize
-        let previousPage = if previousDate < firstPage then previousDate else firstPage
-        let nextPage = currentPage - pageSize
-        let buttonDefinitions = [
-            FontAwesome.Fa.I.FastBackward, firstPage
-            FontAwesome.Fa.I.Backward, previousPage
-            FontAwesome.Fa.I.Refresh, currentPage
-            FontAwesome.Fa.I.Forward, nextPage ]
-        Level.level [] [
-            Level.left [][
-                for icon, key in buttonDefinitions do
-                    yield Button.button [
-                        Button.Color IsPrimary
-                        Button.OnClick (onNavigate key)] [Icon.faIcon [] [Fa.icon icon]]]
-            Level.item [][
-                str (sprintf "%A - %A" currentPage nextPage)]]
+    let view dispatch model =
 
-    let showDeviceDetails deviceDetails =
-        table
-            ["Time"; "Battery"; "Panel"; "Speed"; "Direction"; "Temp"]
-            deviceDetails.Readings
-            (fun reading -> [
-                date reading.ReadingTime
-                number reading.BatteryChargeVoltage
-                number reading.PanelVoltage
-                number reading.SpeedMetersPerSecond
-                string reading.DirectionDegrees
-                number reading.TemperatureCelciusBarometer])        
-   
-    let graph dispatch currentPage pageSize data =
-        let nextPage fromDate _ =
-            dispatch (Readings (data, fromDate, Loading))
-        let voltageData = [|for reading in data.Readings -> {time = date reading.ReadingTime; battery = reading.BatteryChargeVoltage; panel = reading.PanelVoltage}|]        
-        let firstPage = defaultArg data.LastReading DateTime.Now
-        div [] [
-            paginator firstPage currentPage pageSize nextPage
-            h2 [] [str "Voltage"]
-            voltageChart voltageData]        
+        let paginator data =
+            let onNavigate fromDate _ = dispatch (Readings (data, fromDate, Loading))
+            let firstPage = defaultArg data.LastReading DateTime.Now
+            let previousDate = model.CurrentPage + model.PageSize
+            let previousPage = if previousDate < firstPage then previousDate else firstPage
+            let nextPage = model.CurrentPage - model.PageSize
+            let buttonDefinitions = [
+                FontAwesome.Fa.I.FastBackward, firstPage
+                FontAwesome.Fa.I.Backward, previousPage
+                FontAwesome.Fa.I.Refresh, model.CurrentPage
+                FontAwesome.Fa.I.Forward, nextPage ]
+            Level.level [] [
+                Level.left [][
+                    for icon, key in buttonDefinitions do
+                        yield Button.button [
+                            Button.Color IsPrimary
+                            Button.OnClick (onNavigate key)] [Icon.faIcon [] [Fa.icon icon]]]
+                Level.item [][
+                    str (sprintf "%A - %A" model.CurrentPage nextPage)]]
 
-    let settings dispatch model = [
-        yield!
-            match model.UpdateResult with
-            | Loading -> [spinner "Saving Settings..."]
-            | Loaded result ->
-                let color, header, message =
-                    match result with
-                    | Ok response -> Color.IsSuccess, "Success", response
-                    | Error exn -> Color.IsDanger, "Error", exn.Message
-                [Message.message [Message.Option.Color color][
-                    Message.header [] [
-                        str header
-                        Delete.delete [Delete.OnClick (fun _ -> dispatch ClearUpdateResult)][]]
-                    Message.body [] [str message]]]
-            | NotLoading -> []
-
-        yield! loader model.Settings (fun settings ->
-            let readValue f = FSharp.Core.Option.map f settings
-            let setValue builder value =
-                match settings with
-                | Some settings -> Some (builder settings value)
-                | None -> Some (builder StationSettings.Default value)
-                |> SettingsChanged
-                |> dispatch                
+        let showDeviceDetails deviceDetails =
             div [] [
-                checkBoxInput 
-                    (readValue (fun settings -> settings.Brownout)) 
-                    (setValue (fun settings value -> {settings with Brownout = value}))
-                |> simpleFormControl "Brownout"
+                paginator deviceDetails
+                table
+                    ["Time"; "Battery"; "Panel"; "Speed"; "Direction"; "Temp"]
+                    deviceDetails.Readings
+                    (fun reading -> [
+                        date reading.ReadingTime
+                        number reading.BatteryChargeVoltage
+                        number reading.PanelVoltage
+                        number reading.SpeedMetersPerSecond
+                        string reading.DirectionDegrees
+                        number reading.TemperatureCelciusBarometer])]        
+   
+        let graph data =        
+            let voltageData = [|for reading in data.Readings -> {time = date reading.ReadingTime; battery = reading.BatteryChargeVoltage; panel = reading.PanelVoltage}|]        
+            div [] [
+                paginator data
+                h2 [] [str "Voltage"]
+                voltageChart voltageData]
 
-                decimalInput 
-                    (readValue (fun settings -> settings.BrownoutVoltage))
-                    (setValue (fun settings value -> {settings with BrownoutVoltage = value}))
-                |> simpleFormControl "Brownout Voltage"
+        let settings = [
+            yield!
+                match model.UpdateResult with
+                | Loading -> [spinner "Saving Settings..."]
+                | Loaded result ->
+                    let color, header, message =
+                        match result with
+                        | Ok response -> Color.IsSuccess, "Success", response
+                        | Error exn -> Color.IsDanger, "Error", exn.Message
+                    [Message.message [Message.Option.Color color][
+                        Message.header [] [
+                            str header
+                            Delete.delete [Delete.OnClick (fun _ -> dispatch ClearUpdateResult)][]]
+                        Message.body [] [str message]]]
+                | NotLoading -> []
 
-                intInput 
-                    (readValue (fun settings -> settings.BrownoutMinutes))
-                    (setValue (fun settings value -> {settings with BrownoutMinutes = value}))
-                |> simpleFormControl "Brownout Minutes"
+            yield! loader model.Settings (fun settings ->
+                let readValue f = FSharp.Core.Option.map f settings
+                let setValue builder value =
+                    match settings with
+                    | Some settings -> Some (builder settings value)
+                    | None -> Some (builder StationSettings.Default value)
+                    |> SettingsChanged
+                    |> dispatch                
+                div [] [
+                    checkBoxInput 
+                        (readValue (fun settings -> settings.Brownout)) 
+                        (setValue (fun settings value -> {settings with Brownout = value}))
+                    |> simpleFormControl "Brownout"
 
-                formControl 
-                    "Sleep Time" 
+                    decimalInput 
+                        (readValue (fun settings -> settings.BrownoutVoltage))
+                        (setValue (fun settings value -> {settings with BrownoutVoltage = value}))
+                    |> simpleFormControl "Brownout Voltage"
+
+                    intInput 
+                        (readValue (fun settings -> settings.BrownoutMinutes))
+                        (setValue (fun settings value -> {settings with BrownoutMinutes = value}))
+                    |> simpleFormControl "Brownout Minutes"
+
+                    formControl 
+                        "Sleep Time" 
+                        (intInput 
+                            (readValue (fun settings -> settings.SleepTime))
+                            (setValue (fun settings value -> {settings with SleepTime = value})))[                         
+                            Help.help [][str "Measured in seconds"]]
+
                     (intInput 
-                        (readValue (fun settings -> settings.SleepTime))
-                        (setValue (fun settings value -> {settings with SleepTime = value})))[                         
-                        Help.help [][str "Measured in seconds"]]
+                        (readValue (fun settings -> settings.DiagnosticCycles))
+                        (setValue (fun settings value -> {settings with DiagnosticCycles = value})))
+                    |> simpleFormControl "Diagnostic Cycles"
 
-                (intInput 
-                    (readValue (fun settings -> settings.DiagnosticCycles))
-                    (setValue (fun settings value -> {settings with DiagnosticCycles = value})))
-                |> simpleFormControl "Diagnostic Cycles"
+                    checkBoxInput
+                        (readValue (fun settings -> settings.UseDeepSleep))
+                        (setValue (fun settings value -> {settings with UseDeepSleep = value}))
+                    |> simpleFormControl "Use Deep Sleep"
 
-                checkBoxInput
-                    (readValue (fun settings -> settings.UseDeepSleep))
-                    (setValue (fun settings value -> {settings with UseDeepSleep = value}))
-                |> simpleFormControl "Use Deep Sleep"
-
-                button "Save" (fun _ -> dispatch UpdateSettings)])
-    ]
-
-    let view dispatch model = [
-        yield
-            Client.tabs
-                (SelectTab >> dispatch) [
-                    {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Fa.I.Table}
-                    {Name = "Graph"; Key = Graph; Content = loader model.Device (graph dispatch model.CurrentPage model.PageSize); Icon = Some FontAwesome.Fa.I.LineChart}
-                    {Name = "Settings"; Key = Tab.Settings; Content = settings dispatch model; Icon = Some FontAwesome.Fa.I.Gear}
+                    button "Save" (fun _ -> dispatch UpdateSettings)])]
+     
+        [Client.tabs
+            (SelectTab >> dispatch) [
+                {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Fa.I.Table}
+                {Name = "Graph"; Key = Graph; Content = loader model.Device graph; Icon = Some FontAwesome.Fa.I.LineChart}
+                {Name = "Settings"; Key = Tab.Settings; Content = settings; Icon = Some FontAwesome.Fa.I.Gear}
             ]
             model.ActiveTab
             [Tabs.IsFullWidth; Tabs.IsBoxed]]
