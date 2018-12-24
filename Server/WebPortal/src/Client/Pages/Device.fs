@@ -122,6 +122,36 @@ module Device =
         | ClearUpdateResult ->
             {currentModel with UpdateResult = NotLoading}, Cmd.none
 
+    type Voltage = {time: string; battery: float; panel: float}
+
+    let voltageChart readings =
+        let data = [|for reading in readings -> {time = date reading.ReadingTime; battery = reading.BatteryChargeVoltage; panel = reading.PanelVoltage}|]
+        readingsChart data [
+            "battery", "red"
+            "panel", "orange"]
+
+    type Temperature = {time: string; hydrometer: float; barometer: float}
+
+    let temperatureChart readings =
+        let data = [|for reading in readings -> {time = date reading.ReadingTime; hydrometer = reading.TemperatureCelciusHydrometer; barometer = reading.TemperatureCelciusBarometer}|]
+        readingsChart data [
+            "hydrometer", "blue"
+            "barometer", "green"]
+
+    type WindSpeed = {time: string; speed: float}
+
+    let windSpeedChart readings =
+        let data = [|for reading in readings -> {time = date reading.ReadingTime; speed = reading.SpeedMetersPerSecond}|]
+        readingsChart data [
+            "speed", "blue"]
+
+    type WindDirection = {time: string; direction: float}
+
+    let windDirectionChart readings =
+        let data = [|for reading in readings -> {time = date reading.ReadingTime; direction = reading.DirectionDegrees}|]
+        readingsChart data [
+            "direction", "blue"]    
+
     let view dispatch model =
 
         let paginator data =
@@ -158,12 +188,17 @@ module Device =
                         string reading.DirectionDegrees
                         number reading.TemperatureCelciusBarometer])]        
    
-        let graph data =        
-            let voltageData = [|for reading in data.Readings -> {time = date reading.ReadingTime; battery = reading.BatteryChargeVoltage; panel = reading.PanelVoltage}|]        
+        let graphs data =
             div [] [
                 paginator data
                 h2 [] [str "Voltage"]
-                voltageChart voltageData]
+                voltageChart data.Readings
+                h2 [] [str "Temperature (Celcius)"]
+                temperatureChart data.Readings
+                h2 [] [str "Wind Speed (Meters / Second)"]
+                windSpeedChart data.Readings
+                h2 [] [str "Wind Direction (Degrees)"]
+                windDirectionChart data.Readings]
 
         let settings = [
             yield!
@@ -227,7 +262,7 @@ module Device =
         [Client.tabs
             (SelectTab >> dispatch) [
                 {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Fa.I.Table}
-                {Name = "Graph"; Key = Graph; Content = loader model.Device graph; Icon = Some FontAwesome.Fa.I.LineChart}
+                {Name = "Graph"; Key = Graph; Content = loader model.Device graphs; Icon = Some FontAwesome.Fa.I.LineChart}
                 {Name = "Settings"; Key = Tab.Settings; Content = settings; Icon = Some FontAwesome.Fa.I.Gear}
             ]
             model.ActiveTab
