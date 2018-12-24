@@ -61,7 +61,7 @@ module Logic =
                     CreatedOn = station.CreatedOn
                     WundergroundId = toOption station.WundergroundStationId
                     Location = {Latitude = 0.0m; Longitude = 0.0m}
-                    LastReading = None
+                    LastReading = station.LastReading
                     Readings = readings |> List.map createReading
                     PageSizeHours = pageSizeHours
                 }

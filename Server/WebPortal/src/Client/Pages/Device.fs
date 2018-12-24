@@ -44,8 +44,8 @@ module Device =
     let loadReadingsCmd (key : StationKey) stationDetails fromDate tooDate =
         let url =
             let formattedFromDate = UrlDateTime.toUrlDate fromDate
-            let formattedToDate = UrlDateTime.toUrlDate tooDate
-            sprintf "/api/stations/%s/%s/%s/%s" key.DeviceType key.DeviceId formattedFromDate formattedToDate
+            let formattedTooDate = UrlDateTime.toUrlDate tooDate
+            sprintf "/api/stations/%s/%s/%s/%s" key.DeviceType key.DeviceId formattedTooDate formattedFromDate
         let result response = Readings (stationDetails, fromDate, response)
         Cmd.ofPromise
             (fetchAs url)
@@ -94,16 +94,16 @@ module Device =
             let nextModel = { currentModel with Device = Loading }
             nextModel, loadStationCmd currentModel.Key
         | Station (result) ->
-            let pageSize =
+            let currentPage, pageSize =
                 match result with
-                | Loaded (Ok stationDetails) -> TimeSpan.FromHours stationDetails.PageSizeHours
-                | _ -> currentModel.PageSize
-            { currentModel with Device = result; PageSize = pageSize }, Cmd.none
+                | Loaded (Ok stationDetails) -> defaultArg stationDetails.LastReading DateTime.Now, TimeSpan.FromHours stationDetails.PageSizeHours
+                | _ -> DateTime.Now, currentModel.PageSize
+            { currentModel with Device = result; PageSize = pageSize; CurrentPage = currentPage}, Cmd.none
         | Readings (stationDetails, fromDate, readings) ->
             match readings with
             | Loading ->
                 let tooDate = fromDate - currentModel.PageSize
-                {currentModel with Device = Loading}, loadReadingsCmd currentModel.Key stationDetails tooDate fromDate
+                {currentModel with Device = Loading}, loadReadingsCmd currentModel.Key stationDetails fromDate tooDate
             | Loaded (Ok readings) ->
                 let deviceInfo = {stationDetails with Readings = readings}
                 {currentModel with Device = Loaded (Ok deviceInfo); CurrentPage = fromDate}, Cmd.none
@@ -122,6 +122,24 @@ module Device =
         | ClearUpdateResult ->
             {currentModel with UpdateResult = NotLoading}, Cmd.none                            
 
+    let paginator (firstPage : DateTime) currentPage pageSize onNavigate =
+        let previousDate = currentPage + pageSize
+        let previousPage = if previousDate < firstPage then previousDate else firstPage
+        let nextPage = currentPage - pageSize
+        let buttonDefinitions = [
+            FontAwesome.Fa.I.FastBackward, firstPage
+            FontAwesome.Fa.I.Backward, previousPage
+            FontAwesome.Fa.I.Refresh, currentPage
+            FontAwesome.Fa.I.Forward, nextPage ]
+        Level.level [] [
+            Level.left [][
+                for icon, key in buttonDefinitions do
+                    yield Button.button [
+                        Button.Color IsPrimary
+                        Button.OnClick (onNavigate key)] [Icon.faIcon [] [Fa.icon icon]]]
+            Level.item [][
+                str (sprintf "%A - %A" currentPage nextPage)]]
+
     let showDeviceDetails deviceDetails =
         table
             ["Time"; "Battery"; "Panel"; "Speed"; "Direction"; "Temp"]
@@ -132,26 +150,7 @@ module Device =
                 number reading.PanelVoltage
                 number reading.SpeedMetersPerSecond
                 string reading.DirectionDegrees
-                number reading.TemperatureCelciusBarometer])
-
-    let paginator (firstPage : DateTime) currentPage pageSize onNavigate =
-        let previousDate = currentPage + pageSize
-        let previousPage = if previousDate <= firstPage then Some previousDate else None
-        let nextPage = currentPage - pageSize
-        let buttonDefinitions = [
-            FontAwesome.Fa.I.FastBackward, Some firstPage
-            FontAwesome.Fa.I.Backward, previousPage
-            FontAwesome.Fa.I.Refresh, Some currentPage
-            FontAwesome.Fa.I.Forward, Some nextPage ]
-        div [] [
-            for icon, key in buttonDefinitions do
-                yield Button.button [
-                    yield Button.Color IsPrimary
-                    yield 
-                        if Option.isSome key
-                        then Button.OnClick (onNavigate key.Value)
-                        else Button.Disabled true] [Icon.faIcon [] [Fa.icon icon]]
-            yield Box.box' [][str (sprintf "%A - %A" currentPage nextPage)]]
+                number reading.TemperatureCelciusBarometer])        
    
     let graph dispatch currentPage pageSize data =
         let nextPage fromDate _ =
@@ -159,9 +158,9 @@ module Device =
         let voltageData = [|for reading in data.Readings -> {time = date reading.ReadingTime; battery = reading.BatteryChargeVoltage; panel = reading.PanelVoltage}|]        
         let firstPage = defaultArg data.LastReading DateTime.Now
         div [] [
+            paginator firstPage currentPage pageSize nextPage
             h2 [] [str "Voltage"]
-            voltageChart voltageData
-            paginator firstPage currentPage pageSize nextPage]        
+            voltageChart voltageData]        
 
     let settings dispatch model = [
         yield!
