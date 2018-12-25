@@ -56,7 +56,9 @@ module WundergroundForwarder =
                     let! (weatherStation : WeatherStation option) = 
                         async {
                             match! getWeatherStation deviceType deviceReading.DeviceId with
-                            | None -> return! getWeatherStation DeviceType.Test deviceReading.DeviceId
+                            | None -> 
+                                log.LogInformation(sprintf "%A %s not found. Searching for device %A %s in registry" deviceType deviceReading.DeviceId DeviceType.Test deviceReading.DeviceId)
+                                return! getWeatherStation DeviceType.Test deviceReading.DeviceId
                             | value -> return value
                         }                        
 
