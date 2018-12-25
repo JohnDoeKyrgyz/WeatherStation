@@ -13,22 +13,22 @@ npm install -g azure-functions-core-tools
 ```
 
 2. Install the azure cli (az cli)
-3. Change into the build output directory.
 
-```command
-cd bin\Debug\netstandard2.0
-```
-
-4. Download the settings from the azure functions installation
+3. Download the settings from the azure functions installation
 
 ```command
 func azure functionapp fetch-app-settings WeatherStations
 ```
 
-5. Register the extensions
+4. Register the extensions
 
 ```command
 func extensions install
+```
+5. Change into the build output directory.
+
+```command
+cd bin\Debug\netstandard2.0
 ```
 
 6. Run the functions
