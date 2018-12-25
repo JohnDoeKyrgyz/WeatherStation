@@ -9,8 +9,10 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Server", "WebPortal\src\Ser
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4F1B58FB-D474-4D12-A382-09B4309D6C6E}"
 	ProjectSection(SolutionItems) = preProject
+		..\.deployment = ..\.deployment
 		build.cmd = build.cmd
 		WebPortal\build.fsx = WebPortal\build.fsx
+		..\deploy.cmd = ..\deploy.cmd
 		paket.dependencies = paket.dependencies
 		WebPortal\run.cmd = WebPortal\run.cmd
 	EndProjectSection
