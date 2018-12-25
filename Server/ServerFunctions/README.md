@@ -16,7 +16,7 @@ npm install -g azure-functions-core-tools
 3. Change into the build output directory.
 
 ```command
-bin\Debug\netstandard2.0
+cd bin\Debug\netstandard2.0
 ```
 
 4. Download the settings from the azure functions installation

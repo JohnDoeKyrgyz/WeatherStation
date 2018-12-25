@@ -18,7 +18,7 @@ let connect (secrets : Secrets.Root) =
     let connectionString = secrets.DeviceConnectionString
     DeviceClient.CreateFromConnectionString(connectionString, TransportType.Mqtt)
 
-let sampleMessage =
+let createSampleMessage() =
     let date = DateTimeOffset.UtcNow.ToString()
     sprintf
         """
@@ -65,7 +65,7 @@ let runTest (client : DeviceClient) (repository : IWeatherStationsRepository) = 
     
     if initialReadingTime.IsNone then do! createTestWeatherStation repository
 
-    do! sendDeviceToCloudMessages client sampleMessage
+    do! sendDeviceToCloudMessages client (createSampleMessage())
     do! Async.Sleep 5000
     let! subsequentReadingTime = getLastReadingTime repository
     
