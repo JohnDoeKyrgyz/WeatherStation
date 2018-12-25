@@ -15,7 +15,7 @@ open Fake.IO
 let serverTestsPath = Path.getFullName "../Tests/Server.Tests"
 let serverPath = Path.getFullName "./src/Server"
 let clientPath = Path.getFullName "./src/Client"
-let deployDir = Path.getFullName "./deploy"
+let deployDir = Fake.Azure.Kudu.deploymentTemp
 
 let platformTool tool winTool =
     let tool = if Environment.isUnix then tool else winTool
@@ -73,9 +73,18 @@ Target.create "RestoreServer" (fun _ ->
     runDotNet "restore" serverPath
 )
 
+Target.create "Bundle" (fun _ ->
+    runDotNet (sprintf "publish \"%s\" -c release -o \"%s\"" serverPath deployDir) __SOURCE_DIRECTORY__
+    Shell.copyDir (Path.combine deployDir "public") (Path.combine clientPath "public") FileFilter.allFiles
+)
+
 Target.create "Build" (fun _ ->
     runDotNet "build" serverPath
     runDotNet "fable webpack-cli -- --config src/Client/webpack.config.js -p" clientPath
+)
+
+Target.create "Deploy" (fun _ ->
+    Fake.Azure.Kudu.kuduSync()
 )
 
 Target.create "Run" (fun _ ->
@@ -101,6 +110,8 @@ open Fake.Core.TargetOperators
 "Clean"
     ==> "InstallClient"
     ==> "Build"
+    ==> "Bundle"
+    ==> "Deploy"
 
 "Clean"
     ==> "InstallClient"

@@ -42,6 +42,8 @@ group Build
     storage: none
     source https://api.nuget.org/v3/index.json
 
+    nuget FAKE
+    nuget Fake.Azure.Kudu
     nuget Fake.Core.Target
     nuget Fake.DotNet.Cli
     
