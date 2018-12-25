@@ -54,6 +54,9 @@ IF NOT DEFINED KUDU_SYNC_CMD (
 
 echo Handling function App deployment.
 
+echo Build Solution
+dotnet build "%DEPLOYMENT_SOURCE%\Server\ServerFunctions\ServerFunctions.sln"
+
 if "%SCM_USE_FUNCPACK%" == "1" (
   call :DeployWithFuncPack
 ) else (
@@ -66,9 +69,6 @@ goto end
 setlocal
 
 echo Using funcpack to optimize cold start
-
-echo Build Solution
-dotnet build "%DEPLOYMENT_SOURCE%\Server\ServerFunctions\ServerFunctions.sln"
 
 :: 1. Copy to local storage
 echo Copying repository files to local storage
