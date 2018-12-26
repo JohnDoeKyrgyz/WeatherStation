@@ -55,6 +55,7 @@ IF NOT DEFINED KUDU_SYNC_CMD (
 echo Handling function App deployment.
 
 dotnet clean ServerFunctions.sln
+dotnet restore ServerFunctions.sln
 dotnet build ServerFunctions.sln
 
 if "%SCM_USE_FUNCPACK%" == "1" (
@@ -72,7 +73,7 @@ echo Using funcpack to optimize cold start
 
 :: 1. Copy to local storage
 echo Copying repository files to local storage
-xcopy "%DEPLOYMENT_SOURCE%\Server\ServerFunctions" "%DEPLOYMENT_TEMP%" /seyiq
+xcopy "%DEPLOYMENT_SOURCE%\Server\ServerFunctions\bin\Debug\netstandard2.0" "%DEPLOYMENT_TEMP%" /seyiq
 IF !ERRORLEVEL! NEQ 0 goto error
 
 :: 2. Install function extensions
@@ -100,11 +101,11 @@ setlocal
 echo Not using funcpack because SCM_USE_FUNCPACK is not set to 1
 
 :: 1. Install function extensions
-call :InstallFunctionExtensions "%DEPLOYMENT_SOURCE%\Server\ServerFunctions"
+call :InstallFunctionExtensions "%DEPLOYMENT_SOURCE%\Server\ServerFunctions\bin\Debug\netstandard2.0"
 
 :: 2. KuduSync
 IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
-  call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_SOURCE%\Server\ServerFunctions" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.cmd;obj"
+  call :ExecuteCmd "%KUDU_SYNC_CMD%" -v 50 -f "%DEPLOYMENT_SOURCE%\Server\ServerFunctions\bin\Debug\netstandard2.0" -t "%DEPLOYMENT_TARGET%" -n "%NEXT_MANIFEST_PATH%" -p "%PREVIOUS_MANIFEST_PATH%" -i ".git;.hg;.deployment;deploy.cmd;obj"
   IF !ERRORLEVEL! NEQ 0 goto error
 )
 

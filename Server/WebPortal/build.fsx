@@ -15,7 +15,7 @@ open Fake.IO
 let serverTestsPath = Path.getFullName "../Tests/Server.Tests"
 let serverPath = Path.getFullName "./src/Server"
 let clientPath = Path.getFullName "./src/Client"
-let deployDir = Fake.Azure.Kudu.deploymentTemp
+let deployDir = "deploy"
 
 let platformTool tool winTool =
     let tool = if Environment.isUnix then tool else winTool
@@ -83,10 +83,6 @@ Target.create "Build" (fun _ ->
     runDotNet "fable webpack-cli -- --config src/Client/webpack.config.js -p" clientPath
 )
 
-Target.create "Deploy" (fun _ ->
-    Fake.Azure.Kudu.kuduSync()
-)
-
 Target.create "Run" (fun _ ->
     let server = async { runDotNet "watch run" serverPath }    
     let serverTests = async { runDotNet "watch run" serverTestsPath }
@@ -111,7 +107,6 @@ open Fake.Core.TargetOperators
     ==> "InstallClient"
     ==> "Build"
     ==> "Bundle"
-    ==> "Deploy"
 
 "Clean"
     ==> "InstallClient"
