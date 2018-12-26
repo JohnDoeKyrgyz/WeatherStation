@@ -36,3 +36,5 @@ cd bin\Debug\netstandard2.0
 ```command
 func host start
 ```
+
+Deployment attempts .
