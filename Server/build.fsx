@@ -42,6 +42,7 @@ let platformTool tool winTool =
 
 let nodeTool = platformTool "node" "node.exe"
 let yarnTool = platformTool "yarn" "yarn.cmd"
+let funcTool = platformTool "func" "func.cmd"
 
 let runTool cmd args workingDir =
     let result =
@@ -117,7 +118,7 @@ Target.create "WebAppDeploy" (fun _ ->
 
 Target.create "FunctionsDeploy" (fun _ ->
     let deployDir = Path.combine functionsPath @"bin\Debug\netstandard2.0"
-    deploy "FunctionsDeploy.zip" deployDir deploymentSettings.FunctionApp.Name deploymentSettings.FunctionApp.Password
+    runTool funcTool (sprintf "azure functionapp publish %s" deploymentSettings.FunctionApp.Name) deployDir
 )
     
 
