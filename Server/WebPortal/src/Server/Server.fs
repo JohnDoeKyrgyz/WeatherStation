@@ -7,6 +7,8 @@ module Server =
 
     open Microsoft.Extensions.Logging
     open Microsoft.Extensions.DependencyInjection
+    open Microsoft.AspNetCore.Builder
+    open Microsoft.AspNetCore.Http
 
     open Saturn
     open Giraffe
@@ -17,9 +19,7 @@ module Server =
     open WeatherStation.Data
     open WeatherStation.Shared
     open Logic
-    open Microsoft.AspNetCore.Http
 
-    let publicPath = Path.GetFullPath "../Client/public"
     let port = 8085us
 
     #if DEBUG
@@ -99,12 +99,22 @@ module Server =
         fableJsonSettings.Converters.Add(Fable.JsonConverter())
         services.AddSingleton<IJsonSerializer>(NewtonsoftJsonSerializer fableJsonSettings)
 
+    let tryGetEnv = System.Environment.GetEnvironmentVariable >> function null | "" -> None | x -> Some x  
+
+    let publicPath = tryGetEnv "public_path" |> Option.defaultValue "../Client/public" |> Path.GetFullPath      
+
+    let configureAzure (services:IServiceCollection) =
+        tryGetEnv "APPINSIGHTS_INSTRUMENTATIONKEY"
+        |> Option.map services.AddApplicationInsightsTelemetry
+        |> Option.defaultValue services        
+
     let app = application {
         url ("http://0.0.0.0:" + port.ToString() + "/")
         use_router webApp
         memory_cache
         use_static publicPath
         service_config configureSerialization
+        service_config configureAzure
         use_gzip
     }
 

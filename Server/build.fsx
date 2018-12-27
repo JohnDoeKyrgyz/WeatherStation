@@ -102,18 +102,24 @@ Target.create "BuildFunctions" (fun _ ->
     runDotNet (sprintf "build %s" functionsSolutionName) functionsPath
 )
 
-Target.create "WebAppDeploy" (fun _ ->
-    let zipFile = "deploy.zip"
+let deploy zipFile deployDir appName appPassword =
     IO.File.Delete zipFile
-    Zip.zip webDeployDir zipFile !!(webDeployDir + @"\**\**")
-
-    let appName = deploymentSettings.WebApp.Name
-    let appPassword = deploymentSettings.WebApp.Password
+    Zip.zip webDeployDir zipFile !!(deployDir + @"\**\**")
 
     let destinationUri = sprintf "https://%s.scm.azurewebsites.net/api/zipdeploy" appName
-    let client = new WebClient(Credentials = NetworkCredential("$" + appName, appPassword))
+    let client = new WebClient(Credentials = NetworkCredential("$" + (appName : string), (appPassword : string)))
     Trace.tracefn "Uploading %s to %s" zipFile destinationUri
-    client.UploadData(destinationUri, IO.File.ReadAllBytes zipFile) |> ignore)
+    client.UploadData(destinationUri, IO.File.ReadAllBytes zipFile) |> ignore
+
+Target.create "WebAppDeploy" (fun _ ->
+    deploy "WebAppDeploy.zip" webDeployDir deploymentSettings.WebApp.Name deploymentSettings.WebApp.Password
+)
+
+Target.create "FunctionsDeploy" (fun _ ->
+    let deployDir = Path.combine functionsPath @"bin\Debug\netstandard2.0"
+    deploy "FunctionsDeploy.zip" deployDir deploymentSettings.FunctionApp.Name deploymentSettings.FunctionApp.Password
+)
+    
 
 Target.create "Run" (fun _ ->
     let server = async { runDotNet "watch run" webServerPath }    
@@ -143,6 +149,7 @@ open Fake.Core.TargetOperators
 
 "Clean"
     ==> "BuildFunctions"
+    ==> "FunctionsDeploy"
 
 "Clean"
     ==> "InstallClient"

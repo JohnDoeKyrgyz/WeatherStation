@@ -1,6 +1,0 @@
-c:\working\Personal\WeatherStation\Server\build.fsx (47,8)-(47,26): Warning FS0044: This construct is deprecated. use the CreateProcess APIs instead.
-c:\working\Personal\WeatherStation\Server\build.fsx (63,8)-(63,26): Warning FS0044: This construct is deprecated. use the CreateProcess APIs instead.
-c:\working\Personal\WeatherStation\Server\build.fsx (107,12)-(107,27): Error FS0039: The value or constructor 'webAppDeployDir' is not defined. Maybe you want one of the following:
-   webDeployDir
-c:\working\Personal\WeatherStation\Server\build.fsx (107,39)-(107,54): Error FS0039: The value or constructor 'webAppDeployDir' is not defined. Maybe you want one of the following:
-   webDeployDir

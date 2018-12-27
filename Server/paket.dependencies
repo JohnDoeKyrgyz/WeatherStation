@@ -19,6 +19,7 @@ group Server
 	nuget FSharp.Data
 	nuget Otp.NET
 	nuget Particle.SDK
+    nuget Microsoft.ApplicationInsights.AspNetCore
 
 group Client
     storage: none
