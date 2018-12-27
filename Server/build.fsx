@@ -104,7 +104,7 @@ Target.create "BuildFunctions" (fun _ ->
 
 let deploy zipFile deployDir appName appPassword =
     IO.File.Delete zipFile
-    Zip.zip webDeployDir zipFile !!(deployDir + @"\**\**")
+    Zip.zip deployDir zipFile !!(deployDir + @"\**\**")
 
     let destinationUri = sprintf "https://%s.scm.azurewebsites.net/api/zipdeploy" appName
     let client = new WebClient(Credentials = NetworkCredential("$" + (appName : string), (appPassword : string)))
@@ -117,6 +117,7 @@ Target.create "WebAppDeploy" (fun _ ->
 
 Target.create "FunctionsDeploy" (fun _ ->
     let deployDir = Path.combine functionsPath @"bin\Debug\netstandard2.0"
+    printfn "DeployDir %s" deployDir
     deploy "FunctionsDeploy.zip" deployDir deploymentSettings.FunctionApp.Name deploymentSettings.FunctionApp.Password
 )
     
