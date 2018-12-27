@@ -117,7 +117,6 @@ Target.create "WebAppDeploy" (fun _ ->
 
 Target.create "FunctionsDeploy" (fun _ ->
     let deployDir = Path.combine functionsPath @"bin\Debug\netstandard2.0"
-    printfn "DeployDir %s" deployDir
     deploy "FunctionsDeploy.zip" deployDir deploymentSettings.FunctionApp.Name deploymentSettings.FunctionApp.Password
 )
     
