@@ -52,7 +52,7 @@ IF NOT DEFINED KUDU_SYNC_CMD (
 :: Deployment
 :: ----------
 
-echo Handling function App deployment.
+echo Custom function App deployment.
 
 dotnet clean ServerFunctions.sln
 dotnet restore ServerFunctions.sln

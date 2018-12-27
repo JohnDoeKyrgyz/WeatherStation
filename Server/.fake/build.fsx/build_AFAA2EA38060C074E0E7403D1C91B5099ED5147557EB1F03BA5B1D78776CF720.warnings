@@ -1,0 +1,3 @@
+c:\working\Personal\WeatherStation\Server\build.fsx (47,8)-(47,26): Warning FS0044: This construct is deprecated. use the CreateProcess APIs instead.
+c:\working\Personal\WeatherStation\Server\build.fsx (63,8)-(63,26): Warning FS0044: This construct is deprecated. use the CreateProcess APIs instead.
+c:\working\Personal\WeatherStation\Server\build.fsx (107,33)-(107,35): Error FS0043: The type 'string' does not support the operator '!!'

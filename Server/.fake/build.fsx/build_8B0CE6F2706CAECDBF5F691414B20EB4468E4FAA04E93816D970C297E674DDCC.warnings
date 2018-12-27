@@ -1,0 +1,2 @@
+c:\working\Personal\WeatherStation\Server\build.fsx (48,8)-(48,26): Warning FS0044: This construct is deprecated. use the CreateProcess APIs instead.
+c:\working\Personal\WeatherStation\Server\build.fsx (64,8)-(64,26): Warning FS0044: This construct is deprecated. use the CreateProcess APIs instead.
