@@ -257,7 +257,7 @@ module Device =
                         (setValue (fun settings value -> {settings with UseDeepSleep = value}))
                     |> simpleFormControl "Use Deep Sleep"
 
-                    button "Save" (fun _ -> dispatch UpdateSettings)])]
+                    button "Save" (fun _ -> dispatch UpdateSettings) Fa.I.Save])]
      
         [Client.tabs
             (SelectTab >> dispatch) [

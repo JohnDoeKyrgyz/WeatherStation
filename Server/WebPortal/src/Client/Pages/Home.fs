@@ -2,11 +2,14 @@ namespace WeatherStation.Client.Pages
 module Home =
     open WeatherStation.Client
     open WeatherStation.Shared
-    open Elmish
 
     open Fable.Helpers.React
     open Fable.Helpers.React.Props
+
+    open Elmish
+
     open Fulma
+    open FontAwesome.Fa.I
 
     open Client
 
@@ -46,7 +49,7 @@ module Home =
                 tr [] [
                     td [] [str "Name"]
                     td [] [str "Status"]
-                    td [] [button "Reload" (fun _ -> dispatch (Stations Loading))]]]
+                    td [] [button "Reload" (fun _ -> dispatch (Stations Loading)) Refresh]]]
             tbody [] 
                 [for station in stations do
                     let statusColor =
@@ -61,11 +64,7 @@ module Home =
                                 else yield str station.Name]
                             td [] [
                                 Tag.tag [Tag.Color statusColor] [str (string station.Status)]]
-                            td [] [button "Details" (fun _ -> dispatch (Select station))]]]]
+                            td [] [button "Details" (fun _ -> dispatch (Select station)) Table]]]]
 
     let view dispatch model = [
-        yield! loader model.Stations (stationsList dispatch)
-        yield 
-            Columns.columns [] [
-                Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]
-
+        yield! loader model.Stations (stationsList dispatch)]

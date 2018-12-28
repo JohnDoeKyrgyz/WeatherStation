@@ -26,9 +26,11 @@ module Client =
             return Decode.Auto.unsafeFromString<'T> text
         }
 
-    let button txt onClick =
+    let button txt onClick icon =
         Button.button [ Button.IsFullWidth; Button.Color IsPrimary; Button.OnClick onClick ] [
-            str txt ]
+            span [][str txt]
+            span [Class "icon"][
+                Icon.faIcon [] [Fa.icon icon]]]
 
     let tableRow values = tr [] [for value in values -> td [] [str value]]
 
