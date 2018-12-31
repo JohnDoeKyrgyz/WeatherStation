@@ -47,9 +47,9 @@ module Home =
         Table.table [] [
             thead [] [
                 tr [] [
-                    td [] [str "Name"]
-                    td [] [str "Status"]
-                    td [] [button "Reload" (fun _ -> dispatch (Stations Loading)) Refresh]]]
+                    th [] [str "Name"]
+                    th [] [str "Status"]
+                    th [] [button "Reload" (fun _ -> dispatch (Stations Loading)) Refresh]]]
             tbody [] 
                 [for station in stations do
                     let statusColor =
