@@ -5,6 +5,8 @@ Server/WebPortal/src/Server/App.config
 .vs
 obj/
 bin/
+build/
+node_modules/
 Server/WebPortal/src/Server/secrets.json
 Server/Tests/WeatherStationFunctions.Integration.Tests/Secrets.json
 Server/ParticleToken.json
