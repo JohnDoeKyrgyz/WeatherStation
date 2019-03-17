@@ -13,6 +13,8 @@ module Logic =
     open WeatherStation.Shared
     open WeatherStation
 
+    let toOption value = if isNull value then None else Some value
+
     let getWeatherStations activeThreshold allStations = 
         async {
             let! stations = allStations
@@ -24,9 +26,7 @@ module Logic =
                     yield {
                         Key = {DeviceId = station.DeviceId.Trim(); DeviceType = station.DeviceType.Trim()}
                         Name = station.DeviceId.Trim()
-                        WundergroundId = 
-                            let value = station.WundergroundStationId
-                            if value = null then Some "" else Some (value.Trim())
+                        WundergroundId = station.WundergroundStationId |> toOption |> Option.map (fun v -> v.Trim())
                         Status = status
                         Location = {
                             Latitude = decimal station.Latitude
@@ -34,33 +34,36 @@ module Logic =
                         }
                     }] }
 
-    let getWeatherStationDetails data = async {
+    let createReading (reading : Model.Reading) = {
+        DeviceTime = reading.DeviceTime
+        ReadingTime = reading.ReadingTime
+        SupplyVoltage = reading.SupplyVoltage
+        BatteryChargeVoltage = reading.BatteryChargeVoltage
+        PanelVoltage = reading.PanelVoltage
+        TemperatureCelciusHydrometer = reading.TemperatureCelciusHydrometer
+        TemperatureCelciusBarometer = reading.TemperatureCelciusBarometer
+        HumidityPercentHydrometer = reading.HumidityPercentHydrometer
+        HumidityPercentBarometer = reading.HumidityPercentBarometer
+        PressurePascal = reading.PressurePascal
+        GustMetersPerSecond = reading.GustMetersPerSecond
+        SpeedMetersPerSecond = reading.SpeedMetersPerSecond
+        DirectionDegrees = reading.DirectionDegrees
+    }
+
+    let getWeatherStationDetails pageSizeHours data = async {
         match! data with
         | Some (station : WeatherStation, readings : Model.Reading list ) ->
             let readings = readings |> List.sortByDescending (fun reading -> reading.ReadingTime)
             return
                 Some {
                     Key = {DeviceId = station.DeviceId; DeviceType = station.DeviceType}
-                    Name = station.WundergroundStationId
-                    WundergroundId = station.WundergroundStationId
+                    Name = station.DeviceId
+                    CreatedOn = station.CreatedOn
+                    WundergroundId = toOption station.WundergroundStationId
                     Location = {Latitude = 0.0m; Longitude = 0.0m}
-                    LastReading = None
-                    Readings = [
-                        for reading in readings -> {
-                            DeviceTime = reading.DeviceTime
-                            ReadingTime = reading.ReadingTime
-                            SupplyVoltage = reading.SupplyVoltage
-                            BatteryChargeVoltage = reading.BatteryChargeVoltage
-                            PanelVoltage = reading.PanelVoltage
-                            TemperatureCelciusHydrometer = reading.TemperatureCelciusHydrometer
-                            TemperatureCelciusBarometer = reading.TemperatureCelciusBarometer
-                            HumidityPercentHydrometer = reading.HumidityPercentHydrometer
-                            HumidityPercentBarometer = reading.HumidityPercentBarometer
-                            PressurePascal = reading.PressurePascal
-                            GustMetersPerSecond = reading.GustMetersPerSecond
-                            SpeedMetersPerSecond = reading.SpeedMetersPerSecond
-                            DirectionDegrees = reading.DirectionDegrees
-                        }]
+                    LastReading = station.LastReading
+                    Readings = readings |> List.map createReading
+                    PageSizeHours = pageSizeHours
                 }
         | None -> return None
     }
@@ -69,7 +72,7 @@ module Logic =
     let particleSettingsJson = __SOURCE_DIRECTORY__ + "/../../../../DeviceFirmware/ParticleElectron/src/Settings.json"
     type ParticleSettings = JsonProvider< particleSettingsJson >
 
-    let updateParticleDeviceSettings key (settings : StationSettings) =
+    let updateParticleDeviceSettings (key : StationKey) (settings : StationSettings) =
         if parseDeviceType key.DeviceType <> Particle then failwithf "DeviceType %s is not supported" key.DeviceType
         task {
             let! particleCloud = ParticleConnect.connect |> Async.StartAsTask

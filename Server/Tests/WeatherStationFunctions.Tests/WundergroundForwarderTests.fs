@@ -30,6 +30,7 @@ module WundergroundForwarderTests =
         WundergroundStationId = "K1234"
         WundergroundPassword = "fuzzybunny"
         DirectionOffsetDegrees = None
+        CreatedOn = DateTime.Now
         Latitude = 0.0
         Longitude = 0.0
         LastReading = None
@@ -192,6 +193,8 @@ module WundergroundForwarderTests =
         testList "Regression Tests" [
             testAsync "Insert sample record" {
                 let! weatherStationRepository = AzureStorage.weatherStationRepository connectionString
+
+                let weatherStation = {weatherStation with CreatedOn = weatherStation.CreatedOn.ToUniversalTime()}
                 do! weatherStationRepository.Save weatherStation
 
                 let! weatherStationReloaded = weatherStationRepository.Get Particle weatherStation.DeviceId

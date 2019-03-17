@@ -13,6 +13,7 @@ module LogicTests =
         WundergroundStationId = "KSTAT"
         WundergroundPassword = "pass"
         DirectionOffsetDegrees = None
+        CreatedOn = DateTime.Now
         Latitude = 0.0
         Longitude = 0.0
         LastReading = None
@@ -60,6 +61,6 @@ module LogicTests =
                 let! stations = getWeatherStations activeThreshold stations
 
                 Expect.equal stations.Length 1 "Should be two stations"
-                Expect.equal stations.[0].WundergroundId (Some "") "Unexpected station"
+                Expect.isNone stations.[0].WundergroundId "Unexpected station"
                 Expect.equal stations.[0].Key.DeviceId weatherStation.DeviceId "Unexpected device id"}
             ]

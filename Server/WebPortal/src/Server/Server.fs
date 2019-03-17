@@ -7,6 +7,8 @@ module Server =
 
     open Microsoft.Extensions.Logging
     open Microsoft.Extensions.DependencyInjection
+    open Microsoft.AspNetCore.Builder
+    open Microsoft.AspNetCore.Http
 
     open Saturn
     open Giraffe
@@ -17,10 +19,7 @@ module Server =
     open WeatherStation.Data
     open WeatherStation.Shared
     open Logic
-    open Model
-    open Microsoft.AspNetCore.Http
 
-    let publicPath = Path.GetFullPath "../Client/public"
     let port = 8085us
 
     #if DEBUG
@@ -46,23 +45,27 @@ module Server =
         return Ok stations
     }
 
-    let getStationDetails key = async {
+    let getStationDetails (key : StationKey) = async {
         let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
-        let! readingsCount = SystemSettings.readingsCount systemSettingsRepository.GetSettingWithDefault
+        let! defaultPageSize = SystemSettings.defaultPageSize systemSettingsRepository.GetSettingWithDefault
         let! stationDetails =
-            weatherStationDetails connectionString readingsCount key
-            |> getWeatherStationDetails
+            weatherStationDetails connectionString defaultPageSize key
+            |> getWeatherStationDetails defaultPageSize.TotalHours
         return
             match stationDetails with
             | Some details -> Ok details
             | None -> Error (sprintf "No device %A" key) }
+
+    let getReadingsPage key fromDate toDate = async {
+        let! readings = readings connectionString key fromDate toDate
+        return Ok (readings |> List.map createReading) }
 
     let getSettings key = async {
         let! settings = weatherStationSettings connectionString key
         return Ok settings
     }
 
-    let setSettings key settings next (ctx : HttpContext) = task {
+    let setSettings (key : StationKey) settings next (ctx : HttpContext) = task {
         do! updateWeatherStationSettings connectionString key settings
         match settings with
         | Some settings ->
@@ -71,10 +74,22 @@ module Server =
         | None -> return! Successful.OK "Cleared settings" next ctx            
     }
 
+    [<CLIMutable>]
+    type PageKey = {
+        DeviceType : string
+        DeviceId : string
+        FromDate : string
+        TooDate : string
+    }
+
     let webApp =
         choose [        
             GET >=> route "/api/stations" >=> (read getStations)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}" (getStationDetails >> read)
+            GET >=>
+                routeBind<PageKey>
+                    "/api/stations/{DeviceType}/{DeviceId}/{FromDate}/{TooDate}"
+                    (fun key -> getReadingsPage {DeviceType = key.DeviceType; DeviceId = key.DeviceId} (UrlDateTime.fromUrlDate key.FromDate) (UrlDateTime.fromUrlDate key.TooDate) |> read)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (getSettings >> read)
             POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (fun key -> bindJson (setSettings key))
         ]            
@@ -84,12 +99,22 @@ module Server =
         fableJsonSettings.Converters.Add(Fable.JsonConverter())
         services.AddSingleton<IJsonSerializer>(NewtonsoftJsonSerializer fableJsonSettings)
 
+    let tryGetEnv = System.Environment.GetEnvironmentVariable >> function null | "" -> None | x -> Some x  
+
+    let publicPath = tryGetEnv "public_path" |> Option.defaultValue "../Client/public" |> Path.GetFullPath      
+
+    let configureAzure (services:IServiceCollection) =
+        tryGetEnv "APPINSIGHTS_INSTRUMENTATIONKEY"
+        |> Option.map services.AddApplicationInsightsTelemetry
+        |> Option.defaultValue services        
+
     let app = application {
         url ("http://0.0.0.0:" + port.ToString() + "/")
         use_router webApp
         memory_cache
         use_static publicPath
         service_config configureSerialization
+        service_config configureAzure
         use_gzip
     }
 

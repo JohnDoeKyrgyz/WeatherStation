@@ -1,0 +1,14 @@
+{
+    "WebApp" : {
+        "Name" : "Name",
+        "FTP" : "Url",
+        "Username" : "Username",
+        "Password" : "Password"
+    },
+    "FunctionApp" : {
+        "Name" : "Name",
+        "FTP" : "Url",
+        "Username" : "Username",
+        "Password" : "Password"
+    }
+}

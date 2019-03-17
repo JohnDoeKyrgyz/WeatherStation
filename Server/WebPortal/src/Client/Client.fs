@@ -1,4 +1,5 @@
 namespace WeatherStation.Client
+open Fulma
 module Client =
     open System
     open Fable.Helpers.React
@@ -25,9 +26,11 @@ module Client =
             return Decode.Auto.unsafeFromString<'T> text
         }
 
-    let button txt onClick =
+    let button txt onClick icon =
         Button.button [ Button.IsFullWidth; Button.Color IsPrimary; Button.OnClick onClick ] [
-            str txt ]
+            span [][str txt]
+            span [Class "icon"][
+                Icon.faIcon [] [Fa.icon icon]]]
 
     let tableRow values = tr [] [for value in values -> td [] [str value]]
 
@@ -74,30 +77,19 @@ module Client =
 
     module P = Fable.Helpers.React.Props
     
-    type Point = {x: string; y: float}
-    type Voltage = {time: string; battery: float; panel: float}
-
-    let readingsChart (data : seq<Point>) =    
-        lineChart [ Chart.Height 300.0; Chart.Width 900.0; Chart.Data (data |> Array.ofSeq) ] [
-            xaxis [Cartesian.DataKey "x"; Cartesian.Label "x"] []
-            yaxis [] []
-            tooltip [][]
-            cartesianGrid [][]
-            line [Cartesian.DataKey "y"; P.Fill "#88c188"] [] ]
-
     let margin t r b l =
-        Chart.Margin { top = t; bottom = b; right = r; left = l }            
+        Chart.Margin { top = t; bottom = b; right = r; left = l }
 
-    let voltageChart (data : seq<Voltage>) =
+    let readingsChart data lineInfos =
         responsiveContainer [Chart.Height 300.0] [
-            lineChart [ margin 0. 50. 120. 0.; Chart.Data (data |> Array.ofSeq) ] [            
-                xaxis [Cartesian.DataKey "time"; Cartesian.Custom("angle", 67.5); Cartesian.Custom("textAnchor", "start")] []
-                yaxis [] []
-                tooltip [][]
-                cartesianGrid [][]
-                legend [Legend.VerticalAlign "top"] []
-                line [Cartesian.DataKey "battery"; P.Fill "red"; Cartesian.Stroke "red"] []
-                line [Cartesian.DataKey "panel"; P.Fill "orange"; Cartesian.Stroke "orange"] [] ]]
+            lineChart [margin 0. 50. 120. 0.; Chart.Data (data |> Array.ofSeq)] [            
+                yield xaxis [Cartesian.DataKey "time"; Cartesian.Custom("angle", 67.5); Cartesian.Custom("textAnchor", "start")] []
+                yield yaxis [][]
+                yield tooltip [][]
+                yield cartesianGrid [][]
+                yield legend [Legend.VerticalAlign "top"] []
+                for (key, color) in lineInfos do
+                    yield line [Cartesian.DataKey key; P.Fill color; Cartesian.Stroke color][]]]    
 
     let formControl label control additionalControls =
         Field.div [Field.Option.IsHorizontal] [

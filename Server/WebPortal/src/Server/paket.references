@@ -5,3 +5,4 @@ System.Configuration.ConfigurationManager
 Otp.NET
 FSharp.Data
 Particle.SDK
+Microsoft.ApplicationInsights.AspNetCore

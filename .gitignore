@@ -11,3 +11,6 @@ Server/WebPortal/src/Server/secrets.json
 Server/Tests/WeatherStationFunctions.Integration.Tests/Secrets.json
 Server/ParticleToken.json
 Server/WebPortal/src/Server/ParticleToken.json
+Server/local.build.settings.json
+Server/*.zip
+Server/.fake/

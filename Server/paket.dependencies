@@ -19,6 +19,7 @@ group Server
 	nuget FSharp.Data
 	nuget Otp.NET
 	nuget Particle.SDK
+    nuget Microsoft.ApplicationInsights.AspNetCore
 
 group Client
     storage: none
@@ -42,6 +43,8 @@ group Build
     storage: none
     source https://api.nuget.org/v3/index.json
 
+    nuget FSharp.Data
+    nuget Fake.IO.Zip
     nuget Fake.Core.Target
     nuget Fake.DotNet.Cli
     

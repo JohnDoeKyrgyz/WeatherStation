@@ -23,7 +23,8 @@ module Repository =
     type IReadingsRepository =
         inherit IRepository<Reading>
         abstract member GetHistory : deviceId:string -> cutOff:DateTime -> Async<Reading list>
-        abstract member GetRecentReadings : deviceId:string -> count:int -> Async<Reading list>
+        abstract member GetPage : deviceId:string -> from:DateTime -> too:DateTime -> Async<Reading list>
+        abstract member GetRecentReadings : deviceId:string -> cutOff:DateTime -> Async<Reading list>
 
     let createTableIfNecessary (connection : CloudTableClient) tableName =
         let tableReference = connection.GetTableReference(tableName)
@@ -106,6 +107,14 @@ module Repository =
         inherit AzureStorageRepository<Reading>(connection, tableName)        
 
         interface IReadingsRepository with
+            member this.GetPage(deviceId: string) (from: DateTime) (too: DateTime): Async<Reading list> = 
+                async {
+                    let! readings =
+                        Query.all<Reading>
+                        |> Query.where <@ fun reading key -> key.PartitionKey = deviceId && from <= reading.ReadingTime && reading.ReadingTime <= too @>                        
+                        |> runQuery connection tableName
+                    return readings
+                }
             member this.GetHistory deviceId cutOff =
                 async {
                     let! readings =
@@ -114,12 +123,11 @@ module Repository =
                         |> runQuery connection tableName
                     return readings
                 }
-            member this.GetRecentReadings deviceId count =
+            member this.GetRecentReadings deviceId (cutOff: DateTime) =
                 async {
                     let! readings =
                         Query.all<Reading>
-                        |> Query.where <@ fun reading key -> key.PartitionKey = deviceId @>
-                        |> Query.take count
+                        |> Query.where <@ fun reading key -> key.PartitionKey = deviceId && reading.ReadingTime > cutOff @>
                         |> runQuery connection tableName
                     return readings
                 }

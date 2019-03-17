@@ -31,6 +31,7 @@ type Reading = {
     SpeedMetersPerSecond : double
     DirectionDegrees : double
 }
+
 [<CLIMutable>]
 type StationKey = {
     DeviceId : string
@@ -40,10 +41,12 @@ type StationKey = {
 type StationDetails = {
     Key : StationKey
     Name : string
-    WundergroundId : string
+    WundergroundId : string option
     Location : Location
     LastReading : DateTime option
+    CreatedOn : DateTime
     Readings : Reading list
+    PageSizeHours : float
 }
 
 type Station = {
@@ -64,3 +67,10 @@ type StationSettings = {
 }
 with
     static member Default = {Brownout = true; BrownoutVoltage = 4.7m; BrownoutMinutes = 2880; SleepTime = 360; DiagnosticCycles = 0; UseDeepSleep = true}
+
+module UrlDateTime =
+    open System.Globalization
+
+    let UrlDateTimeFormat = "yyyyMMddTHHmmssZ"
+    let toUrlDate (value : DateTime) = value.ToString(UrlDateTimeFormat)
+    let fromUrlDate (value : string) = DateTime.ParseExact(value, UrlDateTimeFormat, CultureInfo.InvariantCulture)

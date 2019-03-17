@@ -2,11 +2,14 @@ namespace WeatherStation.Client.Pages
 module Home =
     open WeatherStation.Client
     open WeatherStation.Shared
-    open Elmish
 
     open Fable.Helpers.React
     open Fable.Helpers.React.Props
+
+    open Elmish
+
     open Fulma
+    open FontAwesome.Fa.I
 
     open Client
 
@@ -44,9 +47,9 @@ module Home =
         Table.table [] [
             thead [] [
                 tr [] [
-                    td [] [str "Name"]
-                    td [] [str "Status"]
-                    td [] [button "Reload" (fun _ -> dispatch (Stations Loading))]]]
+                    th [] [str "Name"]
+                    th [] [str "Status"]
+                    th [] [button "Reload" (fun _ -> dispatch (Stations Loading)) Refresh]]]
             tbody [] 
                 [for station in stations do
                     let statusColor =
@@ -56,15 +59,12 @@ module Home =
                     yield
                         tr [] [
                             td [] [
-                                if station.WundergroundId.IsSome then 
-                                    yield a [Href (sprintf "https://www.wunderground.com/personal-weather-station/dashboard?ID=%s" station.WundergroundId.Value) ] [str station.Name]]
+                                if station.WundergroundId.IsSome
+                                then yield a [Href (sprintf "https://www.wunderground.com/personal-weather-station/dashboard?ID=%s" station.WundergroundId.Value) ] [str station.Name]
+                                else yield str station.Name]
                             td [] [
                                 Tag.tag [Tag.Color statusColor] [str (string station.Status)]]
-                            td [] [button "Details" (fun _ -> dispatch (Select station))]]]]
+                            td [] [button "Details" (fun _ -> dispatch (Select station)) Table]]]]
 
     let view dispatch model = [
-        yield! loader model.Stations (stationsList dispatch)
-        yield 
-            Columns.columns [] [
-                Column.column [] [ button "Reload" (fun _ -> dispatch (Stations Loading))]]]
-
+        yield! loader model.Stations (stationsList dispatch)]
