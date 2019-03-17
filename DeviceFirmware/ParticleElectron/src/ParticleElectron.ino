@@ -56,6 +56,7 @@ Settings settings;
 #define diagnosticMode settings.diagnositicCycles
 unsigned long duration;
 
+bool brownout;
 Reading initialReading;
 
 char messageBuffer[255];
@@ -127,6 +128,11 @@ void onError(char* message)
     Serial.println(message);
 }
 
+bool checkBrownout()
+{
+    return settings.brownout && gauge.getVCell() < settings.brownoutVoltage;
+}
+
 void deviceSetup()
 {
     duration = millis();
@@ -138,26 +144,29 @@ void deviceSetup()
     //Load saved settings;
     settings = *loadSettings();
 
-    if(diagnosticMode)
+    if(!(brownout = checkBrownout()))
     {
-        pinMode(LED, OUTPUT);
-        digitalWrite(LED, HIGH);
-        settings.diagnositicCycles--;
+        if(diagnosticMode)
+        {
+            pinMode(LED, OUTPUT);
+            digitalWrite(LED, HIGH);
+            settings.diagnositicCycles--;
 
-        saveSettings(&settings);
-    }
+            saveSettings(&settings);
+        }
 
-    //turn on the sensors    
-    pinMode(SENSOR_POWER, OUTPUT);    
-    digitalWrite(SENSOR_POWER, HIGH);
+        //turn on the sensors    
+        pinMode(SENSOR_POWER, OUTPUT);    
+        digitalWrite(SENSOR_POWER, HIGH);
 
-    dht.begin();
-    bme280.begin(0x76);
+        dht.begin();
+        bme280.begin(0x76);
 
-    //take an initial wind reading
-    if(!(initialReading.anemometerRead = readAnemometer(&initialReading)))
-    {
-        onError("ERROR: Could not get initial wind reading");
+        //take an initial wind reading
+        if(!(initialReading.anemometerRead = readAnemometer(&initialReading)))
+        {
+            onError("ERROR: Could not get initial wind reading");
+        }
     }
 }
 STARTUP(deviceSetup());
@@ -180,42 +189,29 @@ void onSettingsUpdate(const char* event, const char* data)
     digitalWrite(LED, LOW);
 }
 
-void checkBrownout()
-{
-    float voltage;
-    if(settings.brownout)
-    {
-        if (voltage = gauge.getVCell() < settings.brownoutVoltage)
-        {
-            Serial.print("BROWNOUT ");
-            Serial.println(voltage);
-            System.sleep(SLEEP_MODE_SOFTPOWEROFF, settings.brownoutMinutes * 60);
-
-            Particle.connect();
-            char* buffer = messageBuffer;
-            sprintf(buffer, "%f:%d", voltage, settings.brownoutMinutes);
-            Particle.publish("Brownout", buffer, 60, PRIVATE);
-            Particle.process();
-        }
-        else 
-        {
-            Serial.println("NO BROWNOUT");
-        }
-    }
-}
-
 void setup()
 {
     Serial.begin(115200);
     
-    checkBrownout();
-
     JsonObject& settingsJson = serialize(&settings);
     Serial.print("SETTINGS: ");
     settingsJson.printTo(Serial);
 
     Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
     Particle.connect();
+
+    if(brownout)
+    {
+        Serial.print("BROWNOUT ");
+        Serial.println(gauge.getVCell());
+        
+        char* buffer = messageBuffer;
+        sprintf(buffer, "%f:%d", voltage, settings.brownoutMinutes);
+        Particle.publish("Brownout", buffer, 60, PRIVATE);
+        Particle.process();
+
+        System.sleep(SLEEP_MODE_SOFTPOWEROFF, settings.brownoutMinutes * 60);        
+    }
 }
 
 
