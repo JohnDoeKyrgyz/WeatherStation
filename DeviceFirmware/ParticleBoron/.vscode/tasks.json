@@ -1,0 +1,22 @@
+{ 
+    "version": "0.1.0", 
+    "command": "particle", 
+    "isShellCommand": true, 
+    "args": [], 
+    "showOutput": "always", 
+    "echoCommand": true, 
+    "tasks": [ 
+        { 
+            "taskName": "compile", 
+            "suppressTaskName": false, 
+            "isBuildCommand": true,             
+            "args": ["boron", "${workspaceRoot}", "--saveTo", "${workspaceRoot}/firmware.bin"] 
+        }, 
+        { 
+            "taskName": "flash",             
+            "suppressTaskName": false, 
+            "isTestCommand": true, 
+            "args": ["--usb", "firmware.bin"] 
+        }    
+    ]     
+    } 
