@@ -3,7 +3,7 @@
         {
             "name": "Win32",
             "includePath": [
-                ".",
+                "C:\\working\\Arduino\\libraries\\ArduinoTrace",
                 "C:\\Users\\jatwood\\AppData\\Local\\Arduino15\\packages\\attiny\\hardware\\avr\\1.0.2\\**",
                 "C:\\Users\\jatwood\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\**",
                 "C:\\Users\\jatwood\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.21\\**"

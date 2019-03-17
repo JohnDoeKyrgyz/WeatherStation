@@ -1,4 +1,3 @@
-//https://github.com/jerabaul29/ArduinoDebugMacros
 /*
  Written by Jean Rabault, jean.rblt@gmail.com, May 2018.
  Free to use as long as this header is retained.
@@ -14,6 +13,10 @@
  - no expansion of macros inside strings
  - strings one after the other are automatically concatenated
 */
+
+#ifndef PREPROCTEST  // to allow doing a g++ -E for checking that the macros are OK
+#  include <Arduino.h>
+#endif
 
 #include "Parameters.h"
 

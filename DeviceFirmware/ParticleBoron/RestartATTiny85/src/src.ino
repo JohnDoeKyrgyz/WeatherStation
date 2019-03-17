@@ -1,13 +1,14 @@
 #include <avr/sleep.h>
 #include <math.h>
 #include <SoftwareSerial.h>
-#include "DebugMacros.h"
-#include "Parameters.h"
 
-#define RX    3   // *** D3, Pin 2
-#define TX    4   // *** D4, Pin 3
+#define RX 3   // *** D3, Pin 2
+#define TX 4   // *** D4, Pin 3
 
 SoftwareSerial Serial(RX, TX);
+
+#include "DebugMacros.h"
+#include "Parameters.h"
 
 // Utility macros
 #define adc_disable() (ADCSRA &= ~(1 << ADEN)) // disable ADC (before power-off)
@@ -53,7 +54,7 @@ int timerPrescaler;
 ISR(WDT_vect)
 {
     DEBPMSG("Wakeup");
-    DEPVAR(timerCounter);
+    //DEBPVAR(timerCounter)
 
     timerCounter--;    
     if(timerCounter > 0)
@@ -69,14 +70,14 @@ void sleep(int milliseconds)
     while(prescales[timerPrescaler] > milliseconds && timerPrescaler > 0) timerPrescaler--;
     int prescale = prescales[timerPrescaler];
 
-    DEPVAR(timerPrescaler);
-    DEPVAR(prescale);
+    DEBPVAR(timerPrescaler)
+    DEBPVAR(prescale)
 
     timerCounter = milliseconds / prescale;
     int remainder = milliseconds - (timerCounter * prescale);
 
-    DEPVAR(timerCounter);
-    DEPVAR(remainder);
+    DEBPVAR(timerCounter)
+    DEBPVAR(remainder)
 
     setup_watchdog(timerPrescaler);
     sleep_enable();

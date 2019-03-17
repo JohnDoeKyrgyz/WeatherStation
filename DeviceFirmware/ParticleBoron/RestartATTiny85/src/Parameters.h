@@ -1,4 +1,3 @@
-//https://github.com/jerabaul29/ArduinoDebugMacros
 #ifndef PARAMETERS
 #define PARAMETERS
 

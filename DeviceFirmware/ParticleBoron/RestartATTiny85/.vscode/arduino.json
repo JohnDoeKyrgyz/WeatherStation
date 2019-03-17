@@ -2,7 +2,7 @@
     "board": "attiny:avr:ATtinyX5",
     "configuration": "cpu=attiny85,clock=internal8",
     "programmer": "Arduino as ISP",
-    "sketch": "Restarter.ino",
+    "sketch": "src\\src.ino",
     "port": "COM32",
     "output": "./build"
 }
