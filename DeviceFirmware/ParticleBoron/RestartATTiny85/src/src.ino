@@ -114,6 +114,8 @@ void blink()
 // the loop function runs over and over again forever
 void loop()
 {
+    TinyWireS_stop_check();
+    
     while(requestedSleepTime == -1)
     {
         tws_delay(1000);
