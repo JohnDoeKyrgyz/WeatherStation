@@ -54,7 +54,7 @@ int timerPrescaler;
 ISR(WDT_vect)
 {
     DEBPMSG("Wakeup");
-    //DEBPVAR(timerCounter)
+    DEBPVAR(timerCounter)
 
     timerCounter--;    
     if(timerCounter > 0)
