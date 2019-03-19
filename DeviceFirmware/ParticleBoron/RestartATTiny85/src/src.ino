@@ -37,15 +37,16 @@ void setup()
 {
     adc_disable();
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    
+    TinyWireS.begin(I2C_SLAVE_ADDRESS);
+    TinyWireS.onReceive(onReceiveEvent);
 
     // initialize digital pin LED_BUILTIN as an output.
     pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
 
     DEBINIT // to be able to use debug output later on
     DEBPSTATUS  // print debug status
-
-    TinyWireS.begin(I2C_SLAVE_ADDRESS);
-    TinyWireS.onReceive(onReceiveEvent);
 
     DEBPMSG("Restart Timer");
 }
@@ -113,7 +114,8 @@ void loop()
 {
     while(requestedSleepTime == -1)
     {
-        tws_delay(200);
+        tws_delay(1000);
+        DEBPMSG("WAITING");
     }
     
     DEBPMSG("SLEEP REQUESTED");
