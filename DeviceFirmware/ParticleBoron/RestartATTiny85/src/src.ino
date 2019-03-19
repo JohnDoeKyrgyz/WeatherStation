@@ -16,7 +16,7 @@ SoftwareSerial Serial(RX, TX);
 #define adc_disable() (ADCSRA &= ~(1 << ADEN)) // disable ADC (before power-off)
 #define adc_enable() (ADCSRA |= (1 << ADEN))   // re-enable ADC
 
-#define LED_BUILTIN 0
+#define LED_BUILTIN 1
 
 //table of the time increments in milliseconds that the ATtiny85 watchdog can sleep
 int prescales[] = {16, 32, 64, 128, 250, 500, 1000, 2000, 4000, 8000};
@@ -47,6 +47,8 @@ void setup()
 
     DEBINIT // to be able to use debug output later on
     DEBPSTATUS  // print debug status
+
+    blink();
 
     DEBPMSG("Restart Timer");
 }
