@@ -24,7 +24,14 @@ void setup()
 void loop()
 {
     Serial.println("Enter sleepTime");
+    while(!Serial.available())
+    {
+        delay(500);
+    }
     int sleepTimeRequest = Serial.parseInt();
+    Serial.print("Sleeping for ");
+    Serial.print(sleepTimeRequest);
+    Serial.println(" milliseconds");
     
     Wire.beginTransmission(0x4);
     Wire.write(sleepTimeRequest);
