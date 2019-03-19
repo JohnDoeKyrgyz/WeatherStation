@@ -4,11 +4,13 @@
 
 #define RX 3   // *** D3, Pin 2
 #define TX 4   // *** D4, Pin 3
-
 SoftwareSerial Serial(RX, TX);
 
 #include "DebugMacros.h"
 #include "Parameters.h"
+
+#define I2C_SLAVE_ADDRESS 0x4
+#include "TinyWireS.h"
 
 // Utility macros
 #define adc_disable() (ADCSRA &= ~(1 << ADEN)) // disable ADC (before power-off)
@@ -18,6 +20,17 @@ SoftwareSerial Serial(RX, TX);
 
 //table of the time increments in milliseconds that the ATtiny85 watchdog can sleep
 int prescales[] = {16, 32, 64, 128, 250, 500, 1000, 2000, 4000, 8000};
+
+int requestedSleepTime = -1;
+void onReceiveEvent(uint8_t length)
+{
+    if (length == 2)
+    {        
+        requestedSleepTime = 0;
+        requestedSleepTime = TinyWireS.receive();
+        requestedSleepTime &= (TinyWireS.receive()) >> 8;        
+    }
+}
 
 // the setup function runs once when you press reset or power the board
 void setup()
@@ -30,6 +43,9 @@ void setup()
 
     DEBINIT // to be able to use debug output later on
     DEBPSTATUS  // print debug status
+
+    TinyWireS.begin(I2C_SLAVE_ADDRESS);
+    TinyWireS.onReceive(onReceiveEvent);
 
     DEBPMSG("Restart Timer");
 }
@@ -95,6 +111,14 @@ void blink()
 // the loop function runs over and over again forever
 void loop()
 {
+    while(requestedSleepTime == -1)
+    {
+        tws_delay(200);
+    }
+    
+    DEBPMSG("SLEEP REQUESTED");
+    DEBPVAR(requestedSleepTime);
+
+    sleep(requestedSleepTime);
     blink();    
-    sleep(4500);
 }
