@@ -31,8 +31,7 @@ void setup()
     DEBINIT // to be able to use debug output later on
     DEBPSTATUS  // print debug status
 
-    Serial.begin(9600);
-    Serial.println("Restart Timer");
+    DEBPMSG("Restart Timer");
 }
 
 void setup_watchdog(int timerPrescaler)
@@ -96,7 +95,6 @@ void blink()
 // the loop function runs over and over again forever
 void loop()
 {
-    Serial.println(".");
     blink();    
     sleep(4500);
 }
