@@ -34,10 +34,13 @@ void loop()
     Serial.println(" milliseconds");
     
     Wire.beginTransmission(0x4);
+    Serial.println("Sending data to I2C slave");
     Wire.write(sleepTimeRequest);
     Wire.endTransmission();
-
+    
     unsigned long sleepStartTime = millis();
+
+    Serial.println("Transmission complete");
 
     while(triggeredTime == 0)
     {

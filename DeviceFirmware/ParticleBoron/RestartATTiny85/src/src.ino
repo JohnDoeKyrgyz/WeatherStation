@@ -9,7 +9,7 @@ SoftwareSerial Serial(RX, TX);
 #include "DebugMacros.h"
 #include "Parameters.h"
 
-#define I2C_SLAVE_ADDRESS 0x4
+#define I2C_SLAVE_ADDRESS 8
 #include "TinyWireS.h"
 
 // Utility macros
@@ -24,6 +24,9 @@ int prescales[] = {16, 32, 64, 128, 250, 500, 1000, 2000, 4000, 8000};
 int requestedSleepTime = -1;
 void onReceiveEvent(uint8_t length)
 {
+    DEBPMSG("Received Message");
+    DEBPVAR(length)
+    
     if (length == 2)
     {        
         requestedSleepTime = 0;
@@ -113,18 +116,18 @@ void blink()
 
 // the loop function runs over and over again forever
 void loop()
-{
-    TinyWireS_stop_check();
-    
+{   
+    DEBPMSG("LISTENING");
     while(requestedSleepTime == -1)
     {
-        tws_delay(1000);
-        DEBPMSG("WAITING");
+        TinyWireS_stop_check();
+        yield();
     }
     
     DEBPMSG("SLEEP REQUESTED");
     DEBPVAR(requestedSleepTime);
 
     sleep(requestedSleepTime);
-    blink();    
+    blink();
+    requestedSleepTime = -1;    
 }
