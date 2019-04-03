@@ -53,20 +53,24 @@ void blink()
 }
 
 int loopCounter = 0;
+int dotCounter = 0;
 #define LOOP_COUNT 1000
-#define DOTS 80
+#define DOTS 200
 
 // the loop function runs over and over again forever
 void loop()
 {   
     TinyWireS_stop_check();
-    if(loopCounter++ == LOOP_COUNT)
+    loopCounter++;
+    if(loopCounter == LOOP_COUNT)
     {
         Serial.print(".");
-        if(loopCounter >= LOOP_COUNT * DOTS )
-        {
-            loopCounter = 0;
-            Serial.println();
-        }        
+        dotCounter++;
+        if(dotCounter == DOTS)
+        {            
+            Serial.println("!");
+            dotCounter = 0;
+        }
+        loopCounter = 0;        
     }
 }
