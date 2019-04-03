@@ -3,6 +3,6 @@
     "configuration": "cpu=attiny85,clock=internal8",
     "programmer": "Arduino as ISP",
     "sketch": "src\\src.ino",
-    "port": "COM37",
+    "port": "COM22",
     "output": "./build"
 }

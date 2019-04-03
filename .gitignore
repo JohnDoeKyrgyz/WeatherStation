@@ -14,3 +14,4 @@ Server/WebPortal/src/Server/ParticleToken.json
 Server/local.build.settings.json
 Server/*.zip
 Server/.fake/
+*.bin

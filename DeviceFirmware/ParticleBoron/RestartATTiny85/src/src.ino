@@ -14,7 +14,6 @@ SoftwareSerial Serial(RX, TX);
 
 // Utility macros
 #define adc_disable() (ADCSRA &= ~(1 << ADEN)) // disable ADC (before power-off)
-#define adc_enable() (ADCSRA |= (1 << ADEN))   // re-enable ADC
 
 #define LED_BUILTIN 1
 
