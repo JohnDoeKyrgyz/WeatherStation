@@ -52,7 +52,9 @@ void setup()
     DEBINIT // to be able to use debug output later on
     DEBPSTATUS  // print debug status
 
+    #if DEBUG
     blink();
+    #endif
 
     DEBPMSG("Restart Timer");
 }
