@@ -49,14 +49,13 @@ void setup()
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
 
-    DEBINIT // to be able to use debug output later on
-    DEBPSTATUS  // print debug status
+    Serial.begin(9600);
 
-    #if DEBUG
     blink();
-    #endif
 
-    DEBPMSG("Restart Timer");
+    DEBPSTATUS  // print debug status
+    
+    Serial.println("Restart Timer");
 }
 
 void setup_watchdog(int timerPrescaler)
@@ -120,7 +119,7 @@ void sleep(unsigned int milliseconds)
 void blink()
 {
     digitalWrite(LED_BUILTIN, HIGH); // turn the LED on (HIGH is the voltage level)
-    delay(500);
+    delay(200);
     digitalWrite(LED_BUILTIN, LOW); // turn the LED on (HIGH is the voltage level)
 }
 
