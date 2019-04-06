@@ -25,13 +25,13 @@ void setup()
   Serial.println("Boron Master Test");
 }
 
-byte x = 0;
+unsigned int x = 0;
 
 void loop()
 {
-  Wire.beginTransmission(8); // transmit to device #8
-  Wire.write("x is ");       // sends five bytes
-  Wire.write(x);             // sends one byte
+  Wire.beginTransmission(8);
+  Wire.write(x); //sends the lower order byte
+  Wire.write(x >> 8); //sends the higher order byte
   Wire.endTransmission();    // stop transmitting
 
   x++;

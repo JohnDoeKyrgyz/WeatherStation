@@ -20,18 +20,17 @@ SoftwareSerial Serial(RX, TX);
 //table of the time increments in milliseconds that the ATtiny85 watchdog can sleep
 int prescales[] = {16, 32, 64, 128, 250, 500, 1000, 2000, 4000, 8000};
 
-int requestedSleepTime = -1;
+unsigned int requestedSleepTime = 0;
 void onReceiveEvent(uint8_t length)
 {
-    DEBPMSG("Received Message");
-    DEBPVAR(length)
-    
+    DEBPMSG("Received Message");    
     if (length == 2)
     {        
         requestedSleepTime = 0;
         requestedSleepTime = TinyWireS.receive();
-        requestedSleepTime &= (TinyWireS.receive()) >> 8;        
+        requestedSleepTime |= (TinyWireS.receive() << 8);
     }
+    DEBPVAR(requestedSleepTime)
 }
 
 // the setup function runs once when you press reset or power the board
@@ -117,7 +116,7 @@ void blink()
 void loop()
 {   
     DEBPMSG("LISTENING");
-    while(requestedSleepTime == -1)
+    while(requestedSleepTime == 0)
     {
         TinyWireS_stop_check();
         yield();
@@ -128,5 +127,5 @@ void loop()
 
     sleep(requestedSleepTime);
     blink();
-    requestedSleepTime = -1;    
+    requestedSleepTime = 0;    
 }
