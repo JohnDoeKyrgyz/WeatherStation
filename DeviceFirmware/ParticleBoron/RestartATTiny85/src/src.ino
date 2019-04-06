@@ -59,11 +59,15 @@ void setup_watchdog(int timerPrescaler)
     byte bb = timerPrescaler & 7;
     if (timerPrescaler > 7) bb |= (1 << 5); //Set the special 5th bit if necessary
 
+    cli(); //disable interrupts
+
     //This order of commands is important and cannot be combined
     MCUSR &= ~(1 << WDRF);             //Clear the watch dog reset
     WDTCR |= (1 << WDCE) | (1 << WDE); //Set WD_change enable, set WD enable
     WDTCR = bb;                        //Set new watchdog timeout value
     WDTCR |= _BV(WDIE);                //Set the interrupt enable, this will keep unit from resetting after each int
+
+    sei(); //re-enable interrupts
 }
 
 volatile int timerCounter;
@@ -80,6 +84,13 @@ ISR(WDT_vect)
     {
         sleep_enable();
         sleep_cpu();
+    }
+    else  
+    {
+        //turn off the watchdog so that it doesn't keep triggering
+        WDTCR = 0x00;
+        sleep_disable();
+        DEBPMSG("Done sleeping");        
     }
 }
 
@@ -102,7 +113,7 @@ void sleep(int milliseconds)
     sleep_enable();
     sleep_cpu();
     
-    if(remainder > prescales[0]) sleep(remainder);    
+    if(remainder > prescales[0]) sleep(remainder);
 }
 
 void blink()
@@ -126,6 +137,8 @@ void loop()
     DEBPVAR(requestedSleepTime);
 
     sleep(requestedSleepTime);
+    requestedSleepTime = 0;
+
     blink();
-    requestedSleepTime = 0;    
+    
 }
