@@ -73,46 +73,44 @@ void setup_watchdog(int timerPrescaler)
     sei(); //re-enable interrupts
 }
 
-volatile int timerCounter;
-int timerPrescaler;
+volatile unsigned int timerCounter;
+unsigned int timerPrescaler;
 
 //This runs each time the watch dog wakes us up from sleep
 ISR(WDT_vect)
 {
-    DEBPMSG("Wakeup");
-    DEBPVAR(timerCounter)
-
-    timerCounter--;    
-    if(timerCounter > 0)
-    {
-        sleep_enable();
-        sleep_cpu();
-    }
-    else  
-    {
-        //turn off the watchdog so that it doesn't keep triggering
-        WDTCR = 0x00;
-        sleep_disable();
-        DEBPMSG("Done sleeping");        
-    }
+    DEBPMSG(".");
+    timerCounter--;
 }
 
-void sleep(int milliseconds)
+void sleep(unsigned int milliseconds)
 {
     timerPrescaler = 9;
     while(prescales[timerPrescaler] > milliseconds && timerPrescaler > 0) timerPrescaler--;
-    int prescale = prescales[timerPrescaler];
-    DEBPVAR(prescale)
-
+    unsigned int prescale = prescales[timerPrescaler];
+    
     timerCounter = milliseconds / prescale;
-    int remainder = milliseconds - (timerCounter * prescale);
+    unsigned int remainder = milliseconds - (timerCounter * prescale);
 
+    DEBPMSG("SLEEP CALCULATION");
+    DEBPVAR(milliseconds)
+    DEBPVAR(prescale)
     DEBPVAR(timerCounter)
     DEBPVAR(remainder)
 
     setup_watchdog(timerPrescaler);
+
     sleep_enable();
-    sleep_cpu();
+    do
+    {
+        sleep_cpu();
+    } 
+    while(timerCounter > 0);
+    
+    //turn off the watchdog so that it doesn't keep triggering
+    WDTCR = 0x00;
+    sleep_disable();
+    DEBPMSG("\nDone sleeping");        
     
     if(remainder > prescales[0]) sleep(remainder);
 }
@@ -142,7 +140,9 @@ void loop()
     blink();
 
     //throw away any data that may have been received while trying to process the sleep
-    flushTwiBuffers();
+    //re-initializing forces the receive buffer to be flushed
+    TinyWireS.begin(I2C_SLAVE_ADDRESS);
+    TinyWireS.onReceive(onReceiveEvent);
     
     //this will allow the device to accept another request to sleep from the master
     requestedSleepTime = 0;
