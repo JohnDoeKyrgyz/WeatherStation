@@ -28,7 +28,7 @@ void loop()
   Wire.write(x >> 8); //sends the higher order byte
   Wire.endTransmission();    // stop transmitting
 
-  x++;
+  x += 200;
 
   blink();
   delay(500);

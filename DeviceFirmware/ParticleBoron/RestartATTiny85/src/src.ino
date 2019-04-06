@@ -23,12 +23,15 @@ int prescales[] = {16, 32, 64, 128, 250, 500, 1000, 2000, 4000, 8000};
 unsigned int requestedSleepTime = 0;
 void onReceiveEvent(uint8_t length)
 {
-    DEBPMSG("Received Message");    
-    if (length == 2)
+    DEBPMSG("Received Message");
+    DEBPVAR(length)
+
+    if (requestedSleepTime == 0 && length == 2)
     {        
-        requestedSleepTime = 0;
-        requestedSleepTime = TinyWireS.receive();
-        requestedSleepTime |= (TinyWireS.receive() << 8);
+        //get the last two bytes in the receive buffer, and concatenate them into an int
+        unsigned int a = TinyWireS.receive();
+        unsigned int b = TinyWireS.receive();
+        requestedSleepTime = a | (b << 8);
     }
     DEBPVAR(requestedSleepTime)
 }
@@ -99,8 +102,6 @@ void sleep(int milliseconds)
     timerPrescaler = 9;
     while(prescales[timerPrescaler] > milliseconds && timerPrescaler > 0) timerPrescaler--;
     int prescale = prescales[timerPrescaler];
-
-    DEBPVAR(timerPrescaler)
     DEBPVAR(prescale)
 
     timerCounter = milliseconds / prescale;
@@ -136,9 +137,13 @@ void loop()
     DEBPMSG("SLEEP REQUESTED");
     DEBPVAR(requestedSleepTime);
 
-    sleep(requestedSleepTime);
-    requestedSleepTime = 0;
+    sleep(requestedSleepTime);    
 
     blink();
+
+    //throw away any data that may have been received while trying to process the sleep
+    flushTwiBuffers();
     
+    //this will allow the device to accept another request to sleep from the master
+    requestedSleepTime = 0;
 }

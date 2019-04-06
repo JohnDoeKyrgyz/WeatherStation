@@ -293,9 +293,9 @@ void loop()
    d4128:	f000 fef0 	bl	d4f0c <_Z19__fetch_global_Wirev>
    d412c:	f000 fd5d 	bl	d4bea <_ZN7TwoWire15endTransmissionEv>
 
-  x++;
+  x += 200;
    d4130:	6823      	ldr	r3, [r4, #0]
-   d4132:	3301      	adds	r3, #1
+   d4132:	33c8      	adds	r3, #200	; 0xc8
    d4134:	6023      	str	r3, [r4, #0]
 
   blink();
@@ -308,7 +308,7 @@ void loop()
    d4142:	f000 fc1f 	bl	d4984 <_Z16_fetch_usbserialv>
    d4146:	4903      	ldr	r1, [pc, #12]	; (d4154 <loop+0x50>)
    d4148:	e8bd 4010 	ldmia.w	sp!, {r4, lr}
-  x++;
+  x += 200;
 
   blink();
   delay(500);
