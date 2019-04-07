@@ -1,13 +1,14 @@
-#include <Wire.h>
-#include "Compass.h"
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
+
+#include <Wire.h>
+#include "Compass.h"
 
 FuelGauge fuel;
 PMIC pmic;
 Compass compassSensor;
 
-ApplicationWatchdog wd(10000, watchDogTimeout);
+ApplicationWatchdog wd(20000, watchDogTimeout);
 
 void watchDogTimeout()
 {
@@ -19,7 +20,12 @@ void setup()
 {
   pinMode(LED_BUILTIN, OUTPUT);
 
-  Serial.begin(9600);  
+  Serial.begin(9600);
+  Wire.begin();
+
+  delay(10000);
+
+  Serial.println("Weather Station");
 }
 
 void printSystemInfo()
@@ -54,18 +60,32 @@ void printSystemInfo()
   compassSensor = Compass();
   Serial.println(compassSensor.begin());
   Serial.println("Compass initialed");
-  */
 
   CompassReading reading = compassSensor.getReading();
   Serial.printlnf("X: %d, Y: %d, Z: %d", reading.x, reading.y, reading.z);
+  
+  */
+}
+
+#define WAKEUP_BUDDY_ADDRESS 8
+
+void deepSleep(unsigned int milliseconds)
+{
+  Serial.printlnf("Deep Sleep for %d milliseconds", milliseconds);
+  Wire.beginTransmission(WAKEUP_BUDDY_ADDRESS);
+  Wire.write(milliseconds);
+  Wire.write(milliseconds >> 8);
+  uint8_t status = Wire.endTransmission();
+  Serial.printlnf("Transmission status %d", status);
+
+  fuel.sleep();
+  System.sleep(SLEEP_MODE_DEEP);
 }
 
 void loop()
 {
   digitalWrite(LED_BUILTIN, HIGH);
-
   delay(1000);
-
   digitalWrite(LED_BUILTIN, LOW);
 
   // And repeat!
@@ -73,5 +93,5 @@ void loop()
 
   wd.checkin();
 
-  delay(2000);
+  deepSleep(30000);
 }
