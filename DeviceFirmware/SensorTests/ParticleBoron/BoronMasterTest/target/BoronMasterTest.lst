@@ -1,5 +1,5 @@
 
-c:/working/WeatherStation/DeviceFirmware/ParticleBoron/BoronMasterTest/target/BoronMasterTest.elf:     file format elf32-littlearm
+c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronMasterTest/target/BoronMasterTest.elf:     file format elf32-littlearm
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
@@ -29,11 +29,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
  12 .debug_macro  00030a88  00000000  00000000  000b8d2e  2**0
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_line   0001fd93  00000000  00000000  000e97b6  2**0
+ 13 .debug_line   0001fd9f  00000000  00000000  000e97b6  2**0
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_str    000d0c91  00000000  00000000  00109549  2**0
+ 14 .debug_str    000d0c9d  00000000  00000000  00109555  2**0
                   CONTENTS, READONLY, DEBUGGING
- 15 .debug_frame  0000a658  00000000  00000000  001da1dc  2**2
+ 15 .debug_frame  0000a658  00000000  00000000  001da1f4  2**2
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -200,120 +200,57 @@ void __cxa_guard_release (__guard *g) {*(char *)g = 1;};
    d40b4:	4718      	bx	r3
 
 000d40b6 <_Z5blinkv>:
-#include <Wire.h>
-
-SYSTEM_MODE(SEMI_AUTOMATIC);
-
-void blink()
-{
    d40b6:	b508      	push	{r3, lr}
-  digitalWrite(D7, HIGH);
    d40b8:	2101      	movs	r1, #1
    d40ba:	2007      	movs	r0, #7
    d40bc:	f000 feeb 	bl	d4e96 <digitalWrite>
-  delay(500);
    d40c0:	f44f 70fa 	mov.w	r0, #500	; 0x1f4
    d40c4:	f000 fb18 	bl	d46f8 <delay>
-  digitalWrite(D7, LOW);
    d40c8:	2100      	movs	r1, #0
    d40ca:	2007      	movs	r0, #7
-}
    d40cc:	e8bd 4008 	ldmia.w	sp!, {r3, lr}
-
-void blink()
-{
-  digitalWrite(D7, HIGH);
-  delay(500);
-  digitalWrite(D7, LOW);
    d40d0:	f000 bee1 	b.w	d4e96 <digitalWrite>
 
 000d40d4 <setup>:
-}
-
-void setup()
-{
    d40d4:	b508      	push	{r3, lr}
-  Serial.begin(9600);
    d40d6:	f000 fc55 	bl	d4984 <_Z16_fetch_usbserialv>
    d40da:	f44f 5116 	mov.w	r1, #9600	; 0x2580
    d40de:	f000 fc45 	bl	d496c <_ZN9USBSerial5beginEl>
-  Wire.begin();
    d40e2:	f000 ff13 	bl	d4f0c <_Z19__fetch_global_Wirev>
    d40e6:	f000 fd6f 	bl	d4bc8 <_ZN7TwoWire5beginEv>
-
-  pinMode(D7, OUTPUT);
    d40ea:	2101      	movs	r1, #1
    d40ec:	2007      	movs	r0, #7
    d40ee:	f000 fec1 	bl	d4e74 <pinMode>
-
-  Serial.println("Boron Master Test");
    d40f2:	f000 fc47 	bl	d4984 <_Z16_fetch_usbserialv>
    d40f6:	4902      	ldr	r1, [pc, #8]	; (d4100 <setup+0x2c>)
-}
    d40f8:	e8bd 4008 	ldmia.w	sp!, {r3, lr}
-  Serial.begin(9600);
-  Wire.begin();
-
-  pinMode(D7, OUTPUT);
-
-  Serial.println("Boron Master Test");
    d40fc:	f000 bab1 	b.w	d4662 <_ZN5Print7printlnEPKc>
    d4100:	000d52a0 	.word	0x000d52a0
 
 000d4104 <loop>:
-}
-
-unsigned int x = 0;
-
-void loop()
-{
    d4104:	b510      	push	{r4, lr}
-  Wire.beginTransmission(8);
-  Wire.write(x); //sends the lower order byte
    d4106:	4c12      	ldr	r4, [pc, #72]	; (d4150 <loop+0x4c>)
-
-unsigned int x = 0;
-
-void loop()
-{
-  Wire.beginTransmission(8);
    d4108:	f000 ff00 	bl	d4f0c <_Z19__fetch_global_Wirev>
    d410c:	2108      	movs	r1, #8
    d410e:	f000 fd65 	bl	d4bdc <_ZN7TwoWire17beginTransmissionEi>
-  Wire.write(x); //sends the lower order byte
    d4112:	f000 fefb 	bl	d4f0c <_Z19__fetch_global_Wirev>
    d4116:	6821      	ldr	r1, [r4, #0]
    d4118:	f7ff ffc9 	bl	d40ae <_ZN7TwoWire5writeEj>
-  Wire.write(x >> 8); //sends the higher order byte
    d411c:	f000 fef6 	bl	d4f0c <_Z19__fetch_global_Wirev>
    d4120:	6821      	ldr	r1, [r4, #0]
    d4122:	0a09      	lsrs	r1, r1, #8
    d4124:	f7ff ffc3 	bl	d40ae <_ZN7TwoWire5writeEj>
-  Wire.endTransmission();    // stop transmitting
    d4128:	f000 fef0 	bl	d4f0c <_Z19__fetch_global_Wirev>
    d412c:	f000 fd5d 	bl	d4bea <_ZN7TwoWire15endTransmissionEv>
-
-  x += 200;
    d4130:	6823      	ldr	r3, [r4, #0]
    d4132:	33c8      	adds	r3, #200	; 0xc8
    d4134:	6023      	str	r3, [r4, #0]
-
-  blink();
    d4136:	f7ff ffbe 	bl	d40b6 <_Z5blinkv>
-  delay(500);
    d413a:	f44f 70fa 	mov.w	r0, #500	; 0x1f4
    d413e:	f000 fadb 	bl	d46f8 <delay>
-
-  Serial.println(".");
    d4142:	f000 fc1f 	bl	d4984 <_Z16_fetch_usbserialv>
    d4146:	4903      	ldr	r1, [pc, #12]	; (d4154 <loop+0x50>)
    d4148:	e8bd 4010 	ldmia.w	sp!, {r4, lr}
-  x += 200;
-
-  blink();
-  delay(500);
-
-  Serial.println(".");
    d414c:	f000 ba89 	b.w	d4662 <_ZN5Print7printlnEPKc>
    d4150:	2003e374 	.word	0x2003e374
    d4154:	000d52b2 	.word	0x000d52b2

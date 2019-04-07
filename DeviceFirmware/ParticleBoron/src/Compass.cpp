@@ -1,53 +1,43 @@
 #include "Compass.h"
-#include "Particle.h"
-
-#include <Wire.h>
 
 /* Assign a unique ID to this sensor at the same time */
-Adafruit_HMC5883_Unified magnetometer;
+QMC5883L compass;
 
-void displaySensorDetails(void)
+Compass::Compass()
 {
-  sensor_t sensor;
-  magnetometer.getSensor(&sensor);
-  Serial.println("------------------------------------");
-  Serial.print  ("Sensor:       "); Serial.println(sensor.name);
-  Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
-  Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
-  Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println(" uT");
-  Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println(" uT");
-  Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println(" uT");
-  Serial.println("------------------------------------");
-  Serial.println("");
-  delay(500);
+    compass = QMC5883L();
 }
 
-Compass::Compass(int id)
+bool Compass::begin()
 {
-    magnetometer = Adafruit_HMC5883_Unified(id);
+    // Check that a device responds at the compass address - don't continue if it doesn't -
+    Wire.beginTransmission(QMC5883L_Address);
+    int error = Wire.endTransmission();
 
-    /* Initialise the sensor */
-    if(!magnetometer.begin())
+    if (!error)
     {
-        /* There was a problem detecting the HMC5883 ... check your connections */
-        Serial.println("Ooops, no HMC5883 detected ... Check your wiring!");
-        while(1);
-    }
+        // configure the control registers using static settings above
+        // compass autoranges, but starts in the mode given
+        compass.dataRegister.OSR_RNG_ODR_MODE = (OSR << 6) | (RNG << 4) | (ODR << 2) | MODE;
+        compass.dataRegister.CR2_INT_ENABLE = CR2;
+        compass.dataRegister.SET_RESET_PERIOD = RESETPERIOD;
 
-    /* Display some basic information on this sensor */
-    displaySensorDetails();
+        Serial.println("Configuring QMC5883L - OSR 512, range +/-2 Gauss, ODR 10, Continuous");
+        error = compass.Configure(compass.dataRegister); // use static settings from above - can access register data directly if required..
+        if (error != 0) Serial.println(compass.GetErrorText(error));
+    }
+    return !error;
 }
 
-CompassReading Compass::getReading(){
+CompassReading Compass::getReading()
+{
     CompassReading result;
 
-    /* Get a new sensor event */
-    sensors_event_t event;
-    magnetometer.getEvent(&event);
+    MagnetometerScaled scaled = compass.ReadScaledAxis(&compass.dataRegister);
 
-    result.x = event.magnetic.x;
-    result.y = event.magnetic.y;
-    result.z = event.magnetic.z;
+    result.x = scaled.XAxis;
+    result.y = scaled.YAxis;
+    result.z = scaled.ZAxis;
 
     return result;
 }
