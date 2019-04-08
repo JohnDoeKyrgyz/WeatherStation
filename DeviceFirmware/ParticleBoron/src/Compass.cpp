@@ -10,6 +10,9 @@ Compass::Compass()
 
 bool Compass::begin()
 {
+    //re-initialize the wire library if necessary
+    if(!Wire.isEnabled()) Wire.begin();
+
     // Check that a device responds at the compass address - don't continue if it doesn't -
     Wire.beginTransmission(QMC5883L_Address);
     int error = Wire.endTransmission();
