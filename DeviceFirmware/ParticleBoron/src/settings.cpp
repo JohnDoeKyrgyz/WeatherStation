@@ -15,20 +15,20 @@ Settings DefaultSettings = {
 
 DynamicJsonDocument jsonBuffer(SERIALIZED_SETTINGS_SIZE);
 
-DynamicJsonDocument& serialize(Settings* settings)
+DynamicJsonDocument& serialize(Settings& settings)
 {    
-    jsonBuffer["version"] = settings->version;
-    jsonBuffer["brownout"] = settings->brownout;
-    jsonBuffer["brownoutVoltage"] = settings->brownoutVoltage;
-    jsonBuffer["brownoutMinutes"] = settings->brownoutMinutes;
-    jsonBuffer["sleepTime"] = settings->sleepTime;
-    jsonBuffer["diagnositicCycles"] = settings->diagnositicCycles;
-    jsonBuffer["useDeepSleep"] = settings->useDeepSleep;
+    jsonBuffer["version"] = settings.version;
+    jsonBuffer["brownout"] = settings.brownout;
+    jsonBuffer["brownoutVoltage"] = settings.brownoutVoltage;
+    jsonBuffer["brownoutMinutes"] = settings.brownoutMinutes;
+    jsonBuffer["sleepTime"] = settings.sleepTime;
+    jsonBuffer["diagnositicCycles"] = settings.diagnositicCycles;
+    jsonBuffer["useDeepSleep"] = settings.useDeepSleep;
 
     return jsonBuffer;
 }
 
-Settings* deserialize(const char* json)
+const Settings& deserialize(const char* json)
 {
     const size_t bufferSize = SERIALIZED_SETTINGS_SIZE;
     DynamicJsonDocument jsonBuffer(bufferSize);
@@ -44,31 +44,31 @@ Settings* deserialize(const char* json)
     result->diagnositicCycles = jsonBuffer["diagnositicCycles"];
     result->useDeepSleep = jsonBuffer["useDeepSleep"];
 
-    return result;
+    return *result;
 }
 
-Settings* loadSettings()
+const Settings& loadSettings()
 {
     Settings eepromSettings;
     EEPROM.get(0,eepromSettings);
-    Settings* result = &DefaultSettings;
 
+    Settings* result = &DefaultSettings;
     if(eepromSettings.version >= 0)
     {
         result = (Settings*)malloc(sizeof(Settings));
         *result = eepromSettings;
     }
-    return result;
+    return *result;
 }
 
-void saveSettings(Settings* settings)
+void saveSettings(Settings& settings)
 {
-    Settings* existingSettings = loadSettings();
+    const Settings& existingSettings = loadSettings();
     
-    settings->version = existingSettings->version + 1;
+    settings.version = existingSettings.version + 1;
     Serial.print("SAVING SETTINGS ");
-    Serial.print(settings->version);
+    Serial.print(settings.version);
     Serial.println();
     
-    EEPROM.put(0,*settings);
+    EEPROM.put(0,settings);
 }

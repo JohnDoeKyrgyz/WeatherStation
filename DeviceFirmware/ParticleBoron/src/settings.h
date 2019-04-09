@@ -14,9 +14,9 @@ typedef struct Settings
     bool useDeepSleep;
 } Settings;
 
-DynamicJsonDocument& serialize(Settings* settings);
-Settings* deserialize(const char* serializedSettings);
-Settings* loadSettings();
-void saveSettings(Settings* settings);
+DynamicJsonDocument& serialize(Settings& settings);
+const Settings& deserialize(const char* serializedSettings);
+const Settings& loadSettings();
+void saveSettings(Settings& settings);
 
 #endif

@@ -6,6 +6,7 @@ Server/WebPortal/src/Server/App.config
 obj/
 bin/
 build/
+target/
 node_modules/
 Server/WebPortal/src/Server/secrets.json
 Server/Tests/WeatherStationFunctions.Integration.Tests/Secrets.json

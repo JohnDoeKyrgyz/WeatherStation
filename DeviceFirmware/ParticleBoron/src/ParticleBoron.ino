@@ -122,8 +122,12 @@ void deviceSetup()
   RGB.control(true);
   RGB.color(0, 0, 0);
 
+  delay(10000);
+  Serial.println("WeatherStation: deviceSetup()");
+
   //Load saved settings;
-  settings = *loadSettings();
+  settings = loadSettings();
+  Serial.printlnf("Loaded Settings %d", settings.version);
 
   if (!(brownout = checkBrownout()))
   {
@@ -133,7 +137,7 @@ void deviceSetup()
       digitalWrite(LED, HIGH);
       settings.diagnositicCycles--;
 
-      saveSettings(&settings);
+      saveSettings(settings);
     }
 
     //turn on the sensors
@@ -173,8 +177,8 @@ void deepSleep(unsigned int milliseconds)
 void onSettingsUpdate(const char* event, const char* data)
 {
     digitalWrite(LED, HIGH);
-    settings = *deserialize(data);
-    saveSettings(&settings);
+    settings = deserialize(data);
+    saveSettings(settings);
 
     Serial.print("SETTINGS UPDATE: ");
     Serial.println(data);
@@ -187,6 +191,8 @@ void onSettingsUpdate(const char* event, const char* data)
 
 void setup()
 {
+  Serial.begin(115200);
+
   watchDog.checkin();
 
   Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
@@ -207,51 +213,8 @@ void setup()
   }
 }
 
-void printSystemInfo()
-{
-  String myID = System.deviceID();
-  Serial.printlnf("Device ID: %s", myID.c_str());
-  Serial.printlnf("System version: %s", System.version().c_str());
-
-  byte inputVoltageLimit = pmic.getInputVoltageLimit();
-  Serial.printlnf("Input Voltage Limit: %d", inputVoltageLimit);
-
-  byte inputCurrentLimit = pmic.getInputCurrentLimit();
-  Serial.printlnf("Input Current Limit: %d", inputCurrentLimit);
-
-  uint16_t minimumSystemVoltage = pmic.getMinimumSystemVoltage();
-  Serial.printlnf("Minimum System Voltage: %d", minimumSystemVoltage);
-
-  byte chargeCurrent = pmic.getChargeCurrent();
-  Serial.printlnf("Charge Current: %d", chargeCurrent);
-
-  uint16_t chargeVoltage = pmic.getChargeVoltageValue();
-  Serial.printlnf("Charge Voltage: %d", chargeVoltage);
-
-  Serial.print("Charge: ");
-  Serial.println(fuelGuage.getSoC());
-
-  Serial.print("Voltage: ");
-  Serial.println(fuelGuage.getVCell());
-
-  Serial.println("Compass initializing");
-  compassSensor = Compass();
-  Serial.println(compassSensor.begin());
-  Serial.println("Compass initialed");
-
-  CompassReading reading = compassSensor.getReading();
-  Serial.printlnf("X: %d, Y: %d, Z: %d", reading.x, reading.y, reading.z);
-}
-
 void loop()
 {
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(1000);
-  digitalWrite(LED_BUILTIN, LOW);
-
-  // And repeat!
-  printSystemInfo();
-
   watchDog.checkin();
 
   void (*sleepAction)();
