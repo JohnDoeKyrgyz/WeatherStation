@@ -1,4 +1,4 @@
-c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronMasterTest/target//obj/../../../modules/shared/nRF52840/src/user-part/module_info.o: \
+c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronI2CScanner/target//obj/../../../modules/shared/nRF52840/src/user-part/module_info.o: \
  ../../../modules/shared/nRF52840/src/user-part/module_info.c \
  ../../../dynalib/inc/module_info.inc ../../../dynalib/inc/module_info.h \
  ../../../services/inc/static_assert.h \

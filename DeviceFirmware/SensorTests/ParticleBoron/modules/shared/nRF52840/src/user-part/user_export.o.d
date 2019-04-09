@@ -1,4 +1,4 @@
-c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronMasterTest/target//obj/../../../modules/shared/nRF52840/src/user-part/user_export.o: \
+c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronI2CScanner/target//obj/../../../modules/shared/nRF52840/src/user-part/user_export.o: \
  ../../../modules/shared/nRF52840/src/user-part/user_export.c \
  ../../../modules/shared/nRF52840/inc/user_part_export.c \
  ../../../modules/shared/nRF52840/inc/module_user_init.h \

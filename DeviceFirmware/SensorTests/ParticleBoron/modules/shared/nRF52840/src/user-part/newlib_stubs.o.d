@@ -1,4 +1,4 @@
-c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronMasterTest/target//obj/../../../modules/shared/nRF52840/src/user-part/newlib_stubs.o: \
+c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronI2CScanner/target//obj/../../../modules/shared/nRF52840/src/user-part/newlib_stubs.o: \
  ../../../modules/shared/nRF52840/src/user-part/newlib_stubs.cpp \
  c:\users\jatwood\.particle\toolchains\gcc-arm\5.3.1\arm-none-eabi\include\sys\types.h \
  c:\users\jatwood\.particle\toolchains\gcc-arm\5.3.1\arm-none-eabi\include\_ansi.h \
