@@ -13,9 +13,10 @@ Settings DefaultSettings = {
     false //useDeepSleep
 };
 
+DynamicJsonDocument jsonBuffer(SERIALIZED_SETTINGS_SIZE);
+
 DynamicJsonDocument& serialize(Settings* settings)
-{
-    DynamicJsonDocument jsonBuffer(SERIALIZED_SETTINGS_SIZE);
+{    
     jsonBuffer["version"] = settings->version;
     jsonBuffer["brownout"] = settings->brownout;
     jsonBuffer["brownoutVoltage"] = settings->brownoutVoltage;
