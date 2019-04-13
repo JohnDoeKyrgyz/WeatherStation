@@ -16,7 +16,7 @@ void loop();
 #define ANEMOMETER A4
 #define WAKEUP_BUDDY_ADDRESS 8
 
-#define ANEMOMETER_TIMEOUT 5000
+#define ANEMOMETER_TRIES 3
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
@@ -28,10 +28,11 @@ SYSTEM_MODE(SEMI_AUTOMATIC);
 #include <Adafruit_BME280.h>
 #include <LaCrosse_TX23.h>
 #include <ArduinoJson.h>
+#include <Adafruit_INA219.h>
 
 Adafruit_BME280 bme280;
 LaCrosse_TX23 laCrosseTX23(ANEMOMETER);
-
+Adafruit_INA219 powerMonitor;
 FuelGauge fuelGuage;
 PMIC pmic;
 Compass compassSensor;
@@ -46,7 +47,8 @@ struct Reading
 {
   int version;
   float batteryVoltage;
-  int panelVoltage;
+  float panelVoltage;
+  float panelCurrent;
   bool anemometerRead;
   float windSpeed;
   int windDirection;
@@ -67,19 +69,6 @@ void onError(const char *message)
   Serial.println(message);
 }
 
-bool timeout(int timeout, std::function<bool()> opperation)
-{
-  unsigned long endTime = millis() + timeout;
-  bool result = false;
-  while (!(result = opperation()) && millis() < endTime)
-  {
-    Serial.print(".");
-    delay(10);
-    watchDog.checkin();
-  }
-  return result;
-}
-
 bool checkBrownout()
 {
   return settings.brownout && fuelGuage.getVCell() < settings.brownoutVoltage;
@@ -87,20 +76,23 @@ bool checkBrownout()
 
 bool readAnemometer(Reading *reading)
 {
-  Serial.print("ANEMOMETER ");
-  bool result = timeout(ANEMOMETER_TIMEOUT, [reading]() {
-    return laCrosseTX23.read(reading->windSpeed, reading->windDirection);
-  });
-  Serial.println();
-  return result;
+  bool read = false;
+  int tries = 0;
+  while(!(read = laCrosseTX23.read(reading->windSpeed, reading->windDirection)) && tries++ < ANEMOMETER_TRIES)
+  {
+    Serial.print(".");
+  }
+  if(tries > 0) {
+    Serial.println();
+  }
+  return read;
 }
 
 bool readVoltage(Reading *reading)
 {
   reading->batteryVoltage = fuelGuage.getVCell();
-  //int panelVoltage = analogRead(PANEL_VOLTAGE);
-  //reading->panelVoltage = panelVoltage;
-  reading->panelVoltage = 0;
+  reading->panelVoltage = powerMonitor.getBusVoltage_V();
+  reading->panelCurrent = powerMonitor.getCurrent_mA();
   return true;
 }
 
@@ -146,6 +138,7 @@ void deviceSetup()
     //the bme280 will activate the Wire library as well.
     bme280.begin(0x76);
     compassSensor.begin();
+    powerMonitor.begin();
 
     //Enable the Wire library if it wasn't already enabled by another sensor
     if (!Wire.isEnabled())
@@ -221,7 +214,7 @@ void setup()
 char* serialize(Reading *reading)
 {
     char* buffer = messageBuffer;
-    buffer += sprintf(buffer, "%d:%f:%d|", reading->version, reading->batteryVoltage, reading->panelVoltage);
+    buffer += sprintf(buffer, "%d:%f:%f:%f|", reading->version, reading->batteryVoltage, reading->panelVoltage, reading->panelCurrent);
     if(reading->bmeRead)
     {
         buffer += sprintf(buffer, "b%f:%f:%f", reading->bmeTemperature, reading->pressure, reading->bmeHumidity);
