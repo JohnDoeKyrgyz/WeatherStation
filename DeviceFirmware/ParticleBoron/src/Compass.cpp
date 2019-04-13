@@ -25,7 +25,7 @@ bool Compass::begin()
         compass.dataRegister.CR2_INT_ENABLE = CR2;
         compass.dataRegister.SET_RESET_PERIOD = RESETPERIOD;
 
-        Serial.println("Configuring QMC5883L - OSR 512, range +/-2 Gauss, ODR 10, Continuous");
+        //Serial.println("Configuring QMC5883L - OSR 512, range +/-2 Gauss, ODR 10, Continuous");
         error = compass.Configure(compass.dataRegister); // use static settings from above - can access register data directly if required..
         if (error != 0) Serial.println(compass.GetErrorText(error));
     }

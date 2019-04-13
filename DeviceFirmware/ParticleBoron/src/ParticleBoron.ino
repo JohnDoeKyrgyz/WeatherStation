@@ -5,7 +5,7 @@
 #define ANEMOMETER A4
 #define WAKEUP_BUDDY_ADDRESS 8
 
-#define ANEMOMETER_TIMEOUT 1000
+#define ANEMOMETER_TIMEOUT 5000
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
@@ -64,6 +64,7 @@ bool timeout(int timeout, std::function<bool()> opperation)
   {
     Serial.print(".");
     delay(10);
+    watchDog.checkin();
   }
   return result;
 }
@@ -227,8 +228,6 @@ char* serialize(Reading *reading)
 
 void loop()
 {
-  Serial.println("LOOP");
-
   watchDog.checkin();
 
   //read data
