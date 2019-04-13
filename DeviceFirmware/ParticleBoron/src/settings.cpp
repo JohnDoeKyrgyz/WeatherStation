@@ -51,14 +51,13 @@ const Settings& loadSettings()
 {
     Settings eepromSettings;
     EEPROM.get(0,eepromSettings);
-
-    Settings* result = &DefaultSettings;
+    Settings& result = DefaultSettings;
     if(eepromSettings.version >= 0)
     {
-        result = (Settings*)malloc(sizeof(Settings));
-        *result = eepromSettings;
+        result = *(Settings*)malloc(sizeof(Settings));
+        result = eepromSettings;
     }
-    return *result;
+    return result;
 }
 
 void saveSettings(Settings& settings)

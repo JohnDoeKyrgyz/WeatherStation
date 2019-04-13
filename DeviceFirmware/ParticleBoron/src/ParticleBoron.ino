@@ -2,8 +2,8 @@
 #define FIRMWARE_VERSION "1.0"
 
 #define LED D7
-#define SENSOR_POWER D2
-#define DHT_IN D6
+#define SENSOR_POWER A4
+#define DHT_IN D2
 #define ANEMOMETER D1
 #define WAKEUP_BUDDY_ADDRESS 8
 
@@ -34,7 +34,6 @@ Compass compassSensor;
 ApplicationWatchdog watchDog(60000, watchDogTimeout);
 
 Settings settings;
-#define diagnosticMode settings.diagnositicCycles
 unsigned long duration;
 bool brownout;
 
@@ -123,7 +122,6 @@ void deviceSetup()
   RGB.color(0, 0, 0);
 
   delay(10000);
-  Serial.println("WeatherStation: deviceSetup()");
 
   //Load saved settings;
   settings = loadSettings();
@@ -131,7 +129,7 @@ void deviceSetup()
 
   if (!(brownout = checkBrownout()))
   {
-    if (diagnosticMode)
+    if (settings.diagnositicCycles > 0)
     {
       pinMode(LED, OUTPUT);
       digitalWrite(LED, HIGH);
@@ -143,10 +141,24 @@ void deviceSetup()
     //turn on the sensors
     pinMode(SENSOR_POWER, OUTPUT);
     digitalWrite(SENSOR_POWER, HIGH);
+    
+    Serial.println("Activating sensors");
 
-    Wire.begin();
-    dht.begin();
+    //the bme280 will activate the Wire library as well.    
     bme280.begin(0x76);
+    Serial.println("Activated BME");
+
+    dht.begin();
+    Serial.println("Activated DHT");
+
+    //Enable the Wire library if it wasn't already enabled by another sensor
+    if(!Wire.isEnabled())
+    {
+      Wire.begin();
+      Serial.println("Activated Wire");
+    }
+
+    Serial.println("Sensors initialized");
 
     //take an initial wind reading
     if (!(initialReading.anemometerRead = readAnemometer(&initialReading)))
@@ -159,6 +171,7 @@ void deviceSetup()
 void watchDogTimeout()
 {
   Serial.println("Watchdog timeout");
+  delay(500);
   System.reset();
 }
 
@@ -191,7 +204,7 @@ void onSettingsUpdate(const char* event, const char* data)
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.printlnf("Setup, brownout = %d", brownout);
 
   watchDog.checkin();
 
@@ -215,6 +228,7 @@ void setup()
 
 void loop()
 {
+  Serial.println("Loop");
   watchDog.checkin();
 
   void (*sleepAction)();

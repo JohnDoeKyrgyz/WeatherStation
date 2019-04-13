@@ -5,12 +5,12 @@
 
 typedef struct Settings
 {
-    int version;
+    unsigned int version;
     bool brownout;
     float brownoutVoltage;
-    int brownoutMinutes;
-    long sleepTime;
-    int diagnositicCycles;
+    unsigned int brownoutMinutes;
+    unsigned long sleepTime;
+    unsigned int diagnositicCycles;
     bool useDeepSleep;
 } Settings;
 
