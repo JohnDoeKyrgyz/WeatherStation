@@ -2,8 +2,6 @@
 #define FIRMWARE_VERSION "1.0"
 
 #define LED D7
-#define SENSOR_POWER A4
-#define DHT_IN D2
 #define ANEMOMETER D1
 #define WAKEUP_BUDDY_ADDRESS 8
 
@@ -111,8 +109,6 @@ void deviceSetup()
   RGB.control(true);
   RGB.color(0, 0, 0);
 
-  delay(10000);
-
   //Load saved settings;
   settings = loadSettings();
 
@@ -126,10 +122,6 @@ void deviceSetup()
 
       saveSettings(settings);
     }
-
-    //turn on the sensors
-    pinMode(SENSOR_POWER, OUTPUT);
-    digitalWrite(SENSOR_POWER, HIGH);
 
     //the bme280 will activate the Wire library as well.
     bme280.begin(0x76);
@@ -241,8 +233,6 @@ void loop()
   {
     onError("ERROR: Could not read anemometer");
   }
-
-  digitalWrite(SENSOR_POWER, LOW);
 
   //take the greater of the initial wind reading or the most recent wind reading
   if (!reading.anemometerRead || (reading.anemometerRead && initialReading.anemometerRead && initialReading.windSpeed > reading.windSpeed))
