@@ -43,6 +43,8 @@ struct Reading
   float bmeTemperature;
   float pressure;
   float bmeHumidity;
+  bool compassRead;
+  CompassReading compassReading;
 };
 
 Reading initialReading;
@@ -98,6 +100,12 @@ bool readBme280(Reading *reading)
   return !isnan(reading->bmeTemperature) && !isnan(reading->pressure) && reading->pressure > 0 && !isnan(reading->bmeHumidity);
 }
 
+bool readCompass(Reading *reading)
+{
+  reading->compassReading = compassSensor.getReading();
+  return true;
+}
+
 STARTUP(deviceSetup());
 void deviceSetup()
 {
@@ -125,6 +133,7 @@ void deviceSetup()
 
     //the bme280 will activate the Wire library as well.
     bme280.begin(0x76);
+    compassSensor.begin();
 
     //Enable the Wire library if it wasn't already enabled by another sensor
     if (!Wire.isEnabled())
@@ -194,9 +203,7 @@ void setup()
     Particle.process();
 
     deepSleep(settings.brownoutMinutes * 60000);
-  }
-  
-  Serial.println("CONNECTED");
+  }  
 }
 
 char* serialize(Reading *reading)
@@ -210,6 +217,10 @@ char* serialize(Reading *reading)
     if(reading->anemometerRead)
     {
         buffer += sprintf(buffer, "a%f:%d", reading->windSpeed, reading->windDirection);
+    }
+    if(reading->compassRead)
+    {
+        buffer += sprintf(buffer, "c%f:%f:%f", reading->compassReading.x, reading->compassReading.y, reading->compassReading.z);
     }
     return messageBuffer;
 }
@@ -228,6 +239,10 @@ void loop()
   if (!(reading.bmeRead = readBme280(&reading)))
   {
     onError("ERROR: BME280 temp/pressure sensor");
+  }
+  if (!(reading.compassRead = readCompass(&reading)))
+  {
+    onError("ERROR: Could not read compass");
   }
   if (!(reading.anemometerRead = readAnemometer(&reading)))
   {
