@@ -102,6 +102,15 @@ bool readDht(Reading *reading)
   return result;
 }
 
+bool readVoltage(Reading *reading)
+{
+  reading->batteryVoltage = fuelGuage.getVCell();
+  //int panelVoltage = analogRead(PANEL_VOLTAGE);
+  //reading->panelVoltage = panelVoltage;
+  reading->panelVoltage = 0;
+  return true;
+}
+
 bool readBme280(Reading *reading)
 {
   reading->bmeTemperature = bme280.readTemperature();
@@ -125,7 +134,6 @@ void deviceSetup()
 
   //Load saved settings;
   settings = loadSettings();
-  Serial.printlnf("Loaded Settings %d", settings.version);
 
   if (!(brownout = checkBrownout()))
   {
@@ -141,24 +149,17 @@ void deviceSetup()
     //turn on the sensors
     pinMode(SENSOR_POWER, OUTPUT);
     digitalWrite(SENSOR_POWER, HIGH);
-    
-    Serial.println("Activating sensors");
 
-    //the bme280 will activate the Wire library as well.    
+    //the bme280 will activate the Wire library as well.
     bme280.begin(0x76);
-    Serial.println("Activated BME");
-
     dht.begin();
-    Serial.println("Activated DHT");
 
     //Enable the Wire library if it wasn't already enabled by another sensor
-    if(!Wire.isEnabled())
+    if (!Wire.isEnabled())
     {
       Wire.begin();
       Serial.println("Activated Wire");
     }
-
-    Serial.println("Sensors initialized");
 
     //take an initial wind reading
     if (!(initialReading.anemometerRead = readAnemometer(&initialReading)))
@@ -187,25 +188,23 @@ void deepSleep(unsigned int milliseconds)
   System.sleep(SLEEP_MODE_DEEP);
 }
 
-void onSettingsUpdate(const char* event, const char* data)
+void onSettingsUpdate(const char *event, const char *data)
 {
-    digitalWrite(LED, HIGH);
-    settings = deserialize(data);
-    saveSettings(settings);
+  digitalWrite(LED, HIGH);
+  settings = deserialize(data);
+  saveSettings(settings);
 
-    Serial.print("SETTINGS UPDATE: ");
-    Serial.println(data);
+  Serial.print("SETTINGS UPDATE: ");
+  Serial.println(data);
 
-    Particle.publish("Settings", data, 60, PRIVATE);
-    Particle.process();
+  Particle.publish("Settings", data, 60, PRIVATE);
+  Particle.process();
 
-    digitalWrite(LED, LOW);
+  digitalWrite(LED, LOW);
 }
 
 void setup()
 {
-  Serial.printlnf("Setup, brownout = %d", brownout);
-
   watchDog.checkin();
 
   Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
@@ -224,12 +223,80 @@ void setup()
 
     deepSleep(settings.brownoutMinutes * 60000);
   }
+  
+  Serial.println("CONNECTED");
+}
+
+char* serialize(Reading *reading)
+{
+    char* buffer = messageBuffer;
+    buffer += sprintf(buffer, "%d:%f:%d|", reading->version, reading->batteryVoltage, reading->panelVoltage);
+    if(reading->bmeRead)
+    {
+        buffer += sprintf(buffer, "b%f:%f:%f", reading->bmeTemperature, reading->pressure, reading->bmeHumidity);
+    }
+    if(reading->dhtRead)
+    {
+        buffer += sprintf(buffer, "d%f:%f", reading->dhtTemperature, reading->dhtHumidity);
+    }
+    if(reading->anemometerRead)
+    {
+        buffer += sprintf(buffer, "a%f:%d", reading->windSpeed, reading->windDirection);
+    }
+    return messageBuffer;
 }
 
 void loop()
 {
-  Serial.println("Loop");
+  Serial.println("LOOP");
+
   watchDog.checkin();
+
+  //read data
+  Reading reading;
+  reading.version = settings.version;
+  readVoltage(&reading);
+
+  if (!(reading.bmeRead = readBme280(&reading)))
+  {
+    onError("ERROR: BME280 temp/pressure sensor");
+  }
+  if (!(reading.dhtRead = readDht(&reading)))
+  {
+    onError("ERROR: DHT22 temp/humidity sensor");
+  }
+  if (!(reading.anemometerRead = readAnemometer(&reading)))
+  {
+    onError("ERROR: Could not read anemometer");
+  }
+
+  digitalWrite(SENSOR_POWER, LOW);
+
+  //take the greater of the initial wind reading or the most recent wind reading
+  if (!reading.anemometerRead || (reading.anemometerRead && initialReading.anemometerRead && initialReading.windSpeed > reading.windSpeed))
+  {
+    reading.windSpeed = initialReading.windSpeed;
+    reading.windDirection = initialReading.windDirection;
+    Serial.print("Using faster wind speed ");
+    Serial.print(initialReading.windSpeed);
+    Serial.print(", ");
+    Serial.println(reading.windSpeed);
+  }
+
+  //send serialized reading to the cloud
+  char *publishedReading = serialize(&reading);
+  Serial.println(publishedReading);
+  Particle.publish("Reading", publishedReading, 60, PRIVATE);
+
+  //Allow particle to process before going into deep sleep
+  Particle.process();
+
+  if (settings.diagnositicCycles)
+  {
+    Serial.print("DIAGNOSTIC COUNT ");
+    Serial.println(settings.diagnositicCycles);
+    digitalWrite(LED, LOW);
+  }
 
   void (*sleepAction)();
   const char *sleepMessage;
