@@ -7,8 +7,6 @@
 #define ANEMOMETER D1
 #define WAKEUP_BUDDY_ADDRESS 8
 
-#define DHTTYPE DHT22
-#define DHT_INIT_TIMEOUT 1000
 #define ANEMOMETER_TIMEOUT 1000
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
@@ -17,13 +15,11 @@ SYSTEM_MODE(SEMI_AUTOMATIC);
 #include "Compass.h"
 #include "settings.h"
 
-#include <Adafruit_DHT.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include <LaCrosse_TX23.h>
 #include <ArduinoJson.h>
 
-DHT dht(DHT_IN, DHTTYPE);
 Adafruit_BME280 bme280;
 LaCrosse_TX23 laCrosseTX23(ANEMOMETER);
 
@@ -45,9 +41,6 @@ struct Reading
   bool anemometerRead;
   float windSpeed;
   int windDirection;
-  bool dhtRead;
-  float dhtTemperature;
-  float dhtHumidity;
   bool bmeRead;
   float bmeTemperature;
   float pressure;
@@ -85,18 +78,6 @@ bool readAnemometer(Reading *reading)
   Serial.print("ANEMOMETER ");
   bool result = timeout(ANEMOMETER_TIMEOUT, [reading]() {
     return laCrosseTX23.read(reading->windSpeed, reading->windDirection);
-  });
-  Serial.println();
-  return result;
-}
-
-bool readDht(Reading *reading)
-{
-  Serial.print("DHT ");
-  bool result = timeout(DHT_INIT_TIMEOUT, [reading]() {
-    reading->dhtTemperature = dht.getTempCelcius();
-    reading->dhtHumidity = dht.getHumidity();
-    return !isnan(reading->dhtTemperature) && !isnan(reading->dhtHumidity);
   });
   Serial.println();
   return result;
@@ -152,7 +133,6 @@ void deviceSetup()
 
     //the bme280 will activate the Wire library as well.
     bme280.begin(0x76);
-    dht.begin();
 
     //Enable the Wire library if it wasn't already enabled by another sensor
     if (!Wire.isEnabled())
@@ -207,8 +187,8 @@ void setup()
 {
   watchDog.checkin();
 
-  Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
-  Particle.connect();
+  //Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
+  //Particle.connect();
 
   if (brownout)
   {
@@ -235,10 +215,6 @@ char* serialize(Reading *reading)
     {
         buffer += sprintf(buffer, "b%f:%f:%f", reading->bmeTemperature, reading->pressure, reading->bmeHumidity);
     }
-    if(reading->dhtRead)
-    {
-        buffer += sprintf(buffer, "d%f:%f", reading->dhtTemperature, reading->dhtHumidity);
-    }
     if(reading->anemometerRead)
     {
         buffer += sprintf(buffer, "a%f:%d", reading->windSpeed, reading->windDirection);
@@ -260,10 +236,6 @@ void loop()
   if (!(reading.bmeRead = readBme280(&reading)))
   {
     onError("ERROR: BME280 temp/pressure sensor");
-  }
-  if (!(reading.dhtRead = readDht(&reading)))
-  {
-    onError("ERROR: DHT22 temp/humidity sensor");
   }
   if (!(reading.anemometerRead = readAnemometer(&reading)))
   {
