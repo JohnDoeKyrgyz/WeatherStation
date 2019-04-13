@@ -13,7 +13,7 @@ void loop();
 #define FIRMWARE_VERSION "1.0"
 
 #define LED D7
-#define ANEMOMETER A5
+#define ANEMOMETER A4
 #define WAKEUP_BUDDY_ADDRESS 8
 
 #define ANEMOMETER_TIMEOUT 1000
