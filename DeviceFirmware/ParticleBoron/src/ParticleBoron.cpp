@@ -274,7 +274,6 @@ void loop()
       onError("ERROR: Could not read anemometer");
     }
 
-    Serial.println("Read");
     Particle.process();
 
     //take the greater of the initial wind reading or the most recent wind reading
