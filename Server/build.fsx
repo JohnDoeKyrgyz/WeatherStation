@@ -27,7 +27,7 @@ let webDeployDir = Path.combine webPath "deploy"
 [<Literal>]
 let BuildSettingsFile = __SOURCE_DIRECTORY__ + @"\build.settings.json"
 type DeploymentSettings = JsonProvider< BuildSettingsFile >
-let deploymentSettings = DeploymentSettings.Load (Path.combine __SOURCE_DIRECTORY__ "local.build.settings.json")
+let deploymentSettings = lazy DeploymentSettings.Load (Path.combine __SOURCE_DIRECTORY__ "local.build.settings.json")
 
 let platformTool tool winTool =
     let tool = if Environment.isUnix then tool else winTool
@@ -113,12 +113,12 @@ let deploy zipFile deployDir appName appPassword =
     client.UploadData(destinationUri, IO.File.ReadAllBytes zipFile) |> ignore
 
 Target.create "WebAppDeploy" (fun _ ->
-    deploy "WebAppDeploy.zip" webDeployDir deploymentSettings.WebApp.Name deploymentSettings.WebApp.Password
+    deploy "WebAppDeploy.zip" webDeployDir deploymentSettings.Value.WebApp.Name deploymentSettings.Value.WebApp.Password
 )
 
 Target.create "FunctionsDeploy" (fun _ ->
     let deployDir = Path.combine functionsPath @"bin\Debug\netstandard2.0"
-    runTool funcTool (sprintf "azure functionapp publish %s" deploymentSettings.FunctionApp.Name) deployDir
+    runTool funcTool (sprintf "azure functionapp publish %s" deploymentSettings.Value.FunctionApp.Name) deployDir
 )
     
 
