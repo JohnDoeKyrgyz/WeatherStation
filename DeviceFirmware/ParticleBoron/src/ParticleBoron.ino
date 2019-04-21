@@ -54,16 +54,12 @@ struct Reading
 
 Reading initialReading;
 char messageBuffer[255];
+float systemVoltage;
 
 void onError(const char *message)
 {
   RGB.color(255, 255, 0);
   Serial.println(message);
-}
-
-bool checkBrownout()
-{
-  return settings.brownout && fuelGuage.getVCell() < settings.brownoutVoltage;
 }
 
 bool readAnemometer(Reading *reading)
@@ -118,10 +114,23 @@ void deviceSetup()
   Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
 
   //Load saved settings;
+  Serial.print("Loaded settings...");
   settings = loadSettings();
+  Serial.println("!");  
 
-  if (!(brownout = checkBrownout()))
+  Serial.print("Checking brownout...");
+  fuelGuage.begin();
+  systemVoltage = fuelGuage.getVCell();
+  brownout = settings.brownout && systemVoltage < settings.brownoutVoltage;
+  Serial.println("!");
+
+  if(brownout)
   {
+    Serial.printlnf("Brownout threshold %f exceeded by system voltage %f", settings.brownoutVoltage, systemVoltage);
+  }
+  else
+  {
+    Serial.print("Initializing sensors...");
     //Enable the Wire library if it wasn't already enabled by another sensor
     if (!Wire.isEnabled())
     {
@@ -137,6 +146,7 @@ void deviceSetup()
 
     Wire.reset();
     compassSensor.begin();
+    Serial.println("!");
     
     if (settings.diagnositicCycles > 0)
     {
@@ -160,6 +170,12 @@ void deviceSetup()
 void watchDogTimeout()
 {
   Serial.println("Watchdog timeout");
+
+  if(Particle.connected())
+  {
+    Particle.publish("WATCHDOG", PRIVATE);
+  }
+  
   delay(100); //Allow the Serial buffer to fully flush
   System.reset();
 }
@@ -232,12 +248,8 @@ void loop()
 
   if (brownout)
   {
-    float voltage = fuelGuage.getVCell();
-    Serial.print("BROWNOUT ");
-    Serial.println(voltage);
-
     char *buffer = messageBuffer;
-    sprintf(buffer, "%f:%d", voltage, settings.brownoutMinutes);
+    sprintf(buffer, "%f:%d", systemVoltage, settings.brownoutMinutes);
     Particle.publish("Brownout", buffer, 60, PRIVATE);
     Particle.process();
 
@@ -248,6 +260,7 @@ void loop()
     Reading reading;
     reading.version = settings.version;
 
+    Serial.println("Reading...");
     readVoltage(&reading);
 
     if (!(reading.bmeRead = readBme280(&reading)))
@@ -262,6 +275,7 @@ void loop()
     {
       onError("ERROR: Could not read anemometer");
     }
+    Serial.println("Reading complete");
 
     Particle.process();
 
