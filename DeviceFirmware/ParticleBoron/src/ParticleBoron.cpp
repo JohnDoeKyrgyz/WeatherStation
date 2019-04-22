@@ -12,7 +12,9 @@ void loop();
 #define FIRMWARE_VERSION "1.0"
 
 #define ANEMOMETER_TRIES 3
-#define WATCHDOG_TIMEOUT 60000
+#define WATCHDOG_TIMEOUT 120000 //milliseconds
+#define SLEEP_MODE SLEEP_NETWORK_STANDBY
+//#define SLEEP_MODE SLEEP_MODE_DEEP
 
 #define LED D7
 #define ANEMOMETER A4
@@ -65,6 +67,7 @@ struct Reading
 Reading initialReading;
 char messageBuffer[255];
 float systemVoltage;
+bool suspendWatchDog = false;
 
 void onError(const char *message)
 {
@@ -184,10 +187,15 @@ void watchDogTimeout()
   if(Particle.connected())
   {
     Particle.publish("WATCHDOG", PRIVATE);
+    Particle.connect();
   }
-  
-  delay(100); //Allow the Serial buffer to fully flush
-  System.reset();
+
+  if(!suspendWatchDog)
+  {
+    Serial.println("RESET");
+    delay(100); //Allow the Serial buffer to fully flush
+    System.reset();
+  }
 }
 
 void deepSleep(unsigned int milliseconds)
@@ -199,7 +207,8 @@ void deepSleep(unsigned int milliseconds)
   Wire.endTransmission();
 
   fuelGuage.sleep();
-  System.sleep(SLEEP_MODE_DEEP);
+  //System.sleep(SLEEP_MODE_DEEP);
+  System.sleep(D8, RISING, SLEEP_MODE);
 }
 
 void onSettingsUpdate(const char *event, const char *data)
@@ -211,7 +220,7 @@ void onSettingsUpdate(const char *event, const char *data)
   Serial.print("SETTINGS UPDATE: ");
   Serial.println(data);
 
-  Particle.publish("Settings", data, 60, PRIVATE);
+  Particle.publish("Settings-Echo", data, 60, PRIVATE, WITH_ACK);
   Particle.process();
 
   digitalWrite(LED, LOW);
@@ -260,7 +269,11 @@ void loop()
   {
     char *buffer = messageBuffer;
     sprintf(buffer, "%f:%d", systemVoltage, settings.brownoutMinutes);
-    Particle.publish("Brownout", buffer, 60, PRIVATE);
+    
+    waitUntil(Particle.connected);
+
+    suspendWatchDog = true;
+    Particle.publish("Brownout", buffer, 60, PRIVATE, WITH_ACK);
     Particle.process();
 
     deepSleep(settings.brownoutMinutes * 60000);
@@ -285,10 +298,7 @@ void loop()
     {
       onError("ERROR: Could not read anemometer");
     }
-    Serial.println("Reading complete");
-
-    Particle.process();
-
+    
     //take the greater of the initial wind reading or the most recent wind reading
     if (!reading.anemometerRead || (reading.anemometerRead && initialReading.anemometerRead && initialReading.windSpeed > reading.windSpeed))
     {
@@ -304,9 +314,16 @@ void loop()
     char *publishedReading = serialize(&reading);
     Serial.println(publishedReading);
 
-    //watchDog.checkin();
+    Serial.print("Connecting...");
+    watchDog.checkin();
     waitUntil(Particle.connected);
-    Particle.publish("Reading", publishedReading, 60, PRIVATE);
+    Serial.println("!");
+    watchDog.checkin();    
+    Serial.print("Sending reading...");
+    suspendWatchDog = true;
+    bool publishResult = Particle.publish("Reading", publishedReading, 60, PRIVATE, WITH_ACK);
+    suspendWatchDog = false;
+    Serial.printlnf(" %s!", publishResult ? "+" : "-");
 
     //Allow particle to process before going into deep sleep
     Particle.process();
@@ -343,6 +360,7 @@ void loop()
     Serial.print("DURATION ");
     Serial.println(millis() - duration);
 
+    Serial.flush();
     sleepAction();
   }
 }
