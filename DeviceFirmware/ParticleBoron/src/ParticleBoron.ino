@@ -2,6 +2,7 @@
 #define FIRMWARE_VERSION "1.0"
 
 #define ANEMOMETER_TRIES 3
+#define SEND_TRIES 3
 #define WATCHDOG_TIMEOUT 120000 //milliseconds
 #define SLEEP_MODE SLEEP_NETWORK_STANDBY
 //#define SLEEP_MODE SLEEP_MODE_DEEP
@@ -308,12 +309,21 @@ void loop()
     watchDog.checkin();
     waitUntil(Particle.connected);
     Serial.println("!");
-    watchDog.checkin();    
-    Serial.print("Sending reading...");
-    suspendWatchDog = true;
-    bool publishResult = Particle.publish("Reading", publishedReading, 60, PRIVATE, WITH_ACK);
-    suspendWatchDog = false;
-    Serial.printlnf(" %s!", publishResult ? "+" : "-");
+
+    int tries = SEND_TRIES;
+    bool sentReading = false;
+    do
+    {
+      watchDog.checkin();    
+      Serial.print("Sending reading... ");
+      suspendWatchDog = true;
+      sentReading = Particle.publish("Reading", publishedReading, 60, PRIVATE, WITH_ACK);
+      suspendWatchDog = false;
+      Serial.print(".");
+    }
+    while(!sentReading && --tries > 0);
+
+    Serial.printlnf(" %s!", sentReading ? "+" : "-");    
 
     //Allow particle to process before going into deep sleep
     Particle.process();
