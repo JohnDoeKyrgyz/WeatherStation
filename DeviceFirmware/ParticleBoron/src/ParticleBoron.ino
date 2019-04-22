@@ -210,10 +210,6 @@ void onSettingsUpdate(const char *event, const char *data)
 
   Serial.print("SETTINGS UPDATE: ");
   Serial.println(data);
-
-  Particle.publish("Settings-Echo", data, 60, PRIVATE, WITH_ACK);
-  Particle.process();
-
   digitalWrite(LED, LOW);
 }
 

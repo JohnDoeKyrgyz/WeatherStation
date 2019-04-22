@@ -67,6 +67,8 @@
         {
             "name": "Win32",
             "includePath": [
+                "C:\\Users\\jatwood\\AppData\\Local\\Arduino15\\packages\\esp8266\\tools\\**",
+                "C:\\Users\\jatwood\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.5.0\\**",
                 "C:\\Users\\jatwood\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.1\\cores\\esp8266"
             ],
             "browse": {
@@ -75,7 +77,8 @@
                     "C:\\Users\\jatwood\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.4.1\\cores\\esp8266"
                 ]
             },
-            "configurationProvider": "particle.particle-vscode-core"
+            "configurationProvider": "particle.particle-vscode-core",
+            "forcedInclude": []
         }
     ],
     "version": 4
