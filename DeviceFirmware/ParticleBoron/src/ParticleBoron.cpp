@@ -5,6 +5,7 @@ void onError(const char *message);
 void watchDogTimeout();
 void deepSleep(unsigned int milliseconds);
 void onSettingsUpdate(const char *event, const char *data);
+void startup();
 void setup();
 void loop();
 #line 2 "c:/working/WeatherStation/DeviceFirmware/ParticleBoron/src/ParticleBoron.ino"
@@ -178,12 +179,16 @@ char *serialize(Reading *reading)
   return messageBuffer;
 }
 
-void setup()
+void startup()
 {
   //Turn off the status LED to save power
   RGB.control(true);
   RGB.color(0, 0, 0);
+}
+STARTUP(startup());
 
+void setup()
+{
   Serial.begin(115200);
   //delay(10000); //This is handy when you want to debug from the start
 
