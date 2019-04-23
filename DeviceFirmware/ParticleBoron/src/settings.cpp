@@ -62,12 +62,6 @@ const Settings& loadSettings()
 
 void saveSettings(Settings& settings)
 {
-    const Settings& existingSettings = loadSettings();
-    
-    settings.version = existingSettings.version + 1;
-    Serial.print("SAVING SETTINGS ");
-    Serial.print(settings.version);
-    Serial.println();
-    
+    const Settings& existingSettings = loadSettings();    
     EEPROM.put(0,settings);
 }

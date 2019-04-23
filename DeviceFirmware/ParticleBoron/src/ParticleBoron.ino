@@ -4,8 +4,8 @@
 #define ANEMOMETER_TRIES 3
 #define SEND_TRIES 3
 #define WATCHDOG_TIMEOUT 120000 //milliseconds
-#define SLEEP_MODE SLEEP_NETWORK_STANDBY
-//#define SLEEP_MODE SLEEP_MODE_DEEP
+//#define SLEEP_MODE SLEEP_NETWORK_STANDBY
+#define SLEEP_MODE SLEEP_MODE_DEEP
 
 #define LED D7
 #define ANEMOMETER A4
@@ -197,8 +197,8 @@ void deepSleep(unsigned int milliseconds)
   Wire.write(milliseconds >> 8);
   Wire.endTransmission();
 
-  fuelGuage.sleep();
-  //System.sleep(SLEEP_MODE_DEEP);
+  Serial.flush();
+  fuelGuage.sleep();  
   System.sleep(D8, RISING, SLEEP_MODE);
 }
 
