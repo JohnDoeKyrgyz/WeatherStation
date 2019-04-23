@@ -206,6 +206,7 @@ void setup()
   Cellular.on();
   Cellular.connect();
   Particle.connect();
+  Particle.process();
 
   //Load saved settings;
   Serial.print("Loaded settings...");
@@ -262,6 +263,7 @@ void setup()
 void loop()
 {
   watchDog.checkin();
+  Particle.process();
 
   if (brownout)
   {
@@ -315,6 +317,8 @@ void loop()
     waitUntil(Particle.connected);
     Serial.println("!");
 
+    Particle.process();
+
     int tries = SEND_TRIES;
     bool sentReading = false;
     do
@@ -359,7 +363,9 @@ void loop()
     Serial.printlnf("%s SLEEP %d", sleepMessage, settings.sleepTime);
     Serial.printlnf("DURATION %d", millis() - duration);
 
-    Serial.flush();
+    Particle.process();
+    
+    Serial.flush();    
     sleepAction();
   }
 }
