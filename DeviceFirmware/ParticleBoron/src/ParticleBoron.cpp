@@ -187,6 +187,9 @@ void setup()
   Serial.begin(115200);
   //delay(10000); //This is handy when you want to debug from the start
 
+  //don't send reset info. This will just take up all our bandwith since we are using a deep sleep
+  System.disable(SYSTEM_FLAG_PUBLISH_RESET_INFO);
+
   duration = millis();
   Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
 
