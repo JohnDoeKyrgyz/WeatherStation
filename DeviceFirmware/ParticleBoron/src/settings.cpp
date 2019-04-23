@@ -62,6 +62,5 @@ const Settings& loadSettings()
 
 void saveSettings(Settings& settings)
 {
-    const Settings& existingSettings = loadSettings();    
     EEPROM.put(0,settings);
 }

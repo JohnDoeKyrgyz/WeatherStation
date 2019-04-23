@@ -130,7 +130,7 @@ void deviceSetup()
   //Load saved settings;
   Serial.print("Loaded settings...");
   settings = loadSettings();
-  Serial.println("!");  
+  Serial.println("!");
 
   Serial.print("Checking brownout...");
   fuelGuage.begin();
