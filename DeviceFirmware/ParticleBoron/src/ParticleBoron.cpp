@@ -2,7 +2,6 @@
 #line 1 "c:/working/WeatherStation/DeviceFirmware/ParticleBoron/src/ParticleBoron.ino"
 
 void onError(const char *message);
-void deviceSetup();
 void watchDogTimeout();
 void deepSleep(unsigned int milliseconds);
 void onSettingsUpdate(const char *event, const char *data);
@@ -14,15 +13,13 @@ void loop();
 #define ANEMOMETER_TRIES 3
 #define SEND_TRIES 3
 #define WATCHDOG_TIMEOUT 120000 //milliseconds
-//#define SLEEP_MODE SLEEP_NETWORK_STANDBY
-#define SLEEP_MODE SLEEP_MODE_DEEP
 
 #define LED D7
 #define ANEMOMETER A4
 #define WAKEUP_BUDDY_ADDRESS 8
 
 SYSTEM_THREAD(ENABLED);
-SYSTEM_MODE(AUTOMATIC);
+SYSTEM_MODE(MANUAL);
 
 #include <Wire.h>
 #include "Compass.h"
@@ -68,7 +65,6 @@ struct Reading
 Reading initialReading;
 char messageBuffer[255];
 float systemVoltage;
-bool suspendWatchDog = false;
 
 void onError(const char *message)
 {
@@ -114,8 +110,75 @@ bool readCompass(Reading *reading)
   return true;
 }
 
-STARTUP(deviceSetup());
-void deviceSetup()
+void watchDogTimeout()
+{
+  Serial.println("Watchdog timeout");
+
+  Particle.publish("WATCHDOG", PRIVATE);
+  Particle.process();
+
+  Serial.flush();
+  System.reset();
+}
+
+void deepSleep(unsigned int milliseconds)
+{
+  Serial.printlnf("Deep Sleep for %d milliseconds", milliseconds);
+  Particle.disconnect();
+  waitUntil(Particle.disconnected);
+  Cellular.off();
+  delay(4000);
+  
+  //signal the ATTINY 85 to wake us up
+  Wire.beginTransmission(WAKEUP_BUDDY_ADDRESS);
+  Wire.write(milliseconds);
+  Wire.write(milliseconds >> 8);
+  Wire.endTransmission();
+
+  Serial.flush();
+  fuelGuage.sleep();  
+  System.sleep(SLEEP_MODE_DEEP);
+}
+
+void onSettingsUpdate(const char *event, const char *data)
+{
+  digitalWrite(LED, HIGH);
+  settings = deserialize(data);
+  saveSettings(settings);
+
+  Serial.print("SETTINGS UPDATE: ");
+  Serial.println(data);
+  digitalWrite(LED, LOW);
+}
+
+char *serialize(Reading *reading)
+{
+  char *buffer = messageBuffer;
+  buffer += 
+    sprintf(
+      buffer, 
+      "%d:%f:%f:%f:%f|", 
+      reading->version, 
+      reading->batteryVoltage, 
+      reading->batteryPercentage, 
+      reading->panelVoltage, 
+      reading->panelCurrent);
+  if (reading->bmeRead)
+  {
+    buffer += sprintf(buffer, "b%f:%f:%f", reading->bmeTemperature, reading->pressure, reading->bmeHumidity);
+  }
+  if (reading->anemometerRead)
+  {
+    buffer += sprintf(buffer, "a%f:%d", reading->windSpeed, reading->windDirection);
+  }
+  if (reading->compassRead)
+  {
+    buffer += sprintf(buffer, "c%f:%f:%f", reading->compassReading.x, reading->compassReading.y, reading->compassReading.z);
+  }
+  return messageBuffer;
+}
+
+void setup()
 {
   //Turn off the status LED to save power
   RGB.control(true);
@@ -126,6 +189,15 @@ void deviceSetup()
 
   duration = millis();
   Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
+
+  //connect to the cloud once we have taken all our measurements
+  Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
+  
+  //begin connecting to the cloud
+  Serial.println("Connecting...");
+  Cellular.on();
+  Cellular.connect();
+  Particle.connect();
 
   //Load saved settings;
   Serial.print("Loaded settings...");
@@ -176,86 +248,7 @@ void deviceSetup()
     {
       onError("ERROR: Could not get initial wind reading");
     }
-  }
-
-  watchDog.checkin();
-}
-
-void watchDogTimeout()
-{
-  Serial.println("Watchdog timeout");
-
-  if(Particle.connected())
-  {
-    Particle.publish("WATCHDOG", PRIVATE);
-    Particle.connect();
-  }
-
-  if(!suspendWatchDog)
-  {
-    Serial.println("RESET");
-    delay(100); //Allow the Serial buffer to fully flush
-    System.reset();
-  }
-}
-
-void deepSleep(unsigned int milliseconds)
-{
-  Serial.printlnf("Deep Sleep for %d milliseconds", milliseconds);
-  Wire.beginTransmission(WAKEUP_BUDDY_ADDRESS);
-  Wire.write(milliseconds);
-  Wire.write(milliseconds >> 8);
-  Wire.endTransmission();
-
-  Serial.flush();
-  fuelGuage.sleep();  
-  System.sleep(D8, RISING, SLEEP_MODE);
-}
-
-void onSettingsUpdate(const char *event, const char *data)
-{
-  digitalWrite(LED, HIGH);
-  settings = deserialize(data);
-  saveSettings(settings);
-
-  Serial.print("SETTINGS UPDATE: ");
-  Serial.println(data);
-  digitalWrite(LED, LOW);
-}
-
-char *serialize(Reading *reading)
-{
-  char *buffer = messageBuffer;
-  buffer += 
-    sprintf(
-      buffer, 
-      "%d:%f:%f:%f:%f|", 
-      reading->version, 
-      reading->batteryVoltage, 
-      reading->batteryPercentage, 
-      reading->panelVoltage, 
-      reading->panelCurrent);
-  if (reading->bmeRead)
-  {
-    buffer += sprintf(buffer, "b%f:%f:%f", reading->bmeTemperature, reading->pressure, reading->bmeHumidity);
-  }
-  if (reading->anemometerRead)
-  {
-    buffer += sprintf(buffer, "a%f:%d", reading->windSpeed, reading->windDirection);
-  }
-  if (reading->compassRead)
-  {
-    buffer += sprintf(buffer, "c%f:%f:%f", reading->compassReading.x, reading->compassReading.y, reading->compassReading.z);
-  }
-  return messageBuffer;
-}
-
-void setup()
-{
-  watchDog.checkin();
-
-  //connect to the cloud once we have taken all our measurements
-  Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
+  }  
 }
 
 void loop()
@@ -268,8 +261,6 @@ void loop()
     sprintf(buffer, "%f:%d", systemVoltage, settings.brownoutMinutes);
     
     waitUntil(Particle.connected);
-
-    suspendWatchDog = true;
     Particle.publish("Brownout", buffer, 60, PRIVATE, WITH_ACK);
     Particle.process();
 
@@ -311,7 +302,7 @@ void loop()
     char *publishedReading = serialize(&reading);
     Serial.println(publishedReading);
 
-    Serial.print("Connecting...");
+    Serial.print("Waiting for connection...");
     watchDog.checkin();
     waitUntil(Particle.connected);
     Serial.println("!");
@@ -322,9 +313,7 @@ void loop()
     {
       watchDog.checkin();    
       Serial.print("Sending reading... ");
-      suspendWatchDog = true;
       sentReading = Particle.publish("Reading", publishedReading, 60, PRIVATE, WITH_ACK);
-      suspendWatchDog = false;
       Serial.print(".");
     }
     while(!sentReading && --tries > 0);
@@ -355,16 +344,12 @@ void loop()
       sleepMessage = "LIGHT";
       sleepAction = []() {
         delay(settings.sleepTime * 1000);
-        deviceSetup();
+        setup();
       };
     }
 
-    Serial.print(sleepMessage);
-    Serial.print(" SLEEP ");
-    Serial.println(settings.sleepTime);
-
-    Serial.print("DURATION ");
-    Serial.println(millis() - duration);
+    Serial.printlnf("%s SLEEP %d", sleepMessage, settings.sleepTime);
+    Serial.printlnf("DURATION %d", millis() - duration);
 
     Serial.flush();
     sleepAction();
