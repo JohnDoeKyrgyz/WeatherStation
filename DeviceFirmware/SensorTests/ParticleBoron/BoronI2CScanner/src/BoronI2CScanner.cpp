@@ -1,20 +1,25 @@
 #include "application.h"
 #line 1 "c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronI2CScanner/src/BoronI2CScanner.ino"
+
 void setup();
 void loop();
-#line 1 "c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronI2CScanner/src/BoronI2CScanner.ino"
-SYSTEM_MODE(SEMI_AUTOMATIC);
+#line 2 "c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronI2CScanner/src/BoronI2CScanner.ino"
+SYSTEM_MODE(MANUAL);
 
 #include <Wire.h>
 
 void setup()
-{
+{  
+  Serial.begin(115200);
+  
+  Particle.disconnect();
+  Cellular.off();
+
+  delay(10000);
+  Serial.println("I2C Scanner");
+
   Wire.begin();
-
-  Serial.begin(9600);
-  Serial.println("\nI2C Scanner");
 }
-
 
 void loop()
 {

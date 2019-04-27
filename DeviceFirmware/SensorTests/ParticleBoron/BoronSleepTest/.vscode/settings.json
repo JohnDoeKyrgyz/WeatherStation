@@ -1,0 +1,13 @@
+{
+    "particle.targetPlatform": "boron",
+    "particle.firmwareVersion": "0.9.0",
+    "cortex-debug.openocdPath": "C:\\Users\\jatwood\\.particle\\toolchains\\openocd\\0.10.0-particle.1\\bin\\openocd.exe",
+    "files.associations": {
+        "istream": "cpp",
+        "*.tcc": "cpp",
+        "initializer_list": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp",
+        "memory": "cpp"
+    }
+}
