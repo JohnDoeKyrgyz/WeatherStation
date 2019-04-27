@@ -174,6 +174,12 @@ void startup()
   //Turn off the status LED to save power
   RGB.control(true);
   RGB.color(0, 0, 0);
+
+  pmic.setInputVoltageLimit(5080);  //  for 6V Solar Panels
+  pmic.setInputCurrentLimit(2000) ; // 2000 mA, higher than req'd
+  pmic.setChargeVoltage(4208);      //  Set Li-Po charge termination voltage to 4.21V,  Monitor the Enclosure Temps
+  pmic.setChargeCurrent(0, 0, 1, 1, 1, 0); // 1408 mA [0+0+512mA+256mA+128mA+0] + 512 Offset
+  pmic.enableDPDM();
 }
 STARTUP(startup());
 
@@ -354,7 +360,7 @@ void loop()
     Serial.printlnf("DURATION %d", millis() - duration);
 
     Particle.process();
-    
+
     Serial.flush();    
     sleepAction();
   }
