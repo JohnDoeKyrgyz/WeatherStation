@@ -173,26 +173,27 @@ void startup()
 {
   //Turn off the status LED to save power
   RGB.control(true);
-  RGB.color(0, 0, 0);
-
-  pmic.setInputVoltageLimit(5080);  //  for 6V Solar Panels
-  pmic.setInputCurrentLimit(2000) ; // 2000 mA, higher than req'd
-  pmic.setChargeVoltage(4208);      //  Set Li-Po charge termination voltage to 4.21V,  Monitor the Enclosure Temps
-  pmic.setChargeCurrent(0, 0, 1, 1, 1, 0); // 1408 mA [0+0+512mA+256mA+128mA+0] + 512 Offset
-  pmic.enableDPDM();
+  RGB.color(0, 0, 0);  
 }
 STARTUP(startup());
 
 void setup()
 {
   Serial.begin(115200);
-  //delay(10000); //This is handy when you want to debug from the start
+
+  duration = millis();
+  Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
 
   //don't send reset info. This will just take up all our bandwith since we are using a deep sleep
   System.disable(SYSTEM_FLAG_PUBLISH_RESET_INFO);
 
-  duration = millis();
-  Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
+  Serial.print("Configure power management...");
+  pmic.setInputVoltageLimit(5080);  //  for 6V Solar Panels
+  pmic.setInputCurrentLimit(2000) ; // 2000 mA, higher than req'd
+  pmic.setChargeVoltage(4208);      //  Set Li-Po charge termination voltage to 4.21V,  Monitor the Enclosure Temps
+  pmic.setChargeCurrent(0, 0, 1, 1, 1, 0); // 1408 mA [0+0+512mA+256mA+128mA+0] + 512 Offset
+  pmic.enableDPDM();
+  Serial.println("!");
 
   //connect to the cloud once we have taken all our measurements
   Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
@@ -221,21 +222,9 @@ void setup()
   }
   else
   {
-    Serial.print("Initializing sensors...");
-    //Enable the Wire library if it wasn't already enabled by another sensor
-    if (!Wire.isEnabled())
-    {
-      Wire.begin();
-    }
-
-    //the bme280 will activate the Wire library as well.
-    Wire.reset();
+    Serial.print("Initializing sensors...");    
     powerMonitor.begin();
-
-    Wire.reset();
     bme280.begin(0x76);
-
-    Wire.reset();
     compassSensor.begin();
     Serial.println("!");
     

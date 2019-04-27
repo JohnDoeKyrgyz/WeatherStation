@@ -16,3 +16,4 @@ Server/local.build.settings.json
 Server/*.zip
 Server/.fake/
 *.bin
+/DeviceFirmware/ParticleBoron/shared
