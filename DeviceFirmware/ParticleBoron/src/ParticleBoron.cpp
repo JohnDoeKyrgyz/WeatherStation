@@ -130,7 +130,7 @@ void watchDogTimeout()
 
 void deepSleep(unsigned int milliseconds)
 {
-  Serial.printlnf("Deep Sleep for %d milliseconds. Brownout = %d, SoC = %f", milliseconds, brownout, systemSoC);
+  Serial.printlnf("Deep Sleep for %d milliseconds. Brownout = %d, SoC = %f, settings.diagnositicCycles = %d", milliseconds, brownout, systemSoC, settings.diagnositicCycles);
   Particle.disconnect();
   waitUntil(Particle.disconnected);
   Cellular.off();
@@ -251,7 +251,7 @@ void setup()
     {
       pinMode(LED, OUTPUT);
       digitalWrite(LED, HIGH);
-      settings.diagnositicCycles--;
+      settings.diagnositicCycles = settings.diagnositicCycles - 1;
 
       saveSettings(settings);
     }
@@ -343,12 +343,9 @@ void loop()
     //Allow particle to process before going into deep sleep
     Particle.process();
 
-    if (settings.diagnositicCycles)
-    {
-      Serial.print("DIAGNOSTIC COUNT ");
-      Serial.println(settings.diagnositicCycles);
-      digitalWrite(LED, LOW);
-    }
+    Serial.printlnf("DIAGNOSTIC COUNT %d", settings.diagnositicCycles);
+    Serial.println(settings.diagnositicCycles);
+    digitalWrite(LED, LOW);
 
     void (*sleepAction)();
     const char *sleepMessage;
@@ -373,7 +370,7 @@ void loop()
 
     Particle.process();
 
-    Serial.flush();    
+    Serial.flush(); 
     sleepAction();
   }
 }
