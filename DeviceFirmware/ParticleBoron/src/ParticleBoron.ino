@@ -132,7 +132,8 @@ void deepSleep(unsigned int milliseconds)
   Wire.endTransmission();
 
   Serial.flush();
-  fuelGuage.sleep();  
+  fuelGuage.sleep();
+  watchDog.dispose();
   System.sleep(SLEEP_MODE_DEEP);
 }
 
