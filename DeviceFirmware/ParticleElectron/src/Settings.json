@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "brownoutVoltage": 4.8,
+    "brownoutPercentage": 0.2,
     "brownout": true,
     "brownoutMinutes": 1,
     "sleepTime": 160,

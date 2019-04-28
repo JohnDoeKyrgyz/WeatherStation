@@ -6,7 +6,7 @@
 Settings DefaultSettings = {
     0, //version
     false, //brownout
-    4.6, //brownoutVoltage
+    0.2, //brownoutPercentage
     0, //brownoutMinutes
     30, //sleepTime
     1, //diagnositicCycles
@@ -19,7 +19,7 @@ DynamicJsonDocument& serialize(Settings& settings)
 {    
     jsonBuffer["version"] = settings.version;
     jsonBuffer["brownout"] = settings.brownout;
-    jsonBuffer["brownoutVoltage"] = settings.brownoutVoltage;
+    jsonBuffer["brownoutPercentage"] = settings.brownoutPercentage;
     jsonBuffer["brownoutMinutes"] = settings.brownoutMinutes;
     jsonBuffer["sleepTime"] = settings.sleepTime;
     jsonBuffer["diagnositicCycles"] = settings.diagnositicCycles;
@@ -38,7 +38,7 @@ const Settings& deserialize(const char* json)
 
     result->version = jsonBuffer["version"];
     result->brownout = jsonBuffer["brownout"];
-    result->brownoutVoltage = jsonBuffer["brownoutVoltage"];
+    result->brownoutPercentage = jsonBuffer["brownoutPercentage"];
     result->brownoutMinutes = jsonBuffer["brownoutMinutes"];
     result->sleepTime = jsonBuffer["sleepTime"];
     result->diagnositicCycles = jsonBuffer["diagnositicCycles"];

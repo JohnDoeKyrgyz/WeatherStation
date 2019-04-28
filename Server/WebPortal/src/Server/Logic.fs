@@ -78,7 +78,7 @@ module Logic =
             let! particleCloud = ParticleConnect.connect |> Async.StartAsTask
             match particleCloud with
             | Ok particleCloud ->
-                let particleSettings = ParticleSettings.Root(1, settings.BrownoutVoltage, settings.Brownout, settings.BrownoutMinutes, settings.SleepTime, settings.DiagnosticCycles, settings.UseDeepSleep)
+                let particleSettings = ParticleSettings.Root(1, settings.BrownoutPercentage, settings.Brownout, settings.BrownoutMinutes, settings.SleepTime, settings.DiagnosticCycles, settings.UseDeepSleep)
                 let serializedSettings = particleSettings.JsonValue.ToString()
                 try
                     let! result = particleCloud.PublishEventAsync("Settings", serializedSettings)

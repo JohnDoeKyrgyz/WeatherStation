@@ -231,9 +231,9 @@ module Device =
                     |> simpleFormControl "Brownout"
 
                     decimalInput 
-                        (readValue (fun settings -> settings.BrownoutVoltage))
-                        (setValue (fun settings value -> {settings with BrownoutVoltage = value}))
-                    |> simpleFormControl "Brownout Voltage"
+                        (readValue (fun settings -> settings.BrownoutPercentage))
+                        (setValue (fun settings value -> {settings with BrownoutPercentage = value}))
+                    |> simpleFormControl "Brownout Percentage"
 
                     intInput 
                         (readValue (fun settings -> settings.BrownoutMinutes))

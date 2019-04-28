@@ -67,7 +67,7 @@ struct Reading
 
 Reading initialReading;
 char messageBuffer[255];
-float systemVoltage;
+float systemSoC;
 
 void publishStatusMessage(const char* message){  
   Serial.println(message);
@@ -232,15 +232,11 @@ void setup()
 
   Serial.print("Checking brownout...");
   fuelGuage.begin();
-  systemVoltage = fuelGuage.getVCell();
-  brownout = settings.brownout && systemVoltage < settings.brownoutVoltage;
+  systemSoC = fuelGuage.getSoC();
+  brownout = settings.brownout && systemSoC < settings.brownoutPercentage;
   Serial.println("!");
 
-  if(brownout)
-  {
-    Serial.printlnf("Brownout threshold %f exceeded by system voltage %f", settings.brownoutVoltage, systemVoltage);
-  }
-  else
+  if(!brownout)
   {
     Serial.print("Initializing sensors...");    
     powerMonitor.begin();
@@ -272,8 +268,10 @@ void loop()
 
   if (brownout)
   {
+    Serial.printlnf("Brownout threshold %f exceeded by system battery percentage %f", settings.brownoutPercentage, systemSoC);
+
     char *buffer = messageBuffer;
-    sprintf(buffer, "BROWNOUT %f:%d", systemVoltage, settings.brownoutMinutes);
+    sprintf(buffer, "BROWNOUT %f:%d", systemSoC, settings.brownoutMinutes);
     
     publishStatusMessage(buffer);
 

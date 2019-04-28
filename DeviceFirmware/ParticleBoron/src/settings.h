@@ -7,7 +7,7 @@ typedef struct Settings
 {
     unsigned int version;
     bool brownout;
-    float brownoutVoltage;
+    float brownoutPercentage;
     unsigned int brownoutMinutes;
     unsigned long sleepTime;
     unsigned int diagnositicCycles;
