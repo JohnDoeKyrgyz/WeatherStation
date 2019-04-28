@@ -49,7 +49,7 @@ module Data =
         let! weatherStationRepository = weatherStationRepository connectionString
         match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
         | Some station ->
-            let serializedSettings = 
+            let updatedSettings, serializedSettings = 
                 match settings with 
                 | Some settings ->
                     //increment the Version property
@@ -59,7 +59,8 @@ module Data =
                             existingSettings.Version + 1
                         else 1
                     let settings = {settings with Version = settingsVersion}
-                    JsonConvert.SerializeObject(settings)
-                | None -> null
+                    Some settings, JsonConvert.SerializeObject(settings)
+                | None -> None, null
             do! weatherStationRepository.Save {station with Settings = serializedSettings}
-        | None -> () }
+            return updatedSettings
+        | None -> return None }

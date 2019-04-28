@@ -19,6 +19,7 @@ module Server =
     open WeatherStation.Data
     open WeatherStation.Shared
     open Logic
+    open Newtonsoft.Json.Linq
 
     let port = 8085us
 
@@ -65,12 +66,21 @@ module Server =
         return Ok settings
     }
 
+    type SetSettingsResponse = {
+        ParticleRespose : Result<bool, string>
+        UpdatedSettings : StationSettings
+    }
+
     let setSettings (key : StationKey) settings next (ctx : HttpContext) = task {
-        do! updateWeatherStationSettings connectionString key settings
-        match settings with
-        | Some settings ->
-            let! response = updateParticleDeviceSettings key settings
-            return! Successful.OK response next ctx
+        let! updatedSettings = updateWeatherStationSettings connectionString key settings
+        match updatedSettings with
+        | Some updatedSettings ->
+            let! particleResponse = updateParticleDeviceSettings key updatedSettings
+            let detailedResponse = {
+                ParticleRespose = particleResponse
+                UpdatedSettings = updatedSettings
+            }
+            return! Successful.OK detailedResponse next ctx
         | None -> return! Successful.OK "Cleared settings" next ctx            
     }
 
