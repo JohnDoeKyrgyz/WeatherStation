@@ -49,7 +49,7 @@ bool brownout;
 
 struct Reading
 {
-  int version;
+  unsigned int version;
   float batteryVoltage;
   float batteryPercentage;
   float panelVoltage;
@@ -131,22 +131,29 @@ void watchDogTimeout()
 void deepSleep(unsigned int milliseconds)
 {
   Serial.printlnf("Deep Sleep for %d milliseconds. Brownout = %d, SoC = %f, settings.diagnositicCycles = %d", milliseconds, brownout, systemSoC, settings.diagnositicCycles);
+
   Particle.disconnect();
   waitUntil(Particle.disconnected);
   Cellular.off();
   delay(4000);
   
+  //make sure that the I2C bus is enabled before we try to request a reset time from the wakeup buddy.
+  if(!Wire.isEnabled())
+  {
+    Wire.begin();
+  }
+
   //signal the ATTINY 85 to wake us up
   Wire.beginTransmission(WAKEUP_BUDDY_ADDRESS);
   Wire.write(milliseconds);
   Wire.write(milliseconds >> 8);
   Wire.endTransmission();
-
+  
   Serial.flush();
   fuelGuage.sleep();
   watchDog.dispose();
   Wire.end();
-  Serial.end();
+
   System.sleep(SLEEP_MODE_DEEP);
 }
 
