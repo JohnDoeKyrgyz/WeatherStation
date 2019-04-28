@@ -344,7 +344,6 @@ void loop()
     Particle.process();
 
     Serial.printlnf("DIAGNOSTIC COUNT %d", settings.diagnositicCycles);
-    Serial.println(settings.diagnositicCycles);
     digitalWrite(LED, LOW);
 
     void (*sleepAction)();
