@@ -20,18 +20,21 @@ SoftwareSerial Serial(RX, TX);
 //table of the time increments in milliseconds that the ATtiny85 watchdog can sleep
 int prescales[] = {16, 32, 64, 128, 250, 500, 1000, 2000, 4000, 8000};
 
-unsigned int requestedSleepTime = 0;
+unsigned long requestedSleepTime = 0;
 void onReceiveEvent(uint8_t length)
 {
     DEBPMSG("Received Message");
     DEBPVAR(length)
 
-    if (requestedSleepTime == 0 && length == 2)
+    if (requestedSleepTime == 0 && length == 4)
     {        
         //get the last two bytes in the receive buffer, and concatenate them into an int
-        unsigned int a = TinyWireS.receive();
-        unsigned int b = TinyWireS.receive();
-        requestedSleepTime = a | (b << 8);
+        uint8_t a = TinyWireS.receive();
+        uint8_t b = TinyWireS.receive();
+        uint8_t c = TinyWireS.receive();
+        uint8_t d = TinyWireS.receive();
+        requestedSleepTime = a | (b << 8) | (c << 16) | (d << 32);
+        requestedSleepTime = requestedSleepTime * 1000;
     }
     DEBPVAR(requestedSleepTime)
 }
@@ -47,11 +50,9 @@ void setup()
 
     // initialize digital pin LED_BUILTIN as an output.
     pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, LOW);
+    digitalWrite(LED_BUILTIN, HIGH);
 
     Serial.begin(9600);
-
-    blink();
 
     DEBPSTATUS  // print debug status
     
@@ -116,13 +117,6 @@ void sleep(unsigned int milliseconds)
     if(remainder > prescales[0]) sleep(remainder);
 }
 
-void blink()
-{
-    digitalWrite(LED_BUILTIN, HIGH); // turn the LED on (HIGH is the voltage level)
-    delay(200);
-    digitalWrite(LED_BUILTIN, LOW); // turn the LED on (HIGH is the voltage level)
-}
-
 // the loop function runs over and over again forever
 void loop()
 {   
@@ -136,9 +130,9 @@ void loop()
     DEBPMSG("SLEEP REQUESTED");
     DEBPVAR(requestedSleepTime);
 
+    digitalWrite(LED_BUILTIN, LOW);
     sleep(requestedSleepTime);    
-
-    blink();
+    digitalWrite(LED_BUILTIN, HIGH);
 
     //throw away any data that may have been received while trying to process the sleep
     //re-initializing forces the receive buffer to be flushed

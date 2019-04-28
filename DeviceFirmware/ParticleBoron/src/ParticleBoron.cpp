@@ -218,6 +218,7 @@ void setup()
   System.disable(SYSTEM_FLAG_PUBLISH_RESET_INFO);
 
   Serial.print("Configure power management...");
+  pmic.begin();
   pmic.setInputVoltageLimit(5080);  //  for 6V Solar Panels
   pmic.setInputCurrentLimit(2000) ; // 2000 mA, higher than req'd
   pmic.setChargeVoltage(4208);      //  Set Li-Po charge termination voltage to 4.21V,  Monitor the Enclosure Temps
