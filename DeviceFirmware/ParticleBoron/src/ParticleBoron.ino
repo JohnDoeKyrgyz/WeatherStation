@@ -119,7 +119,7 @@ void watchDogTimeout()
 
 void deepSleep(unsigned int milliseconds)
 {
-  Serial.printlnf("Deep Sleep for %d milliseconds", milliseconds);
+  Serial.printlnf("Deep Sleep for %d milliseconds. Brownout = %d, SoC = %f", milliseconds, brownout, systemSoC);
   Particle.disconnect();
   waitUntil(Particle.disconnected);
   Cellular.off();
@@ -134,6 +134,8 @@ void deepSleep(unsigned int milliseconds)
   Serial.flush();
   fuelGuage.sleep();
   watchDog.dispose();
+  Wire.end();
+  Serial.end();
   System.sleep(SLEEP_MODE_DEEP);
 }
 
@@ -259,11 +261,15 @@ void loop()
   if (brownout)
   {
     Serial.printlnf("Brownout threshold %f exceeded by system battery percentage %f", settings.brownoutPercentage, systemSoC);
+    Particle.process();
 
     char *buffer = messageBuffer;
     sprintf(buffer, "BROWNOUT %f:%d", systemSoC, settings.brownoutMinutes);
     
     publishStatusMessage(buffer);
+
+    delay(4000);
+    Particle.process();
 
     deepSleep(settings.brownoutMinutes * 60000);
   }
