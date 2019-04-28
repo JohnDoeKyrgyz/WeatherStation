@@ -58,6 +58,7 @@ type Station = {
 }
 
 type StationSettings = {
+    Version : int
     Brownout : bool
     BrownoutPercentage : decimal
     BrownoutMinutes : int
@@ -66,7 +67,7 @@ type StationSettings = {
     UseDeepSleep : bool    
 }
 with
-    static member Default = {Brownout = true; BrownoutPercentage = 0.2m; BrownoutMinutes = 2880; SleepTime = 360; DiagnosticCycles = 0; UseDeepSleep = true}
+    static member Default = {Brownout = true; BrownoutPercentage = 0.2m; BrownoutMinutes = 2880; SleepTime = 360; DiagnosticCycles = 0; UseDeepSleep = true; Version = 1}
 
 module UrlDateTime =
     open System.Globalization

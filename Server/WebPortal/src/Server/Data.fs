@@ -51,7 +51,15 @@ module Data =
         | Some station ->
             let serializedSettings = 
                 match settings with 
-                | Some settings -> JsonConvert.SerializeObject(settings)
+                | Some settings ->
+                    //increment the Version property
+                    let settingsVersion =
+                        if station.Settings <> null then
+                            let existingSettings = JsonConvert.DeserializeObject<StationSettings>(station.Settings)
+                            existingSettings.Version + 1
+                        else 1
+                    let settings = {settings with Version = settingsVersion}
+                    JsonConvert.SerializeObject(settings)
                 | None -> null
             do! weatherStationRepository.Save {station with Settings = serializedSettings}
         | None -> () }
