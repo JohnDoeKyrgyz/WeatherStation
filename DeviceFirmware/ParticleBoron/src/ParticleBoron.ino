@@ -1,4 +1,5 @@
 
+#define RBG_NOTIFICATIONS_OFF
 #define FIRMWARE_VERSION "1.0"
 
 #define ANEMOMETER_TRIES 3
@@ -57,10 +58,17 @@ Reading initialReading;
 char messageBuffer[255];
 float systemVoltage;
 
+void publishStatusMessage(const char* message){  
+  Serial.println(message);
+  waitUntil(Particle.connected);
+  Particle.publish("Status", message, 60, PRIVATE, WITH_ACK);
+  Particle.process();
+}
+
 void onError(const char *message)
 {
   RGB.color(255, 255, 0);
-  Serial.println(message);
+  publishStatusMessage(message);
 }
 
 bool readAnemometer(Reading *reading)
@@ -103,10 +111,7 @@ bool readCompass(Reading *reading)
 
 void watchDogTimeout()
 {
-  Serial.println("Watchdog timeout");
-
-  Particle.publish("WATCHDOG", PRIVATE);
-  Particle.process();
+  publishStatusMessage("WATCHDOG_TIMEOUT");
 
   Serial.flush();
   System.reset();
@@ -140,6 +145,10 @@ void onSettingsUpdate(const char *event, const char *data)
   Serial.print("SETTINGS UPDATE: ");
   Serial.println(data);
   digitalWrite(LED, LOW);
+
+  char *buffer = messageBuffer;
+  sprintf(buffer, "SETTINGS %d", settings.version);
+  publishStatusMessage(buffer);
 }
 
 char *serialize(Reading *reading)
@@ -253,11 +262,9 @@ void loop()
   if (brownout)
   {
     char *buffer = messageBuffer;
-    sprintf(buffer, "%f:%d", systemVoltage, settings.brownoutMinutes);
+    sprintf(buffer, "BROWNOUT %f:%d", systemVoltage, settings.brownoutMinutes);
     
-    waitUntil(Particle.connected);
-    Particle.publish("Brownout", buffer, 60, PRIVATE, WITH_ACK);
-    Particle.process();
+    publishStatusMessage(buffer);
 
     deepSleep(settings.brownoutMinutes * 60000);
   }
