@@ -33,7 +33,7 @@ void onReceiveEvent(uint8_t length)
         uint8_t b = TinyWireS.receive();
         uint8_t c = TinyWireS.receive();
         uint8_t d = TinyWireS.receive();
-        requestedSleepTime = a | (b << 8) | (c << 16) | (d << 32);
+        requestedSleepTime = a | (b << 8) | (c << 16) | (d << 24);
         requestedSleepTime = requestedSleepTime * 1000;
     }
     DEBPVAR(requestedSleepTime)
@@ -85,14 +85,14 @@ ISR(WDT_vect)
     timerCounter--;
 }
 
-void sleep(unsigned int milliseconds)
+void sleep(unsigned long milliseconds)
 {
     timerPrescaler = 9;
     while(prescales[timerPrescaler] > milliseconds && timerPrescaler > 0) timerPrescaler--;
     unsigned int prescale = prescales[timerPrescaler];
     
     timerCounter = milliseconds / prescale;
-    unsigned int remainder = milliseconds - (timerCounter * prescale);
+    unsigned long remainder = milliseconds - (timerCounter * prescale);
 
     DEBPMSG("SLEEP CALCULATION");
     DEBPVAR(milliseconds)
