@@ -18,7 +18,7 @@ SoftwareSerial Serial(RX, TX);
 #define LED_BUILTIN 1
 
 //table of the time increments in milliseconds that the ATtiny85 watchdog can sleep
-int prescales[] = {16, 32, 64, 128, 250, 500, 1000, 2000, 4000, 8000};
+unsigned long prescales[] = {16, 32, 64, 128, 250, 500, 1000, 2000, 4000, 8000};
 
 unsigned long requestedSleepTime = 0;
 void onReceiveEvent(uint8_t length)
@@ -81,15 +81,15 @@ unsigned int timerPrescaler;
 //This runs each time the watch dog wakes us up from sleep
 ISR(WDT_vect)
 {
-    DEBPMSG(".");
     timerCounter--;
+    DEBPVAR(timerCounter)
 }
 
 void sleep(unsigned long milliseconds)
 {
     timerPrescaler = 9;
     while(prescales[timerPrescaler] > milliseconds && timerPrescaler > 0) timerPrescaler--;
-    unsigned int prescale = prescales[timerPrescaler];
+    unsigned long prescale = prescales[timerPrescaler];
     
     timerCounter = milliseconds / prescale;
     unsigned long remainder = milliseconds - (timerCounter * prescale);
