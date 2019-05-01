@@ -117,9 +117,9 @@ void watchDogTimeout()
   System.reset();
 }
 
-void deepSleep(unsigned int milliseconds)
+void deepSleep(unsigned long seconds)
 {
-  Serial.printlnf("Deep Sleep for %d milliseconds. Brownout = %d, SoC = %f, settings.diagnositicCycles = %d", milliseconds, brownout, systemSoC, settings.diagnositicCycles);
+  Serial.printlnf("Deep Sleep for %d seconds. Brownout = %d, SoC = %f, settings.diagnositicCycles = %d", seconds, brownout, systemSoC, settings.diagnositicCycles);
 
   Particle.disconnect();
   waitUntil(Particle.disconnected);
@@ -134,8 +134,10 @@ void deepSleep(unsigned int milliseconds)
 
   //signal the ATTINY 85 to wake us up
   Wire.beginTransmission(WAKEUP_BUDDY_ADDRESS);
-  Wire.write(milliseconds);
-  Wire.write(milliseconds >> 8);
+  Wire.write(seconds);
+  Wire.write(seconds >> 8);
+  Wire.write(seconds >> 16);
+  Wire.write(seconds >> 24);
   Wire.endTransmission();
   
   Serial.flush();
@@ -279,7 +281,7 @@ void loop()
     delay(4000);
     Particle.process();
 
-    deepSleep(settings.brownoutMinutes * 60000);
+    deepSleep(settings.brownoutMinutes * 60);
   }
   else
   {
@@ -349,14 +351,14 @@ void loop()
     {
       sleepMessage = "DEEP";
       sleepAction = []() {
-        deepSleep(settings.sleepTime * 1000);
+        deepSleep(settings.sleepTime);
       };
     }
     else
     {
       sleepMessage = "LIGHT";
       sleepAction = []() {
-        delay(settings.sleepTime * 1000);
+        delay(settings.sleepTime);
         setup();
       };
     }
