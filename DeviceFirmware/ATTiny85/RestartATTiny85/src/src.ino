@@ -12,6 +12,8 @@ SoftwareSerial Serial(RX, TX);
 #define I2C_SLAVE_ADDRESS 8
 #include "TinyWireS.h"
 
+#define MAX_LISTEN_TIME 360000 /* 6 minutes */
+
 // Utility macros
 #define adc_disable() (ADCSRA &= ~(1 << ADEN)) // disable ADC (before power-off)
 
@@ -117,21 +119,36 @@ void sleep(unsigned long milliseconds)
     if(remainder > prescales[0]) sleep(remainder);
 }
 
+unsigned long beginListenTime;
+
 // the loop function runs over and over again forever
 void loop()
-{   
+{
+    beginListenTime = millis();
+
     DEBPMSG("LISTENING");
-    while(requestedSleepTime == 0)
+    while(requestedSleepTime == 0 && (millis() - beginListenTime) < MAX_LISTEN_TIME)
     {
         TinyWireS_stop_check();
         yield();
     }
-    
-    DEBPMSG("SLEEP REQUESTED");
-    DEBPVAR(requestedSleepTime);
 
-    digitalWrite(LED_BUILTIN, LOW);
-    sleep(requestedSleepTime);    
+    bool sleepRequested = requestedSleepTime > 0;
+    
+    if(sleepRequested)
+    {
+        DEBPMSG("SLEEP REQUESTED");
+        DEBPVAR(requestedSleepTime);
+
+        digitalWrite(LED_BUILTIN, LOW);
+        sleep(requestedSleepTime);    
+    }
+    else
+    {
+        DEBPMSG("LISTENING TIMEOUT");
+    }
+    
+    //wakeup the controlled device
     digitalWrite(LED_BUILTIN, HIGH);
 
     //throw away any data that may have been received while trying to process the sleep
