@@ -132,8 +132,6 @@ void deepSleep(unsigned long seconds)
 {
   Serial.printlnf("Deep Sleep for %d seconds. Brownout = %d, SoC = %f, settings.diagnositicCycles = %d", seconds, brownout, systemSoC, settings.diagnositicCycles);
 
-  Particle.disconnect();
-  waitUntil(Particle.disconnected);
   Cellular.off();
   delay(4000);
   
