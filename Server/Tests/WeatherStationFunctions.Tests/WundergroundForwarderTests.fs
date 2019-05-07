@@ -87,6 +87,7 @@ module WundergroundForwarderTests =
                     LogLevel.Information, Exact "Parsed particle reading for device 1e0037000751363130333334"
                     LogLevel.Information, Ignore
                     LogLevel.Information, Exact "Searching for device Particle 1e0037000751363130333334 in registry"
+                    LogLevel.Information, Exact "Particle 1e0037000751363130333334 not found. Searching for device Test 1e0037000751363130333334 in registry"
                     LogLevel.Error, Exact "Device [1e0037000751363130333334] is not provisioned"|]
                 
                 do!
@@ -94,7 +95,7 @@ module WundergroundForwarderTests =
             }
         ]
 
-    let readingTime = new DateTime(2018,1,1,1,1,0)
+    let readingTime = DateTime(2018,1,1,1,1,0)
 
     [<Tests>]
     let readingTests =
