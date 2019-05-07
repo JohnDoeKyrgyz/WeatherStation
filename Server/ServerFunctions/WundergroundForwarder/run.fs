@@ -22,7 +22,7 @@ module WundergroundForwarder =
 
     let rec innerMostException (ex : exn) =
         printfn "%A" ex
-        if ex.InnerException <> null then innerMostException ex.InnerException else ex
+        if not (isNull ex.InnerException) then innerMostException ex.InnerException else ex
 
     let processEventHubMessage 
         (log: ILogger) 
@@ -74,7 +74,7 @@ module WundergroundForwarder =
                         let values = fixReadings recentReadings weatherStation deviceReading.Readings
                         log.LogInformation(sprintf "Fixed Values %A" values)
                     
-                        if weatherStation.WundergroundStationId <> null then
+                        if not (isNull weatherStation.WundergroundStationId) then
                             try
                                 let valuesSeq = values |> Seq.ofList
                                 let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
