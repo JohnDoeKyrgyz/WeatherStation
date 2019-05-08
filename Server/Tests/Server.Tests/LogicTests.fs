@@ -18,6 +18,7 @@ module LogicTests =
         Longitude = 0.0
         LastReading = None
         Settings = null
+        Sensors = 0xFFFF
     }   
 
     [<Tests>]

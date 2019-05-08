@@ -35,6 +35,7 @@ module WundergroundForwarderTests =
         Longitude = 0.0
         LastReading = None
         Settings = null
+        Sensors = 0xFFFF
     }
 
     type LogMessageCompare =

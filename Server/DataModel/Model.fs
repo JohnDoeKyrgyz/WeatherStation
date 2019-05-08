@@ -38,6 +38,7 @@ module Model =
         Longitude : double
         LastReading : DateTime option
         Settings : string
+        Sensors : int
     }
 
     type Reading = {
