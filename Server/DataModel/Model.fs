@@ -42,11 +42,12 @@ module Model =
     }
 
     type Reading = {
-        RefreshIntervalSeconds : int
         DeviceTime : DateTime
         ReadingTime : DateTime
         SupplyVoltage : double
         BatteryChargeVoltage : double
+        BatteryPercentage : double
+        PanelMilliamps : double
         PanelVoltage : double
         TemperatureCelciusHydrometer : double
         TemperatureCelciusBarometer : double
@@ -62,13 +63,14 @@ module Model =
         RowKey : string
     }
     with
-        static member Default = {
-            RefreshIntervalSeconds = 0
+        static member Default = {            
             DeviceTime = DateTime.MinValue
             ReadingTime = DateTime.MinValue
             SupplyVoltage = 0.0
+            BatteryPercentage = 0.0
             BatteryChargeVoltage = 0.0
             PanelVoltage = 0.0
+            PanelMilliamps = 0.0
             TemperatureCelciusHydrometer = 0.0
             TemperatureCelciusBarometer = 0.0
             HumidityPercentHydrometer = 0.0

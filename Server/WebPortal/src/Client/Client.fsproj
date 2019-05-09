@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\paket-files\client\fable-compiler\fable-react\src\Fable.Recharts\Fable.Recharts.fs">
+    <Compile Include="..\..\..\paket-files\client\fable-compiler\fable-recharts\src\Fable.Recharts.fs">
       <Paket>True</Paket>
       <Link>Fable.Recharts.fs</Link>
     </Compile>

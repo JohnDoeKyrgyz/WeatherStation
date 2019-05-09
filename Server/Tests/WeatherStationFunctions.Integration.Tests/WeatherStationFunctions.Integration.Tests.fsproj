@@ -10,7 +10,6 @@
     </Content>
     <Content Include="Secrets.Template.json" />
     <None Include="paket.references" />
-    <Compile Include="..\..\DataModel\Sensors.fs" />
     <Compile Include="SimulatedDevice.fs" />
   </ItemGroup>
   <ItemGroup>

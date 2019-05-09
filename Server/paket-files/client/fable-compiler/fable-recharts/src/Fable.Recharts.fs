@@ -1,8 +1,8 @@
 module Fable.Recharts
 
-open Fable.Import
 open Fable.Core
 open Fable.Core.JsInterop
+open Browser.Types
 
 module Props =
 
@@ -77,30 +77,30 @@ module Props =
         | [<CompiledName("ease-in-out")>] EaseInOut
         | Linear
 
-    type [<Pojo>] Point2 =
+    type Point2 =
         { x: float; y: float }
 
-    type [<Pojo>] Point3 =
+    type Point3 =
         { x: float; y: float; z: float }
 
-    type [<Pojo>] LinePoint =
+    type LinePoint =
         { x: float
           y: float
           value: float }
 
-    type [<Pojo>] ScatterPoint =
+    type ScatterPoint =
         { cx: float
           cy: float
           r: float
           payload: Point3 }
 
-    type [<Pojo>] Margin =
+    type Margin =
         { top: float
           bottom: float
           right: float
           left: float }
 
-    type [<Pojo>] ViewBox =
+    type ViewBox =
         { x: float
           y: float
           width: float
@@ -148,15 +148,15 @@ module Props =
         | OuterRadius of obj
 
         // Events
-        | OnClick of (React.MouseEvent -> unit)
-        | OnMouseDown of (React.MouseEvent -> unit)
-        | OnMouseUp of (React.MouseEvent -> unit)
-        | OnMouseMove of (React.MouseEvent -> unit)
-        | OnMouseOver of (React.MouseEvent -> unit)
-        | OnMouseEnter of (React.MouseEvent -> unit)
-        | OnMouseLeave of (React.MouseEvent -> unit)
+        | OnClick of (MouseEvent -> unit)
+        | OnMouseDown of (MouseEvent -> unit)
+        | OnMouseUp of (MouseEvent -> unit)
+        | OnMouseMove of (MouseEvent -> unit)
+        | OnMouseOver of (MouseEvent -> unit)
+        | OnMouseEnter of (MouseEvent -> unit)
+        | OnMouseLeave of (MouseEvent -> unit)
 
-        interface Fable.Helpers.React.Props.IProp
+        interface Fable.React.Props.IProp
         static member inline Custom(key: string, value: obj): Chart = !!(key, value)
 
     type [<RequireQualifiedAccess>] Treemap =
@@ -174,7 +174,7 @@ module Props =
         /// Specifies the duration of animation, the unit of this option is ms.
         | AnimationDuration of float
         | AnimationEasing of Easing
-        interface Fable.Helpers.React.Props.IProp
+        interface Fable.React.Props.IProp
         static member inline Custom(key: string, value: obj): Treemap = !!(key, value)
 
     type [<RequireQualifiedAccess>] Responsive =
@@ -190,7 +190,7 @@ module Props =
         | MinHeight of float
         /// If specified a positive number, debounced function will be used to handle the resize event.
         | Debounce of float
-        interface Fable.Helpers.React.Props.IProp
+        interface Fable.React.Props.IProp
         static member inline Custom(key: string, value: obj): Responsive = !!(key, value)
 
     type [<RequireQualifiedAccess>] Legend =
@@ -216,14 +216,14 @@ module Props =
         | Content of obj
         /// The style of legend container which is a "position: absolute;" div element. Because the position of legend is quite flexible, so you can change the position by the value of top, left, right, bottom in this option. And the format of wrapperStyle is the same as React inline style.
         | WrapperStyle of obj
-        | OnClick of (React.MouseEvent -> unit)
-        | OnMouseDown of (React.MouseEvent -> unit)
-        | OnMouseUp of (React.MouseEvent -> unit)
-        | OnMouseMove of (React.MouseEvent -> unit)
-        | OnMouseOver of (React.MouseEvent -> unit)
-        | OnMouseEnter of (React.MouseEvent -> unit)
-        | OnMouseLeave of (React.MouseEvent -> unit)
-        interface Fable.Helpers.React.Props.IProp
+        | OnClick of (MouseEvent -> unit)
+        | OnMouseDown of (MouseEvent -> unit)
+        | OnMouseUp of (MouseEvent -> unit)
+        | OnMouseMove of (MouseEvent -> unit)
+        | OnMouseOver of (MouseEvent -> unit)
+        | OnMouseEnter of (MouseEvent -> unit)
+        | OnMouseLeave of (MouseEvent -> unit)
+        interface Fable.React.Props.IProp
         static member inline Custom(key: string, value: obj): Legend = !!(key, value)
 
     type [<RequireQualifiedAccess>] Tooltip =
@@ -265,7 +265,7 @@ module Props =
         /// Specifies the duration of animation, the unit of this option is ms.
         | AnimationDuration of float
         | AnimationEasing of Easing
-        interface Fable.Helpers.React.Props.IProp
+        interface Fable.React.Props.IProp
         static member inline Custom(key: string, value: obj): Tooltip = !!(key, value)
 
     type [<RequireQualifiedAccess>] Cell =
@@ -273,6 +273,7 @@ module Props =
         | Fill of string
         /// The presentation attribute of a rectangle in bar or a sector in pie.
         | Stroke of string
+        interface Fable.React.Props.IProp
         static member inline Custom(key: string, value: obj): Cell = !!(key, value)
 
     type [<RequireQualifiedAccess>] Text =
@@ -286,7 +287,7 @@ module Props =
         | TextAnchor of string
         /// 'start' | 'middle' | 'end'
         | VerticalAnchor of string
-        interface Fable.Helpers.React.Props.IProp
+        interface Fable.React.Props.IProp
         static member inline Custom(key: string, value: obj): Text = !!(key, value)
 
     type [<RequireQualifiedAccess>] Label =
@@ -305,7 +306,7 @@ module Props =
         | Content of obj
         /// The unique id of this component, which will be used to generate unique clip path id internally. This props is suggested to be set in SSR.
         | Id of string
-        interface Fable.Helpers.React.Props.IProp
+        interface Fable.React.Props.IProp
         static member inline Custom(key: string, value: obj): Label = !!(key, value)
 
     type [<RequireQualifiedAccess>] LabelList =
@@ -327,7 +328,7 @@ module Props =
         | ClockWise of string
         /// The unique id of this component, which will be used to generate unique clip path id internally. This props is suggested to be set in SSR.
         | Id of string
-        interface Fable.Helpers.React.Props.IProp
+        interface Fable.React.Props.IProp
         static member inline Custom(key: string, value: obj): LabelList = !!(key, value)
 
     type [<RequireQualifiedAccess>] Cartesian =
@@ -485,16 +486,16 @@ module Props =
         // Events
         /// Brush: The handler of changing the active scope of brush.
         | OnChange of (unit -> unit) // TODO: Check args
-        | OnClick of (React.MouseEvent -> unit)
-        | OnMouseDown of (React.MouseEvent -> unit)
-        | OnMouseUp of (React.MouseEvent -> unit)
-        | OnMouseOver of (React.MouseEvent -> unit)
-        | OnMouseOut of (React.MouseEvent -> unit)
-        | OnMouseEnter of (React.MouseEvent -> unit)
-        | OnMouseMove of (React.MouseEvent -> unit)
-        | OnMouseLeave of (React.MouseEvent -> unit)
+        | OnClick of (MouseEvent -> unit)
+        | OnMouseDown of (MouseEvent -> unit)
+        | OnMouseUp of (MouseEvent -> unit)
+        | OnMouseOver of (MouseEvent -> unit)
+        | OnMouseOut of (MouseEvent -> unit)
+        | OnMouseEnter of (MouseEvent -> unit)
+        | OnMouseMove of (MouseEvent -> unit)
+        | OnMouseLeave of (MouseEvent -> unit)
 
-        interface Fable.Helpers.React.Props.IProp
+        interface Fable.React.Props.IProp
         static member inline Custom(key: string, value: obj): Cartesian = !!(key, value)
 
     type [<RequireQualifiedAccess>] Polar =
@@ -576,24 +577,24 @@ module Props =
         | Scale of ScaleType
 
         // Events
-        | OnClick of (React.MouseEvent -> unit)
-        | OnMouseDown of (React.MouseEvent -> unit)
-        | OnMouseUp of (React.MouseEvent -> unit)
-        | OnMouseOver of (React.MouseEvent -> unit)
-        | OnMouseOut of (React.MouseEvent -> unit)
-        | OnMouseEnter of (React.MouseEvent -> unit)
-        | OnMouseMove of (React.MouseEvent -> unit)
-        | OnMouseLeave of (React.MouseEvent -> unit)
+        | OnClick of (MouseEvent -> unit)
+        | OnMouseDown of (MouseEvent -> unit)
+        | OnMouseUp of (MouseEvent -> unit)
+        | OnMouseOver of (MouseEvent -> unit)
+        | OnMouseOut of (MouseEvent -> unit)
+        | OnMouseEnter of (MouseEvent -> unit)
+        | OnMouseMove of (MouseEvent -> unit)
+        | OnMouseLeave of (MouseEvent -> unit)
 
-        interface Fable.Helpers.React.Props.IProp
+        interface Fable.React.Props.IProp
         static member inline Custom(key: string, value: obj): Polar = !!(key, value)
 
     type [<RequireQualifiedAccess>] Shape =
-        interface Fable.Helpers.React.Props.IProp
+        interface Fable.React.Props.IProp
         static member inline Custom(key: string, value: obj): Shape = !!(key, value)
 
 
-open Fable.Helpers.React
+open Fable.React
 open Props
 
 // Charts

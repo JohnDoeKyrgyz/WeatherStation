@@ -15,11 +15,11 @@ module Particle =
     let ParticleSample = __SOURCE_DIRECTORY__ + @"\ParticleStatusUpdate.json"
     type ParticlePayload = JsonProvider<ParticleSample, SampleIsList = true>
 
-    let readingParser = new Regex(@"(?<SettingsCounter>\d+):(?<BatteryVoltage>\d+\.\d+):(?<PanelVoltage>\d+)\|(b(?<BmeTemperature>\d+\.\d+):(?<BmePressure>\d+.\d+):(?<BmeHumidity>\d+.\d+))(d(?<DhtTemperature>\d+\.\d+):(?<DhtHumidity>\d+.\d+))?(a(?<AnemometerWindSpeed>\d+\.\d+):(?<AnemometerDirection>\d+))?")
+    let readingParser = Regex(@"(?<SettingsCounter>\d+):(?<BatteryVoltage>\d+\.\d+):(?<PanelVoltage>\d+)\|(b(?<BmeTemperature>\d+\.\d+):(?<BmePressure>\d+.\d+):(?<BmeHumidity>\d+.\d+))(d(?<DhtTemperature>\d+\.\d+):(?<DhtHumidity>\d+.\d+))?(a(?<AnemometerWindSpeed>\d+\.\d+):(?<AnemometerDirection>\d+))?")
 
     let readRegexGroups (log: ILogger) key builder (regexGroups : GroupCollection) =
         let value = regexGroups.[key : string]
-        if value <> null && not (String.IsNullOrWhiteSpace(value.Value)) then 
+        if (not (isNull value)) && not (String.IsNullOrWhiteSpace(value.Value)) then 
             log.LogInformation(sprintf "RegexValue %s %s" key value.Value)
             Some (builder value.Value) else None
 

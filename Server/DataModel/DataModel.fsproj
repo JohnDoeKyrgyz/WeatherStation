@@ -5,8 +5,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Cache.fs" />
-    <Compile Include="Sensors.fs" />
     <Compile Include="Model.fs" />
+    <Compile Include="Readings.fs" />
+    <Compile Include="Sensors.fs" />
     <Compile Include="Repository.fs" />
     <Compile Include="AzureStorage.fs" />
     <Compile Include="SystemSettings.fs" />

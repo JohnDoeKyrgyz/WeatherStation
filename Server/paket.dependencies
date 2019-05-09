@@ -29,13 +29,13 @@ group Client
     nuget Fable.Elmish.React
     nuget Fable.Elmish.HMR
     nuget Fulma
-    github fable-compiler/fable-react src/Fable.Recharts/Fable.Recharts.fs
+    github fable-compiler/fable-recharts src/Fable.Recharts.fs
     clitool dotnet-fable
 
 group Test
 	storage: none
     source https://api.nuget.org/v3/index.json
-	nuget Expecto.VisualStudio.TestAdapter
+    nuget Expecto.VisualStudio.TestAdapter
     nuget Microsoft.Azure.Devices.Client
     nuget FSharp.Data
 

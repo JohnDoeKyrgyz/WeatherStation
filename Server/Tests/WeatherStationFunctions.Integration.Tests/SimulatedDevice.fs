@@ -1,9 +1,13 @@
 ﻿open System
+open System.IO
 open System.Text
 open FSharp.Data
+
 open Microsoft.Azure.Devices.Client
+
 open WeatherStation
 open WeatherStation.Model
+open WeatherStation.Sensors
 open WeatherStation.Repository
 
 type Secrets = JsonProvider< "Secrets.Template.json" >
@@ -18,17 +22,53 @@ let connect (secrets : Secrets.Root) =
     let connectionString = secrets.DeviceConnectionString
     DeviceClient.CreateFromConnectionString(connectionString, TransportType.Mqtt)
 
+let devices = Sensors.All
+
+let random = Random()
+let generateRandomReading values =
+
+    let version = 1
+    let batteryVoltage = random.NextDouble() * 4.2
+    let batteryPercentage = random.NextDouble() * 100.0
+
+    let builder = StringBuilder()
+
+    let generate {Name = _; Type = valueType} =
+        match valueType with
+        | ValueType.Float -> 
+            let value = random.NextDouble()
+            builder.Append(value)
+        | ValueType.Int -> 
+            let value = random.Next()
+        builder.Append(',') |> ignore
+
+    values |> Seq.iter generate
+    valuesWriter.Flush() |> ignore
+
+    use outputBuffer = new StringWriter()
+    valuesBuffer.Seek(0L, SeekOrigin.Begin) |> ignore
+    SimpleBase.Base85.Z85.Encode(valuesBuffer, outputBuffer)
+
+    printfn "%d" builder.Length
+
+    outputBuffer.ToString()  
+
 let createSampleMessage() =
     let date = DateTimeOffset.UtcNow.ToString()
+    let randomReading = generateRandomReading [for device in devices do yield! device.Values]
+
+    printfn "%d" randomReading.Length
+
     sprintf
         """
         {
-            "data": "100:4.006250:3864|d10.800000:86.500000a1.700000:15",
+            "data": "%s",
             "device_id": "TestDevice",
             "event": "Reading",
             "published_at": "%s"
         }
         """
+        randomReading
         date
 
 let deviceId = "TestDevice"
@@ -56,7 +96,8 @@ let createTestWeatherStation (repository : IWeatherStationsRepository) = async {
         Latitude = 0.0
         Longitude = 0.0
         LastReading = None
-        Settings = null}
+        Settings = null
+        Sensors = Sensors.id devices |> int}
 }
 
 let runTest (client : DeviceClient) (repository : IWeatherStationsRepository) = async {
