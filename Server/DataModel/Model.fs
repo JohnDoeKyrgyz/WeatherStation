@@ -57,6 +57,9 @@ module Model =
         GustMetersPerSecond : double
         SpeedMetersPerSecond : double
         DirectionDegrees : double
+        X : double
+        Y : double
+        Z : double
         [<PartitionKey>]
         SourceDevice : string
         [<RowKey>]
@@ -79,6 +82,9 @@ module Model =
             GustMetersPerSecond = 0.0
             SpeedMetersPerSecond = 0.0
             DirectionDegrees = 0.0
+            X = 0.0
+            Y = 0.0
+            Z = 0.0
             SourceDevice = null
             RowKey = null
         }

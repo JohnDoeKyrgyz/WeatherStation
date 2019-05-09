@@ -44,16 +44,24 @@ module Readings =
         | SupplyVoltage of decimal<volts>
         | BatteryChargeVoltage of decimal<volts>
         | BatteryPercentage of decimal<milliamps>
+        //INA219
         | PanelVoltage of decimal<volts>
         | ChargeMilliamps of decimal<milliamps>
-        | TemperatureCelciusHydrometer of decimal<celcius>
+        //BME280
         | TemperatureCelciusBarometer of decimal<celcius>
-        | HumidityPercentHydrometer of decimal<percent>
         | HumidityPercentBarometer of decimal<percent>
         | PressurePascal of decimal<pascal>
+        //DHT22
+        | TemperatureCelciusHydrometer of decimal<celcius>        
+        | HumidityPercentHydrometer of decimal<percent>
+        //anemometer
         | SpeedMetersPerSecond of decimal<meters/seconds>
         | GustMetersPerSecond of decimal<meters/seconds>
         | DirectionSixteenths of int<sixteenths>
+        //compass
+        | X of decimal<degrees>
+        | Y of decimal<degrees>
+        | Z of decimal<degrees>
 
     type DeviceReadings = {
         DeviceId : string
@@ -82,6 +90,9 @@ module Readings =
         | SpeedMetersPerSecond speed -> {reading with SpeedMetersPerSecond = toDouble(speed)}
         | GustMetersPerSecond speed -> {reading with GustMetersPerSecond = toDouble(speed)}
         | DirectionSixteenths direction -> {reading with DirectionDegrees = sixteenthsToDegrees direction |> double}
+        | X angle -> {reading with X = toDouble(angle)}
+        | Y angle -> {reading with Y = toDouble(angle)}
+        | Z angle -> {reading with Z = toDouble(angle)}
 
     let createReading deviceReading = 
         let readingKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)

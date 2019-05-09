@@ -1,7 +1,7 @@
 namespace WeatherStation
 module Sensors =
 
-    open WeatherStation.Model
+    open WeatherStation.Readings
     
     type ValueType = 
         | Float
@@ -17,13 +17,14 @@ module Sensors =
         Name : string
         Description : string
         Values : Value list
-        LoadValues : Map<string, obj> -> ReadingValues list
+        DefaultReadingValues : ReadingValues list
     }
 
     let anemometer =  {
         Id = 1uy
         Name = "LaCrosse_TX23U"
         Description = "Anemometer"
+        DefaultReadingValues = [SpeedMetersPerSecond 0.0m<meters/seconds>; DirectionSixteenths 0<sixteenths>]
         Values = [
             {Name = "WindSpeed"; Type = ValueType.Float}
             {Name = "WindDirection"; Type = ValueType.Int}
@@ -33,6 +34,7 @@ module Sensors =
         Id = 2uy
         Name ="BME280"
         Description = "Temperature / Pressure / Humidity sensor"
+        DefaultReadingValues = [TemperatureCelciusBarometer 0.0m<celcius>; PressurePascal 0.0m<pascal>; HumidityPercentBarometer 0.0m<percent>]
         Values = [
             {Name = "Temperature"; Type = ValueType.Float}
             {Name = "Pressure"; Type = ValueType.Float}
@@ -43,6 +45,7 @@ module Sensors =
         Id = 8uy
         Name = "QMC5883L"
         Description = "Compass"
+        DefaultReadingValues = [X 0.0m<degrees>; Y 0.0m<degrees>; Z 0.0m<degrees>]
         Values = [
             {Name = "X"; Type = ValueType.Float}
             {Name = "Y"; Type = ValueType.Float}
@@ -53,6 +56,7 @@ module Sensors =
         Id = 16uy
         Name = "INA219"
         Description = "Voltage / Current"
+        DefaultReadingValues = [SpeedMetersPerSecond 0.0m<meters/seconds>; DirectionSixteenths 0<sixteenths>]
         Values = [
             {Name = "Volts"; Type = ValueType.Float}
             {Name = "Milliamps"; Type = ValueType.Float}
@@ -62,6 +66,7 @@ module Sensors =
         Id = 32uy
         Name = "DHT22"
         Description = "Temperature / Pessure"
+        DefaultReadingValues = [SpeedMetersPerSecond 0.0m<meters/seconds>; DirectionSixteenths 0<sixteenths>]
         Values = [
             {Name = "Temperature"; Type = ValueType.Float}
             {Name = "Humidity"; Type = ValueType.Float}
