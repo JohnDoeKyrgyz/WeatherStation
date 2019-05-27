@@ -63,6 +63,32 @@ module Readings =
         | Y of decimal<degrees>
         | Z of decimal<degrees>
 
+    let loadReadingValue sampleReadingValue value =
+        match sampleReadingValue with
+        | ReadingTime _ -> value |> DateTime.Parse |> ReadingTime
+        | DeviceTime _ -> value |> DateTime.Parse |> DeviceTime
+        | SupplyVoltage _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> SupplyVoltage
+        | BatteryChargeVoltage _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> BatteryChargeVoltage
+        | BatteryPercentage _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> BatteryPercentage
+        //INA219
+        | PanelVoltage _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> PanelVoltage
+        | ChargeMilliamps  _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> ChargeMilliamps
+        //BME280
+        | TemperatureCelciusBarometer _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> TemperatureCelciusBarometer
+        | HumidityPercentBarometer _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> HumidityPercentBarometer
+        | PressurePascal _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> PressurePascal
+        //DHT22
+        | TemperatureCelciusHydrometer _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> TemperatureCelciusHydrometer
+        | HumidityPercentHydrometer _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> HumidityPercentHydrometer
+        //anemometer
+        | SpeedMetersPerSecond _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> SpeedMetersPerSecond
+        | GustMetersPerSecond _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> GustMetersPerSecond
+        | DirectionSixteenths _ -> value |> int |> LanguagePrimitives.Int32WithMeasure |> DirectionSixteenths
+        //compass
+        | X  _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> X
+        | Y  _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> Y
+        | Z  _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> Z
+
     type DeviceReadings = {
         DeviceId : string
         Readings : ReadingValues list

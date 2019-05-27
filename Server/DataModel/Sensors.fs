@@ -1,5 +1,13 @@
 namespace WeatherStation
+open System.Text.RegularExpressions
+
 module Sensors =
+
+    open System
+    open System.Text.RegularExpressions
+
+    open FSharp.Reflection
+    open FSharp.Linq
 
     open WeatherStation.Readings
     
@@ -7,70 +15,75 @@ module Sensors =
         | Float
         | Int
 
-    type Value = {
-        Name : string
-        Type : ValueType
-    }        
-
     type Sensor = {
-        Id : byte        
+        Id : byte
+        Prefix : char  
         Name : string
         Description : string
-        Values : Value list
-        DefaultReadingValues : ReadingValues list
+        SampleValues : Map<ReadingValues, ValueType>
     }
 
     let anemometer =  {
         Id = 1uy
+        Prefix = 'a'
         Name = "LaCrosse_TX23U"
         Description = "Anemometer"
-        DefaultReadingValues = [SpeedMetersPerSecond 0.0m<meters/seconds>; DirectionSixteenths 0<sixteenths>]
-        Values = [
-            {Name = "WindSpeed"; Type = ValueType.Float}
-            {Name = "WindDirection"; Type = ValueType.Int}
-        ] }
+        SampleValues = 
+            [
+                SpeedMetersPerSecond 0.0m<meters/seconds>, ValueType.Float
+                DirectionSixteenths 0<sixteenths>, ValueType.Int
+            ]
+            |> Map.ofList }
         
     let bme280 = {        
         Id = 2uy
+        Prefix = 'b'
         Name ="BME280"
         Description = "Temperature / Pressure / Humidity sensor"
-        DefaultReadingValues = [TemperatureCelciusBarometer 0.0m<celcius>; PressurePascal 0.0m<pascal>; HumidityPercentBarometer 0.0m<percent>]
-        Values = [
-            {Name = "Temperature"; Type = ValueType.Float}
-            {Name = "Pressure"; Type = ValueType.Float}
-            {Name = "Humidity"; Type = ValueType.Float}
-        ]}
+        SampleValues = 
+            [
+                TemperatureCelciusBarometer 0.0m<celcius>, ValueType.Float
+                PressurePascal 0.0m<pascal>, ValueType.Float
+                HumidityPercentBarometer 0.0m<percent>, ValueType.Float
+            ]
+            |> Map.ofList }
 
     let qmc5883l = {
         Id = 8uy
+        Prefix = 'c'
         Name = "QMC5883L"
         Description = "Compass"
-        DefaultReadingValues = [X 0.0m<degrees>; Y 0.0m<degrees>; Z 0.0m<degrees>]
-        Values = [
-            {Name = "X"; Type = ValueType.Float}
-            {Name = "Y"; Type = ValueType.Float}
-            {Name = "Z"; Type = ValueType.Float}
-        ]}
+        SampleValues = 
+            [
+                X 0.0m<degrees>, ValueType.Float
+                Y 0.0m<degrees>, ValueType.Float
+                Z 0.0m<degrees>, ValueType.Float
+            ]
+            |> Map.ofList }
         
     let ina219 = {
         Id = 16uy
+        Prefix = 'p'
         Name = "INA219"
         Description = "Voltage / Current"
-        DefaultReadingValues = [SpeedMetersPerSecond 0.0m<meters/seconds>; DirectionSixteenths 0<sixteenths>]
-        Values = [
-            {Name = "Volts"; Type = ValueType.Float}
-            {Name = "Milliamps"; Type = ValueType.Float}
-        ]}
+        SampleValues = 
+            [
+                SpeedMetersPerSecond 0.0m<meters/seconds>, ValueType.Float
+                DirectionSixteenths 0<sixteenths>, ValueType.Float
+            ]
+            |> Map.ofList}
 
     let dht22 = {
         Id = 32uy
+        Prefix = 'd'
         Name = "DHT22"
         Description = "Temperature / Pessure"
-        DefaultReadingValues = [SpeedMetersPerSecond 0.0m<meters/seconds>; DirectionSixteenths 0<sixteenths>]
-        Values = [
-            {Name = "Temperature"; Type = ValueType.Float}
-            {Name = "Humidity"; Type = ValueType.Float}
-        ]}
+        SampleValues =
+            [
+                SpeedMetersPerSecond 0.0m<meters/seconds>, ValueType.Float
+                DirectionSixteenths 0<sixteenths>, ValueType.Float
+            ]
+            |> Map.ofList}
 
     let All = [
         anemometer
@@ -86,18 +99,50 @@ module Sensors =
     let sensors id =
         All |> List.filter (fun sensor -> sensor.Id &&& id = 0x01uy)
 
-    let sensorRegex sensors =
-        let valuePattern value =
-            match value.Type with
-            | Int -> sprintf @"(?<%s>\d+)" value.Name
-            | Float -> sprintf @"(?<%s>\d+\.\d+)" value.Name
+    let readingKey (sampleReading : ReadingValues) = 
+        let readingToString = string sampleReading
+        readingToString.Substring(0, readingToString.IndexOf(" "))        
+
+    let loadReading sensor (regexMatch : Match) =
+        let samples = 
+            sensor.SampleValues 
+            |> Map.toSeq
+            |> Seq.map fst
+            |> Seq.toList
+        let rawValues = 
+            samples
+            |> List.map (readingKey >> (fun key -> regexMatch.Groups.[key].Value))
+        [for (sample, value) in rawValues |> Seq.zip sensor.SampleValues -> loadReadingValue sample.Key value]
+        
+
+    let parseReadingOfSensors (sensors : seq<Sensor>) reading =
+        let valuePattern (sampleReading : ReadingValues, valueType) =
+            let name = readingKey sampleReading
+            match valueType with
+            | Int -> sprintf @"(?<%s>\d+)" name
+            | Float -> sprintf @"(?<%s>\d+\.\d+)" name
+
+        let sensorPattern sensor =
+            let valuesPattern = sensor.SampleValues |> Map.toSeq |> Seq.map valuePattern |> String.concat ":"
+            sprintf "%O%s" sensor.Prefix valuesPattern
             
         let valuesPattern =
             sensors
-            |> Seq.map valuePattern
-            |> String.concat ":"
-        let pattern = sprintf "%O%s" valuesPattern
-        Regex()        
+            |> Seq.map sensorPattern
+            |> String.concat String.Empty
+
+        let regex = Regex(valuesPattern)
+        
+        let matches = [for regexMatch in regex.Matches(reading) -> regexMatch]
+        let sensorReadings = 
+            query {
+                for regexMatch in matches do
+                join sensor in sensors on (regexMatch.Value.[0] = sensor.Prefix)
+                select (sensor, regexMatch) }
+
+        [for (sensor, regexMatch) in sensorReadings -> loadReading sensor regexMatch]
 
     let parseReading id reading =
         let selectedSensors = sensors id
+        parseReadingOfSensors selectedSensors reading
+
