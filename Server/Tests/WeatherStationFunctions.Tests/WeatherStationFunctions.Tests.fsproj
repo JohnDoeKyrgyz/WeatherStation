@@ -8,6 +8,7 @@
     <None Include="paket.references" />
     <Compile Include="DataSetup.fs" />
     <Compile Include="ReadingsTests.fs" />
+    <Compile Include="SensorTests.fs" />
     <Compile Include="WundergroundForwarderTests.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>

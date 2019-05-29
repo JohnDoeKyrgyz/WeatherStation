@@ -99,7 +99,6 @@ module ReadingsTests =
                         DirectionSixteenths (toDirection (expectedReading.DirectionDegrees / (360.0 / 16.0)))
                     ]
                 
-            Expect.equal reading.RefreshIntervalSeconds expectedReading.RefreshIntervalSeconds "Unexpected value"
             Expect.equal reading.DeviceTime expectedReading.DeviceTime "Unexpected value"
             Expect.equal reading.ReadingTime expectedReading.ReadingTime "Unexpected value"
             Expect.equal reading.SupplyVoltage expectedReading.SupplyVoltage "Unexpected value"

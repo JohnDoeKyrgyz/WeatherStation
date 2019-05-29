@@ -1,15 +1,15 @@
 ﻿namespace WeatherStation.Tests.Functions
-open Expecto.Flip
 module WundergroundForwarderTests =
+    open Expecto
+    open Expecto.Flip
     open System
     open System.Diagnostics  
-    open Microsoft.Extensions.Logging
-    open Expecto    
-    open WeatherStation.Functions.Model
-    open WeatherStation.Model
-    open WeatherStation.Tests.Functions.DataSetup
-    open WeatherStation.Functions.WundergroundForwarder
+    open Microsoft.Extensions.Logging    
     open WeatherStation
+    open WeatherStation.Model
+    open WeatherStation.Functions.Model    
+    open WeatherStation.Tests.Functions.DataSetup
+    open WeatherStation.Functions.WundergroundForwarder    
     open ReadingsTests
 
     let buildLog onMessage = { 
@@ -48,10 +48,10 @@ module WundergroundForwarderTests =
             printfn "%A" (actualLevel, actualMessage)
             let index = !messageIndex
             let level, messageCompare = index |> Array.get expectedMessages
-            Expect.equal level actualLevel "Unexpected log level"
+            Expect.equal "Unexpected log level" level actualLevel 
             match messageCompare with
-            | Exact message -> Expect.equal message actualMessage "Unexpected message"
-            | Test test -> Expect.isTrue (test actualMessage) "Unexpected message"
+            | Exact message -> Expect.equal "Unexpected message" message actualMessage
+            | Test test -> Expect.isTrue "Unexpected message" (test actualMessage)
             | Ignore -> ()
             messageIndex := index + 1 )
 
@@ -104,13 +104,17 @@ module WundergroundForwarderTests =
             testAsync "Empty particle data" {
                 let message = buildParticleMessage weatherStation readingTime String.Empty
                 let! reading = readingTest log [] readingTime weatherStation message [ReadingTime readingTime]
-                Expect.equal reading.SpeedMetersPerSecond 0.0 "WindSpeed should be blank"
-                Expect.equal reading.BatteryChargeVoltage 0.0 "BatteryCharge should be blank"
-                Expect.equal reading.DeviceTime readingTime "Unexpected DeviceTime"
+                Expect.equal "WindSpeed should be blank" reading.SpeedMetersPerSecond 0.0
+                Expect.equal "BatteryCharge should be blank" reading.BatteryChargeVoltage 0.0
+                Expect.equal "Unexpected DeviceTime" reading.DeviceTime readingTime
             }            
             testAsync "Basic reading" {
                 let expectedReading = {
-                    RefreshIntervalSeconds = 0
+                    BatteryPercentage = 85.0
+                    PanelMilliamps = 30.0
+                    X = 100.0
+                    Y = 101.0
+                    Z = 102.0
                     DeviceTime = readingTime
                     ReadingTime = readingTime
                     SupplyVoltage = 0.0
@@ -148,9 +152,9 @@ module WundergroundForwarderTests =
                         (async {return fun key defaultValue -> async {return {Key = key; Value = defaultValue; Group = ""}}})
                         message
 
-                Expect.isNone !wundergroundParameters "Wunderground should not have been called"
-                Expect.isSome !weatherStationSave "WeatherStation should have been saved"
-                Expect.isSome !readingSave "A reading should have been saved"
+                Expect.isNone "Wunderground should not have been called" !wundergroundParameters
+                Expect.isSome "WeatherStation should have been saved" !weatherStationSave
+                Expect.isSome "A reading should have been saved" !readingSave
             }]
             
     [<Tests>]
@@ -164,7 +168,11 @@ module WundergroundForwarderTests =
                     let expectedWindDirection = if expectedWindDirection < 0.0 then 16.0 + expectedWindDirection else expectedWindDirection
                     yield testAsync testName {
                         let expectedReading = {
-                            RefreshIntervalSeconds = 0
+                            BatteryPercentage = 85.0
+                            PanelMilliamps = 30.0
+                            X = 100.0
+                            Y = 101.0
+                            Z = 102.0
                             DeviceTime = readingTime
                             ReadingTime = readingTime
                             SupplyVoltage = 0.0
@@ -200,8 +208,8 @@ module WundergroundForwarderTests =
                 do! weatherStationRepository.Save weatherStation
 
                 let! weatherStationReloaded = weatherStationRepository.Get Particle weatherStation.DeviceId
-                Expect.isSome weatherStationReloaded "No WeatherStation found"
-                Expect.equal weatherStation weatherStationReloaded.Value "WeatherStations are not equal"
+                Expect.isSome "No WeatherStation found" weatherStationReloaded
+                Expect.equal "WeatherStations are not equal" weatherStation weatherStationReloaded.Value
             }
             testAsync "Reading for basic device" {
                 do! loadWeatherStations [weatherStation]
@@ -223,28 +231,27 @@ module WundergroundForwarderTests =
                     GustMetersPerSecond 1.700000M<meters/seconds>]
                 
                 let wundergroundParameters = ref None
-                do!
-                    
+                do!                    
                     processEventHubMessageWithAzureStorage (fun stationId password values _ -> async {
                         wundergroundParameters := Some {StationId = stationId; Password = password; Values = values |> Seq.toList}
                     }) log message
                 
                 let wundergroundParameters = !wundergroundParameters
-                Expect.isSome wundergroundParameters "No call to wunderground"
+                Expect.isSome "No call to wunderground" wundergroundParameters
 
                 let wundergroundParameters = wundergroundParameters.Value
-                Expect.equal wundergroundParameters.StationId weatherStation.WundergroundStationId "Unexpected StationId"
-                Expect.equal wundergroundParameters.Password weatherStation.WundergroundPassword "Unexpected Password"                        
-                Expect.equal wundergroundParameters.Values expectedReadings "Unexpected readings"
+                Expect.equal "Unexpected StationId" wundergroundParameters.StationId weatherStation.WundergroundStationId
+                Expect.equal "Unexpected Password" wundergroundParameters.Password weatherStation.WundergroundPassword
+                Expect.equal "Unexpected readings" wundergroundParameters.Values expectedReadings
 
                 let! readingsRepository = AzureStorage.readingsRepository connectionString
                 let! readings = readingsRepository.GetAll()
 
                 match readings with
                 | [reading] ->
-                    Expect.equal reading.SourceDevice weatherStation.DeviceId "Unexpected DeviceId"
-                    Expect.isGreaterThanOrEqual reading.ReadingTime readingTime "Unexpected ReadingTime"
-                    Expect.equal reading.SpeedMetersPerSecond 1.70 "Unexpected SpeedMetersPerSecond"
+                    Expect.equal "Unexpected DeviceId" reading.SourceDevice weatherStation.DeviceId
+                    Expect.isGreaterThanOrEqual "Unexpected ReadingTime" (reading.ReadingTime, readingTime)
+                    Expect.equal "Unexpected SpeedMetersPerSecond" reading.SpeedMetersPerSecond 1.70 
                 | _ -> failwith "Unexpected readings"
 
                 do! clearWeatherStations
