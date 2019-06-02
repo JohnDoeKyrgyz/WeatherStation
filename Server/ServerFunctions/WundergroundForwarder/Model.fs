@@ -63,7 +63,6 @@ module Model =
             double cleanV
 
         match value with
-        | RefreshInterval seconds -> {reading with RefreshIntervalSeconds = seconds / 1<seconds>}
         | ReadingTime time -> {reading with ReadingTime = time}
         | DeviceTime time -> {reading with DeviceTime = time}
         | SupplyVoltage voltage -> {reading with SupplyVoltage = toDouble(voltage)}

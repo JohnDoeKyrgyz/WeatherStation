@@ -4,11 +4,6 @@ open System.Text.RegularExpressions
 module Sensors =
 
     open System
-    open System.Text.RegularExpressions
-
-    open FSharp.Reflection
-    open FSharp.Linq
-
     open WeatherStation.Readings
     
     type ValueType = 
@@ -94,10 +89,10 @@ module Sensors =
     ]        
 
     let id sensors =
-        sensors |> Seq.fold (fun result sensor -> result &&& sensor.Id) 0x00uy
+        sensors |> Seq.fold (fun result sensor -> result ^^^ sensor.Id) 0x00uy
 
     let sensors id =
-        All |> List.filter (fun sensor -> sensor.Id &&& id = 0x01uy)
+        All |> List.filter (fun sensor -> (sensor.Id &&& id) = sensor.Id)
 
     let readingKey (sampleReading : ReadingValues) = 
         let readingToString = string sampleReading
@@ -122,18 +117,15 @@ module Sensors =
             | Int -> sprintf @"(?<%s>\d+)" name
             | Float -> sprintf @"(?<%s>\d+\.\d+)" name
 
-        let sensorPattern sensor =
+        let sensorMatch sensor =
             let valuesPattern = sensor.SampleValues |> Map.toSeq |> Seq.map valuePattern |> String.concat ":"
-            sprintf "%O%s" sensor.Prefix valuesPattern
+            let pattern = sprintf "%c%s" sensor.Prefix valuesPattern            
+            [for regexMatch in Regex.Matches(reading, pattern) -> regexMatch]
             
-        let valuesPattern =
+        let matches =
             sensors
-            |> Seq.map sensorPattern
-            |> String.concat String.Empty
+            |> Seq.collect sensorMatch
 
-        let regex = Regex(valuesPattern)
-        
-        let matches = [for regexMatch in regex.Matches(reading) -> regexMatch]
         let sensorReadings = 
             query {
                 for regexMatch in matches do
@@ -145,4 +137,4 @@ module Sensors =
     let parseReading id reading =
         let selectedSensors = sensors id
         parseReadingOfSensors selectedSensors reading
-
+        |> List.concat
