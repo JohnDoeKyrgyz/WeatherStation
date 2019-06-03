@@ -14,8 +14,6 @@
     <None Include="paket.references" />
     <Content Include="WundergroundForwarder\HologramStatusUpdate.json" />
     <Content Include="WundergroundForwarder\ParticleStatusUpdate.json" />
-    <Compile Include="WundergroundForwarder\Model.fs" />
-    <Compile Include="WundergroundForwarder\Hologram.fs" />
     <Compile Include="WundergroundForwarder\Particle.fs" />
     <Compile Include="WundergroundForwarder\ProcessReadings.fs" />
     <Compile Include="WundergroundForwarder\WundergroundPost.fs" />

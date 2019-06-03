@@ -2,7 +2,7 @@ namespace WeatherStation.Functions
 
 module ProcessReadings =
     
-    open Model
+    open WeatherStation.Readings
     open WeatherStation.Model
 
     let rec readingTime values =

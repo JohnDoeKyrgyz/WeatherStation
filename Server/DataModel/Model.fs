@@ -15,13 +15,11 @@ module Model =
 
     type DeviceType =
         | Particle
-        | Hologram
         | Test
 
     let parseDeviceType value =
         match value with 
         | "Particle" -> Particle
-        | "Hologram" -> Hologram
         | "Test" -> Test
         | _ -> failwithf "%s is not a valid DeviceType" value
 
@@ -60,6 +58,7 @@ module Model =
         X : double
         Y : double
         Z : double
+        RefreshInterval : double
         [<PartitionKey>]
         SourceDevice : string
         [<RowKey>]
@@ -85,6 +84,7 @@ module Model =
             X = 0.0
             Y = 0.0
             Z = 0.0
+            RefreshInterval = 0.0
             SourceDevice = null
             RowKey = null
         }

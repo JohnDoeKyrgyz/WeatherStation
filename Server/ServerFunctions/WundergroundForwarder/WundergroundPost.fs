@@ -4,7 +4,7 @@ module WundergroundPost =
 
     open FSharp.Data
     open Microsoft.Extensions.Logging
-    open Model
+    open WeatherStation.Readings
     
     let queryParameter value =
         match value with

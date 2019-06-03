@@ -26,8 +26,8 @@ let sensors = Sensors.All
 
 let random = Random()
 let generateRandomSensorReading (sensor : Sensor) =
-    [for entry in sensor.SampleValues ->
-        match entry.Value with
+    [for (_, valueType) in sensor.SampleValues ->
+        match valueType with
         | ValueType.Float -> 
             let value = random.NextDouble()
             string value
@@ -42,9 +42,11 @@ let generateRandomReading sensors =
     let version = 1
     let batteryVoltage = random.NextDouble() * 4.2
     let batteryPercentage = random.NextDouble() * 100.0
+    let panelVoltage = random.NextDouble() * 6.0
+    let panelCurrent = random.NextDouble() * 100.0
 
-    let readings = sensors |> List.map generateRandomSensorReading |> String.concat ","
-    sprintf "%d:%f:%f%s" version batteryVoltage batteryPercentage readings
+    let readings = sensors |> List.map generateRandomSensorReading |> String.concat ""
+    sprintf "%df%f:%fp%f:%f%s" version batteryVoltage batteryPercentage panelVoltage panelCurrent readings
 
 let createSampleMessage() =
     let date = DateTimeOffset.UtcNow.ToString()
@@ -68,6 +70,7 @@ let deviceId = "TestDevice"
 let deviceType = DeviceType.Test
 
 let sendDeviceToCloudMessages (client : DeviceClient) messageString = async {
+    printfn "%s" messageString        
     let message = new Message(Encoding.ASCII.GetBytes(messageString : string));
     do! client.SendEventAsync(message) |> Async.AwaitTask
 }

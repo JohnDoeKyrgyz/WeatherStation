@@ -2,7 +2,7 @@
 module ReadingsTests =
     open System
     open Expecto    
-    open WeatherStation.Functions.Model
+    open WeatherStation.Readings
     open WeatherStation.Model
     open WeatherStation.Functions.WundergroundForwarder
     
@@ -82,12 +82,15 @@ module ReadingsTests =
             let toPascal (doubleV : double) = 1.0m<_> * decimal doubleV
             let toSpeed (doubleV : double) = 1.0m<_> * decimal doubleV
             let toDirection (doubleV : double) = 1<_> * int doubleV
+            let toMilliamps (doubleV : double) = 1.0m<_> * decimal doubleV
             let! reading = 
                 readingTest 
                     log [] readingTime weatherStation message 
                     [
                         ReadingTime readingTime
                         BatteryChargeVoltage (toVolts expectedReading.BatteryChargeVoltage)
+                        BatteryPercentage (toPercent expectedReading.BatteryPercentage)
+                        ChargeMilliamps (toMilliamps expectedReading.PanelMilliamps)
                         PanelVoltage (toVolts expectedReading.PanelVoltage)
                         TemperatureCelciusHydrometer (toCelcius expectedReading.TemperatureCelciusHydrometer)
                         TemperatureCelciusBarometer (toCelcius expectedReading.TemperatureCelciusBarometer)

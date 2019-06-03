@@ -167,7 +167,7 @@ char *serialize(Reading *reading)
   buffer += 
     sprintf(
       buffer, 
-      "%d:%f:%f:%f:%f|", 
+      "%df%f:%fp%f:%f", 
       reading->version, 
       reading->batteryVoltage, 
       reading->batteryPercentage, 

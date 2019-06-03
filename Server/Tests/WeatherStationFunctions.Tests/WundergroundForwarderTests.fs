@@ -7,7 +7,7 @@ module WundergroundForwarderTests =
     open Microsoft.Extensions.Logging    
     open WeatherStation
     open WeatherStation.Model
-    open WeatherStation.Functions.Model    
+    open WeatherStation.Readings    
     open WeatherStation.Tests.Functions.DataSetup
     open WeatherStation.Functions.WundergroundForwarder    
     open ReadingsTests
@@ -110,6 +110,7 @@ module WundergroundForwarderTests =
             }            
             testAsync "Basic reading" {
                 let expectedReading = {
+                    RefreshInterval = 100.0
                     BatteryPercentage = 85.0
                     PanelMilliamps = 30.0
                     X = 100.0
@@ -131,7 +132,7 @@ module WundergroundForwarderTests =
                     SourceDevice = weatherStation.DeviceId
                     RowKey = String.Empty
                 }
-                do! particleDeviceReadingTest log expectedReading weatherStation readingTime "100:4.00:3640|b1.0:2.0:3.0d10.800000:86.500000a10.00:10"
+                do! particleDeviceReadingTest log expectedReading weatherStation readingTime "100:f4.00:85.0p16.0:30.0b1.0:2.0:3.0d10.800000:86.500000a10.00:10"
             }
             testAsync "No WundergroundId" {
                 let weatherStation = {weatherStation with WundergroundStationId = null}
@@ -168,6 +169,7 @@ module WundergroundForwarderTests =
                     let expectedWindDirection = if expectedWindDirection < 0.0 then 16.0 + expectedWindDirection else expectedWindDirection
                     yield testAsync testName {
                         let expectedReading = {
+                            RefreshInterval = 100.0
                             BatteryPercentage = 85.0
                             PanelMilliamps = 30.0
                             X = 100.0
@@ -189,7 +191,7 @@ module WundergroundForwarderTests =
                             SourceDevice = weatherStation.DeviceId
                             RowKey = String.Empty
                         }
-                        let data = sprintf "100:4.00:3640|b1.0:2.0:3.0d10.800000:86.500000a10.0:%f" windDirection
+                        let data = sprintf "100f4.00:85.0p16.0:30.0b1.0:2.0:3.0d10.800000:86.500000a10.0:%d" (int windDirection)
                         let weatherStation = {weatherStation with DirectionOffsetDegrees = Some (int rotationDegrees)}
                         do! particleDeviceReadingTest quietLog expectedReading weatherStation readingTime data
 
@@ -215,18 +217,20 @@ module WundergroundForwarderTests =
                 do! loadWeatherStations [weatherStation]
                 do! clearReadings
 
-                let message = buildParticleMessage weatherStation readingTime "100:4.006250:3864|b1.0:2.0:3.0d10.800000:86.500000a1.700000:15"
+                let message = buildParticleMessage weatherStation readingTime "100f4.006250:85.0p16.98:100.0b1.0:2.0:3.0d10.800000:86.500000a1.700000:15"
 
                 let expectedReadings = [
-                    BatteryChargeVoltage 4.006250M<volts>
-                    PanelVoltage 16.984615384615384615384615385M<volts>
+                    SpeedMetersPerSecond 1.700000M<meters/seconds>
+                    DirectionSixteenths 15<sixteenths>
                     TemperatureCelciusBarometer 1.0M<celcius>
                     PressurePascal 2.0m<pascal>
                     HumidityPercentBarometer 3.0m<percent>
+                    PanelVoltage 16.98M<volts>
+                    ChargeMilliamps 100.0m<milliamps>
                     TemperatureCelciusHydrometer 10.800000M<celcius>
                     HumidityPercentHydrometer 86.500000M<percent>
-                    SpeedMetersPerSecond 1.700000M<meters/seconds>
-                    DirectionSixteenths 15<sixteenths>
+                    BatteryChargeVoltage 4.006250M<volts>            
+                    BatteryPercentage 85.0M<percent>
                     ReadingTime readingTime
                     GustMetersPerSecond 1.700000M<meters/seconds>]
                 

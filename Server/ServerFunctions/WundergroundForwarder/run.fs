@@ -18,7 +18,7 @@ module WundergroundForwarder =
         with ex -> Choice2Of2 ex
 
     let parsers = 
-        [Particle, Particle.parseValues; Hologram, Hologram.parseValues]
+        [Particle, Particle.parseValues]
 
     let rec innerMostException (ex : exn) =
         printfn "%A" ex
@@ -85,7 +85,7 @@ module WundergroundForwarder =
                             log.LogWarning("No WundergroundId. No data posted to Wunderground.")                        
                             
                         let deviceReading = {deviceReading with Readings = values}
-                        let reading = Model.createReading deviceReading                        
+                        let reading = Readings.createReading deviceReading                        
 
                         log.LogInformation(sprintf "Saving Reading %A" reading)
                         do! saveReading reading

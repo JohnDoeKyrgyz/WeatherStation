@@ -41,9 +41,9 @@ module Readings =
     type ReadingValues =
         | ReadingTime of DateTime
         | DeviceTime of DateTime
-        | SupplyVoltage of decimal<volts>
+        //FuelGauge
         | BatteryChargeVoltage of decimal<volts>
-        | BatteryPercentage of decimal<milliamps>
+        | BatteryPercentage of decimal<percent>
         //INA219
         | PanelVoltage of decimal<volts>
         | ChargeMilliamps of decimal<milliamps>
@@ -62,12 +62,14 @@ module Readings =
         | X of decimal<degrees>
         | Y of decimal<degrees>
         | Z of decimal<degrees>
+        //Derived
+        | RefreshInterval of int<seconds>
 
     let loadReadingValue sampleReadingValue value =
         match sampleReadingValue with
         | ReadingTime _ -> value |> DateTime.Parse |> ReadingTime
         | DeviceTime _ -> value |> DateTime.Parse |> DeviceTime
-        | SupplyVoltage _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> SupplyVoltage
+        //FuelGuage
         | BatteryChargeVoltage _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> BatteryChargeVoltage
         | BatteryPercentage _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> BatteryPercentage
         //INA219
@@ -88,6 +90,8 @@ module Readings =
         | X  _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> X
         | Y  _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> Y
         | Z  _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> Z
+        //Derived
+        | RefreshInterval _ -> value |> int |> LanguagePrimitives.Int32WithMeasure |> RefreshInterval
 
     type DeviceReadings = {
         DeviceId : string
@@ -103,7 +107,6 @@ module Readings =
         match value with
         | ReadingTime time -> {reading with ReadingTime = time}
         | DeviceTime time -> {reading with DeviceTime = time}
-        | SupplyVoltage voltage -> {reading with SupplyVoltage = toDouble(voltage)}
         | BatteryChargeVoltage voltage -> {reading with BatteryChargeVoltage = toDouble(voltage)}
         | ChargeMilliamps milliamps -> {reading with PanelMilliamps = toDouble(milliamps)}
         | BatteryPercentage percentage -> {reading with BatteryPercentage = toDouble(percentage)}
@@ -119,6 +122,7 @@ module Readings =
         | X angle -> {reading with X = toDouble(angle)}
         | Y angle -> {reading with Y = toDouble(angle)}
         | Z angle -> {reading with Z = toDouble(angle)}
+        | RefreshInterval interval -> {reading with RefreshInterval = double interval}
 
     let createReading deviceReading = 
         let readingKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)

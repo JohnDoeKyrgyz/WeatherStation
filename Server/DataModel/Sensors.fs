@@ -3,7 +3,6 @@ open System.Text.RegularExpressions
 
 module Sensors =
 
-    open System
     open WeatherStation.Readings
     
     type ValueType = 
@@ -15,7 +14,7 @@ module Sensors =
         Prefix : char  
         Name : string
         Description : string
-        SampleValues : Map<ReadingValues, ValueType>
+        SampleValues : (ReadingValues * ValueType) list
     }
 
     let anemometer =  {
@@ -27,8 +26,7 @@ module Sensors =
             [
                 SpeedMetersPerSecond 0.0m<meters/seconds>, ValueType.Float
                 DirectionSixteenths 0<sixteenths>, ValueType.Int
-            ]
-            |> Map.ofList }
+            ] }
         
     let bme280 = {        
         Id = 2uy
@@ -39,9 +37,8 @@ module Sensors =
             [
                 TemperatureCelciusBarometer 0.0m<celcius>, ValueType.Float
                 PressurePascal 0.0m<pascal>, ValueType.Float
-                HumidityPercentBarometer 0.0m<percent>, ValueType.Float
-            ]
-            |> Map.ofList }
+                HumidityPercentBarometer 0.0m<percent>, ValueType.Float                                
+            ] }
 
     let qmc5883l = {
         Id = 8uy
@@ -53,8 +50,7 @@ module Sensors =
                 X 0.0m<degrees>, ValueType.Float
                 Y 0.0m<degrees>, ValueType.Float
                 Z 0.0m<degrees>, ValueType.Float
-            ]
-            |> Map.ofList }
+            ] }
         
     let ina219 = {
         Id = 16uy
@@ -63,22 +59,31 @@ module Sensors =
         Description = "Voltage / Current"
         SampleValues = 
             [
-                SpeedMetersPerSecond 0.0m<meters/seconds>, ValueType.Float
-                DirectionSixteenths 0<sixteenths>, ValueType.Float
-            ]
-            |> Map.ofList}
+                PanelVoltage 0.0m<volts>, ValueType.Float
+                ChargeMilliamps 0.0m<milliamps>, ValueType.Float
+            ] }
 
     let dht22 = {
         Id = 32uy
         Prefix = 'd'
         Name = "DHT22"
-        Description = "Temperature / Pessure"
+        Description = "Temperature / Humidity"
         SampleValues =
             [
-                SpeedMetersPerSecond 0.0m<meters/seconds>, ValueType.Float
-                DirectionSixteenths 0<sixteenths>, ValueType.Float
-            ]
-            |> Map.ofList}
+                TemperatureCelciusHydrometer 0.0m<celcius>, ValueType.Float
+                HumidityPercentHydrometer 0.0m<percent>, ValueType.Float
+            ] }
+
+    let internalBattery = {
+        Id = 1uy
+        Prefix = 'f'
+        Name = "Fuel Guage"
+        Description = "Onboard Power Sensor"
+        SampleValues = 
+            [
+                BatteryChargeVoltage 0.0m<volts>, ValueType.Float
+                BatteryPercentage 0.0m<percent>, ValueType.Float
+            ] }            
 
     let All = [
         anemometer
@@ -86,6 +91,7 @@ module Sensors =
         qmc5883l
         ina219
         dht22
+        internalBattery
     ]        
 
     let id sensors =
@@ -101,13 +107,12 @@ module Sensors =
     let loadReading sensor (regexMatch : Match) =
         let samples = 
             sensor.SampleValues 
-            |> Map.toSeq
             |> Seq.map fst
             |> Seq.toList
         let rawValues = 
             samples
             |> List.map (readingKey >> (fun key -> regexMatch.Groups.[key].Value))
-        [for (sample, value) in rawValues |> Seq.zip sensor.SampleValues -> loadReadingValue sample.Key value]
+        [for ((sample, _), value) in rawValues |> Seq.zip sensor.SampleValues -> loadReadingValue sample value]
         
 
     let parseReadingOfSensors (sensors : seq<Sensor>) reading =
@@ -118,7 +123,7 @@ module Sensors =
             | Float -> sprintf @"(?<%s>\d+\.\d+)" name
 
         let sensorMatch sensor =
-            let valuesPattern = sensor.SampleValues |> Map.toSeq |> Seq.map valuePattern |> String.concat ":"
+            let valuesPattern = sensor.SampleValues |> Seq.map valuePattern |> String.concat ":"
             let pattern = sprintf "%c%s" sensor.Prefix valuesPattern            
             [for regexMatch in Regex.Matches(reading, pattern) -> regexMatch]
             
@@ -132,9 +137,9 @@ module Sensors =
                 join sensor in sensors on (regexMatch.Value.[0] = sensor.Prefix)
                 select (sensor, regexMatch) }
 
-        [for (sensor, regexMatch) in sensorReadings -> loadReading sensor regexMatch]
+        let readings = [for (sensor, regexMatch) in sensorReadings do yield! loadReading sensor regexMatch]
+        readings
 
     let parseReading id reading =
         let selectedSensors = sensors id
         parseReadingOfSensors selectedSensors reading
-        |> List.concat
