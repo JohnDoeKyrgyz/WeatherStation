@@ -96,7 +96,7 @@ Target.create "Bundle" (fun _ ->
 
 Target.create "Build" (fun _ ->
     runDotNet "build" webServerPath
-    runDotNet "fable webpack-cli -- --config src/Client/webpack.config.js -p" webClientPath
+    runTool yarnTool "webpack-cli -- --config src/Client/webpack.config.js -p" webClientPath
 )
 
 Target.create "BuildFunctions" (fun _ ->
@@ -126,7 +126,7 @@ Target.create "Run" (fun _ ->
     let server = async { runDotNet "watch run" webServerPath }    
     let serverTests = async { runDotNet "watch run" serverTestsPath }
     let client = async {
-        runDotNet "fable webpack-dev-server -- --config src/Client/webpack.config.js" webClientPath
+        runTool yarnTool "webpack-dev-server --config src/Client/webpack.config.js" webClientPath
     }
     let browser = async {
         do! Async.Sleep 5000

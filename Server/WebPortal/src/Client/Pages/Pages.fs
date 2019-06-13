@@ -1,7 +1,7 @@
 namespace WeatherStation.Client.Pages
 module Pages =
 
-    open Elmish.Browser.UrlParser
+    open Elmish.UrlParser
     open WeatherStation.Shared
 
     /// The different pages of the application. If you add a new page, then add an entry here.
@@ -13,7 +13,7 @@ module Pages =
     let toPath =
         function
         | Page.Home -> "/"
-        | Page.Device key -> sprintf "/device/%s/%s" key.DeviceType key.DeviceId        
+        | Page.Device key -> sprintf "/device/%s/%s" key.DeviceType key.DeviceId
 
     /// The URL is turned into a Result.
     let pageParser : Parser<Page -> Page,_> =

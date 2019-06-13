@@ -25,12 +25,19 @@ group Client
     storage: none
     source https://api.nuget.org/v3/index.json
 
-    nuget Fable.Elmish.Debugger
+    nuget Fable.Core
+    nuget Fable.Fetch
+    nuget Fable.Elmish
     nuget Fable.Elmish.React
+    nuget Fable.Elmish.Browser
+    nuget Fable.Elmish.Debugger
     nuget Fable.Elmish.HMR
+    nuget Fable.React
+    nuget Fable.Promise
+    nuget Fable.FontAwesome.Free
+    nuget Thoth.Json    
     nuget Fulma
     github fable-compiler/fable-recharts src/Fable.Recharts.fs
-    clitool dotnet-fable
 
 group Test
 	storage: none

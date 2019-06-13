@@ -1,4 +1,8 @@
 namespace WeatherStation.Client.Pages
+
+open Thoth.Json
+open Fetch
+
 module Device =
 
     open System
@@ -7,12 +11,10 @@ module Device =
     open WeatherStation.Shared
     open Elmish
 
-    open Fable.PowerPack
-    open Fable.Helpers.React
-    open Fable.PowerPack.Fetch    
+    open Fable
+    open Fable.React
 
     open Fulma
-    open Fulma.FontAwesome
 
     open Client
 
@@ -47,49 +49,63 @@ module Device =
             let formattedTooDate = UrlDateTime.toUrlDate tooDate
             sprintf "/api/stations/%s/%s/%s/%s" key.DeviceType key.DeviceId formattedTooDate formattedFromDate
         let result response = Readings (stationDetails, fromDate, response)
-        Cmd.ofPromise
+        Cmd.OfPromise.either
             (fetchAs url)
             []
             (Ok >> Loaded >> result)
             (Error >> Loaded >> result)
 
     let loadStationCmd (key : StationKey) =
-        Cmd.ofPromise
+        Cmd.OfPromise.either
             (fetchAs (sprintf "/api/stations/%s/%s" key.DeviceType key.DeviceId))
             []
             (Ok >> Loaded >> Station)
             (Error >> Loaded >> Station)
 
     let updateSettings key settings =
-        Cmd.ofPromise
-            (fun args -> promise {
-                let! result = postRecord<StationSettings> (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId) settings args
+        (*
+            this code is ported from commented out code in:
+            https://github.com/fable-compiler/fable-fetch
+            This code was commented out because it takes a dependancy on Thoth
+        *)
+        let url = (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId)
+        let json = Encode.Auto.toString<StationSettings>(0, settings)
+        let jsonBody = RequestProperties.Body ( BodyInit.Case2(json) )
+        Cmd.OfPromise.either
+            (fun _ -> promise {
+                let! result =
+                    [
+                        RequestProperties.Method HttpMethod.POST
+                        requestHeaders [ContentType "application/json"]
+                        jsonBody
+                    ]
+                    |> fetch url
                 return! result.text()
-            }) 
+            })
             []
             (Ok >> Loaded >> SettingsUpdated)
             (Error >> Loaded >> SettingsUpdated)
 
     let loadSettings key =
-        Cmd.ofPromise
+        Cmd.OfPromise.either
             (fetchAs (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId))
             []
             (Ok >> Loaded >> Settings)
             (Error >> Loaded >> Settings)
-            
+
     let init key : Model * Cmd<Msg> =
-        let initialModel = {Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = NotLoading; PageSize = TimeSpan.FromDays 2.0; CurrentPage = DateTime.Now}    
+        let initialModel = {Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = NotLoading; PageSize = TimeSpan.FromDays 2.0; CurrentPage = DateTime.Now}
         initialModel, loadStationCmd key
 
-    module P = Fable.Helpers.React.Props
-    module R = Fable.Helpers.React
-    
+    module P = Fable.React.Props
+    module R = Fable.React.Helpers
+
     let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         match msg with
         | SelectTab Tab.Settings ->
             {currentModel with ActiveTab = Tab.Settings}, loadSettings currentModel.Key
         | SelectTab tab ->
-            {currentModel with ActiveTab = tab}, Cmd.none                    
+            {currentModel with ActiveTab = tab}, Cmd.none
         | Station Loading ->
             let nextModel = { currentModel with Device = Loading }
             nextModel, loadStationCmd currentModel.Key
@@ -150,7 +166,7 @@ module Device =
     let windDirectionChart readings =
         let data = [|for reading in readings -> {time = date reading.ReadingTime; direction = reading.DirectionDegrees}|]
         readingsChart data [
-            "direction", "blue"]    
+            "direction", "blue"]
 
     let view dispatch model =
 
@@ -161,16 +177,16 @@ module Device =
             let previousPage = if previousDate < firstPage then previousDate else firstPage
             let nextPage = model.CurrentPage - model.PageSize
             let buttonDefinitions = [
-                FontAwesome.Fa.I.FastBackward, firstPage
-                FontAwesome.Fa.I.Backward, previousPage
-                FontAwesome.Fa.I.Refresh, model.CurrentPage
-                FontAwesome.Fa.I.Forward, nextPage ]
+                FontAwesome.Free.Fa.Solid.FastBackward, firstPage
+                FontAwesome.Free.Fa.Solid.Backward, previousPage
+                FontAwesome.Free.Fa.Solid.Redo, model.CurrentPage
+                FontAwesome.Free.Fa.Solid.Forward, nextPage ]
             Level.level [] [
                 Level.left [][
                     for icon, key in buttonDefinitions do
                         yield Button.button [
                             Button.Color IsPrimary
-                            Button.OnClick (onNavigate key)] [Icon.faIcon [] [Fa.icon icon]]]
+                            Button.OnClick (onNavigate key)] [Icon.icon [] [FontAwesome.Fa.i [icon] []]]]
                 Level.item [][
                     str (sprintf "%A - %A" model.CurrentPage nextPage)]]
 
@@ -186,8 +202,8 @@ module Device =
                         number reading.PanelVoltage
                         number reading.SpeedMetersPerSecond
                         string reading.DirectionDegrees
-                        number reading.TemperatureCelciusBarometer])]        
-   
+                        number reading.TemperatureCelciusBarometer])]
+
         let graphs data =
             div [] [
                 paginator data
@@ -223,31 +239,31 @@ module Device =
                     | Some settings -> Some (builder settings value)
                     | None -> Some (builder StationSettings.Default value)
                     |> SettingsChanged
-                    |> dispatch                
+                    |> dispatch
                 div [] [
-                    checkBoxInput 
-                        (readValue (fun settings -> settings.Brownout)) 
+                    checkBoxInput
+                        (readValue (fun settings -> settings.Brownout))
                         (setValue (fun settings value -> {settings with Brownout = value}))
                     |> simpleFormControl "Brownout"
 
-                    decimalInput 
+                    decimalInput
                         (readValue (fun settings -> settings.BrownoutPercentage))
                         (setValue (fun settings value -> {settings with BrownoutPercentage = value}))
                     |> simpleFormControl "Brownout Percentage"
 
-                    intInput 
+                    intInput
                         (readValue (fun settings -> settings.BrownoutMinutes))
                         (setValue (fun settings value -> {settings with BrownoutMinutes = value}))
                     |> simpleFormControl "Brownout Minutes"
 
-                    formControl 
-                        "Sleep Time" 
-                        (intInput 
+                    formControl
+                        "Sleep Time"
+                        (intInput
                             (readValue (fun settings -> settings.SleepTime))
-                            (setValue (fun settings value -> {settings with SleepTime = value})))[                         
+                            (setValue (fun settings value -> {settings with SleepTime = value})))[
                             Help.help [][str "Measured in seconds"]]
 
-                    (intInput 
+                    (intInput
                         (readValue (fun settings -> settings.DiagnosticCycles))
                         (setValue (fun settings value -> {settings with DiagnosticCycles = value})))
                     |> simpleFormControl "Diagnostic Cycles"
@@ -257,13 +273,13 @@ module Device =
                         (setValue (fun settings value -> {settings with UseDeepSleep = value}))
                     |> simpleFormControl "Use Deep Sleep"
 
-                    button "Save" (fun _ -> dispatch UpdateSettings) Fa.I.Save])]
-     
+                    button "Save" (fun _ -> dispatch UpdateSettings) FontAwesome.Free.Fa.Solid.Save])]
+
         [Client.tabs
             (SelectTab >> dispatch) [
-                {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Fa.I.Table}
-                {Name = "Graph"; Key = Graph; Content = loader model.Device graphs; Icon = Some FontAwesome.Fa.I.LineChart}
-                {Name = "Settings"; Key = Tab.Settings; Content = settings; Icon = Some FontAwesome.Fa.I.Gear}
+                {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Free.Fa.Solid.Table}
+                {Name = "Graph"; Key = Graph; Content = loader model.Device graphs; Icon = Some FontAwesome.Free.Fa.Solid.Anchor}
+                {Name = "Settings"; Key = Tab.Settings; Content = settings; Icon = Some FontAwesome.Free.Fa.Solid.Database}
             ]
             model.ActiveTab
             [Tabs.IsFullWidth; Tabs.IsBoxed]]

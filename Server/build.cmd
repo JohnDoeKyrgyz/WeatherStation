@@ -17,5 +17,4 @@ dotnet build
 dotnet Tests\WeatherStationFunctions.Tests\bin\Debug\netcoreapp2.0\WeatherStationFunctions.Tests.dll
 dotnet Tests\Server.Tests\bin\Debug\netcoreapp2.0\Server.Tests.dll
 
-cd WebPortal
-fake --target build
+fake build --target build

@@ -3,16 +3,17 @@ module Home =
     open WeatherStation.Client
     open WeatherStation.Shared
 
-    open Fable.Helpers.React
-    open Fable.Helpers.React.Props
+    open Fable.React
+    open Fable.React.Props
 
     open Elmish
 
     open Fulma
-    open FontAwesome.Fa.I
 
     open Client
 
+    module Icons = Fable.FontAwesome.Free.Fa.Solid
+    
     type Model = {
         Stations : Loadable<Station list>
     }
@@ -22,13 +23,13 @@ module Home =
         | Select of Station
 
     let loadStationsCmd =
-        Cmd.ofPromise
+        Cmd.OfPromise.either
             (fetchAs "/api/stations")
             []
             (Ok >> Loaded >> Stations)
-            (Error >> Loaded >> Stations)    
+            (Error >> Loaded >> Stations)
     let init () : Model * Cmd<Msg> =
-        let initialModel = { Stations = Loading }    
+        let initialModel = { Stations = Loading }
         initialModel, loadStationsCmd
 
     let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
@@ -49,8 +50,8 @@ module Home =
                 tr [] [
                     th [] [str "Name"]
                     th [] [str "Status"]
-                    th [] [button "Reload" (fun _ -> dispatch (Stations Loading)) Refresh]]]
-            tbody [] 
+                    th [] [button "Reload" (fun _ -> dispatch (Stations Loading)) Icons.Redo]]]
+            tbody []
                 [for station in stations do
                     let statusColor =
                         match station.Status with
@@ -64,7 +65,7 @@ module Home =
                                 else yield str station.Name]
                             td [] [
                                 Tag.tag [Tag.Color statusColor] [str (string station.Status)]]
-                            td [] [button "Details" (fun _ -> dispatch (Select station)) Table]]]]
+                            td [] [button "Details" (fun _ -> dispatch (Select station)) Icons.Table]]]]
 
     let view dispatch model = [
         yield! loader model.Stations (stationsList dispatch)]

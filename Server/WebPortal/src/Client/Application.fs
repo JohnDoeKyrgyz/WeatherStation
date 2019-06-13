@@ -2,14 +2,15 @@ namespace WeatherStation.Client
 
 module Application =
     open Elmish
-    open Elmish.React    
-    open Elmish.Browser.Navigation
+    open Elmish.React
+    open Elmish.HMR
+    open Elmish.Navigation
 
-    open Fable.Helpers.React
-    open Fable.Helpers.React.Props
+    open Fable.React
+    open Fable.React.Props
 
     open WeatherStation.Client.Pages
-    
+
     /// The composed model for the different possible page states of the application
     type PageModel =
         | HomeModel of Home.Model
@@ -27,7 +28,7 @@ module Application =
 
     // VIEW
     open Fulma
-    
+
     /// Constructs the view for a page given the model and dispatcher.
     let viewPage model dispatch =
         match model.PageModel with
@@ -36,7 +37,7 @@ module Application =
 
     let navigate page model =
         let url = Pages.toPath page
-        let gotoPage message toPageModel (pageModel, pageCommand) =            
+        let gotoPage message toPageModel (pageModel, pageCommand) =
             let command =
                 [
                     Navigation.newUrl url
@@ -48,10 +49,10 @@ module Application =
         | Pages.Page.Home -> gotoPage HomeMsg HomeModel (Home.init())
         | Pages.Page.Device key -> gotoPage DeviceMsg DeviceModel (Device.init key)
 
-    let view model dispatch =        
+    let view model dispatch =
         let homeCrumb active = Breadcrumb.item [Breadcrumb.Item.IsActive active] [a [OnClick (fun _ -> dispatch (Msg.Navigate Pages.Page.Home))] [ str "Home" ]]
 
-        div [] [            
+        div [] [
             Navbar.navbar [ Navbar.Color IsPrimary ] [
                 Navbar.Item.div [Navbar.Item.Option.IsTab] [
                     Breadcrumb.breadcrumb [Breadcrumb.HasBulletSeparator] [
@@ -63,7 +64,7 @@ module Application =
                             yield Breadcrumb.item [Breadcrumb.Item.IsActive true ][ a [ ] [ str deviceModel.Key.DeviceId ] ] ] ] ]
 
             Container.container [] [
-                Content.content [] (viewPage model dispatch) ]  
+                Content.content [] (viewPage model dispatch) ]
 
             Footer.footer [] [
                 Content.content [] [
@@ -103,7 +104,6 @@ module Application =
 
     #if DEBUG
     open Elmish.Debug
-    open Elmish.HMR
 
     #endif
 
@@ -112,9 +112,8 @@ module Application =
     |> Program.toNavigable pageParser urlUpdate
     #if DEBUG
     |> Program.withConsoleTrace
-    |> Program.withHMR
     #endif
-    |> Program.withReact "elmish-app"
+    |> Program.withReactSynchronous "elmish-app"
     #if DEBUG
     |> Program.withDebugger
     #endif
