@@ -52,6 +52,17 @@
       "command": "host start",
       "isBackground": true,
       "problemMatcher": "$func-watch"
+    },
+    {
+        "command": "./run-server.cmd",
+        "args": [],
+        "type": "shell",
+        "label": "Start",
+        "group": "build",
+        "isBackground": true,
+        "windows": {
+          "command": "./run-server.cmd"
+        }
     }
   ]
 }
