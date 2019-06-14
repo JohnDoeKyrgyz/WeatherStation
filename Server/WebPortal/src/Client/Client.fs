@@ -2,7 +2,7 @@ namespace WeatherStation.Client
 
 module Client =
     open System
-    
+
     open Fable.React
     open Fable.React.Props
     open Fable.Recharts
@@ -24,7 +24,8 @@ module Client =
         promise {
             let! response = fetch url parameters
             let! text = response.text()
-            return Decode.Auto.unsafeFromString<'T> text
+            let extraEncoders = Extra.empty |> Extra.withDecimal
+            return Decode.Auto.unsafeFromString<'T>(text, extra = extraEncoders)
         }
 
     let button txt onClick icon =
