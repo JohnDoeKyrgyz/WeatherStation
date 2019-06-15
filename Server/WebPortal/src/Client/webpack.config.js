@@ -21,7 +21,7 @@ var CONFIG = {
             ["@babel/preset-env", {
                 "modules": false,
                 "useBuiltIns": "usage",
-                "corejs": 3,
+                "corejs": 2,
                 // This saves around 4KB in minified bundle (not gzipped)
                 // "loose": true,
             }]

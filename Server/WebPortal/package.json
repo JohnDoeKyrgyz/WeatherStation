@@ -1,9 +1,6 @@
 {
     "private": true,
     "dependencies": {
-        "@babel/polyfill": "^7.4.4",
-        "@babel/runtime": "^7.4.5",
-        "fable-compiler": "^2.3.11",
         "react": "16.8.6",
         "react-bootstrap": "0.32.4",
         "react-dom": "16.8.6",
@@ -14,6 +11,7 @@
         "bulma-pageloader": "^2.1.0"
     },
     "devDependencies": {
+        "fable-compiler": "^2.3.11",
         "@babel/core": "^7.4.5",
         "@babel/plugin-transform-runtime": "^7.4.4",
         "@babel/preset-env": "^7.4.5",
@@ -25,7 +23,7 @@
         "webpack-cli": "^3.3.4",
         "webpack-dev-server": "^3.7.1",
         "copy-webpack-plugin": "^5.0.2",
-        "core-js": "^3.0.0",
+        "core-js": "^2.0.0",
         "css-loader": "^2.1.1",
         "html-webpack-plugin": "^3.2.0",
         "mini-css-extract-plugin": "^0.5.0",
