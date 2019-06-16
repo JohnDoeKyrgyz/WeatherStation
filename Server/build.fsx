@@ -74,10 +74,6 @@ Target.create "InstallClient" (fun _ ->
     runDotNet "restore" webClientPath
 )
 
-Target.create "RestoreServer" (fun _ ->
-    runDotNet "restore" webServerPath
-)
-
 Target.create "Bundle" (fun _ ->
     runDotNet (sprintf "publish \"%s\" -c release -o \"%s\"" webServerPath webDeployDir) webPath
     Shell.copyDir (Path.combine webDeployDir "public") (Path.combine webClientPath "public") FileFilter.allFiles
@@ -140,7 +136,6 @@ open Fake.Core.TargetOperators
 
 "Clean"
     ==> "InstallClient"
-    ==> "RestoreServer"
     ==> "Run"
 
 Target.runOrDefault "Build"
