@@ -18,10 +18,10 @@ open FSharp.Data
 
 let functionsPath = Path.getFullName "ServerFunctions"
 let functionsSolutionName = "ServerFunctions.sln"
-let webPath = Path.getFullName "WebPortal"
-let serverTestsPath = Path.getFullName @"Tests\Server.Tests"
-let webServerPath = Path.combine webPath @"src\Server"
-let webClientPath = Path.combine webPath @"src\Client"
+let webPath = Path.getFullName "./WebPortal"
+let serverTestsPath = Path.getFullName @"Tests/Server.Tests"
+let webServerPath = Path.combine webPath @"src/Server"
+let webClientPath = Path.combine webPath @"src/Client"
 let webDeployDir = Path.combine webPath "deploy"
 
 [<Literal>]
@@ -45,29 +45,18 @@ let yarnTool = platformTool "yarn" "yarn.cmd"
 let funcTool = platformTool "func" "func.cmd"
 
 let runTool cmd args workingDir =
-    let result =
-        Process.execSimple (fun info ->
-            { info with
-                FileName = cmd
-                WorkingDirectory = workingDir
-                Arguments = args })
-            TimeSpan.MaxValue
-    if result <> 0 then failwithf "'%s %s' failed" cmd args
+    let arguments = args |> String.split ' ' |> Arguments.OfArgs
+    Command.RawCommand (cmd, arguments)
+    |> CreateProcess.fromCommand
+    |> CreateProcess.withWorkingDirectory workingDir
+    |> CreateProcess.ensureExitCode
+    |> Proc.run
+    |> ignore
 
 let runDotNet cmd workingDir =
     let result =
         DotNet.exec (DotNet.Options.withWorkingDirectory workingDir) cmd ""
     if result.ExitCode <> 0 then failwithf "'dotnet %s' failed in %s" cmd workingDir
-
-let openBrowser url =
-    let result =
-        //https://github.com/dotnet/corefx/issues/10361
-        Process.execSimple (fun info ->
-            { info with
-                FileName = url
-                UseShellExecute = true })
-            TimeSpan.MaxValue
-    if result <> 0 then failwithf "opening browser failed"
 
 Target.create "Clean" (fun _ ->
     Shell.cleanDirs [webDeployDir]
@@ -96,7 +85,7 @@ Target.create "Bundle" (fun _ ->
 
 Target.create "Build" (fun _ ->
     runDotNet "build" webServerPath
-    runTool yarnTool "webpack-cli -- --config src/Client/webpack.config.js -p" webClientPath
+    runTool yarnTool "webpack-cli --config src/webpack.config.js -p" webClientPath
 )
 
 Target.create "BuildFunctions" (fun _ ->
@@ -126,14 +115,11 @@ Target.create "Run" (fun _ ->
     let server = async { runDotNet "watch run" webServerPath }    
     let serverTests = async { runDotNet "watch run" serverTestsPath }
     let client = async {
-        runTool yarnTool "webpack-dev-server --config src/Client/webpack.config.js" webClientPath
-    }
-    let browser = async {
-        do! Async.Sleep 5000
-        openBrowser "http://localhost:8080"
+        runTool yarnTool "webpack-dev-server --config src/webpack.config.js" webClientPath
     }
 
-    [ serverTests; server; client; browser ]
+    [ serverTests; server; client ]
+    //[ server; client ]
     |> Async.Parallel
     |> Async.RunSynchronously
     |> ignore

@@ -8,20 +8,31 @@ var CONFIG = {
     indexHtmlTemplate: './src/Client/public/index.html',
     fsharpEntry: './src/Client/Client.fsproj',
     cssEntry: './src/Client/scss/main.scss',
-    outputDir: './src/Client/output',
+    outputDir: './src/Client/deploy',
     assetsDir: './src/Client/public',
     devServerPort: 8080,
     // When using webpack-dev-server, you may need to redirect some calls
     // to a external API server. See https://webpack.js.org/configuration/dev-server/#devserver-proxy
-    devServerProxy: undefined,
+    devServerProxy: {
+        // redirect requests that start with /api/* to the server on port 8085
+        '/api/*': {
+            target: 'http://localhost:' + (process.env.SERVER_PROXY_PORT || "8085"),
+               changeOrigin: true
+           },
+        // redirect websocket requests that start with /socket/* to the server on the port 8085
+        '/socket/*': {
+            target: 'http://localhost:' + (process.env.SERVER_PROXY_PORT || "8085"),
+            ws: true
+           }
+       },
     // Use babel-preset-env to generate JS compatible with most-used browsers.
     // More info at https://github.com/babel/babel/blob/master/packages/babel-preset-env/README.md
     babel: {
         presets: [
             ["@babel/preset-env", {
-                "modules": false,
-                "useBuiltIns": "usage",
-                "corejs": 2,
+                modules: false,
+                useBuiltIns: "usage",
+                corejs: 2,
                 // This saves around 4KB in minified bundle (not gzipped)
                 // "loose": true,
             }]
