@@ -168,6 +168,8 @@ module Device =
         readingsChart data [
             "direction", "blue"]
 
+    let dateFormat (date : DateTime) = date.ToString("MM/dd HH:mm")            
+
     let view dispatch model =
 
         let paginator data =
@@ -176,6 +178,8 @@ module Device =
             let previousDate = model.CurrentPage + model.PageSize
             let previousPage = if previousDate < firstPage then previousDate else firstPage
             let nextPage = model.CurrentPage - model.PageSize
+            let currentPageFormatted = dateFormat model.CurrentPage
+            let nextPageFormatted = dateFormat nextPage
             let buttonDefinitions = [
                 FontAwesome.Free.Fa.Solid.FastBackward, firstPage
                 FontAwesome.Free.Fa.Solid.Backward, previousPage
@@ -187,8 +191,8 @@ module Device =
                         yield Button.button [
                             Button.Color IsPrimary
                             Button.OnClick (onNavigate key)] [Icon.icon [] [FontAwesome.Fa.i [icon] []]]]
-                Level.item [][
-                    str (sprintf "%A - %A" model.CurrentPage nextPage)]]
+                Level.item [][                    
+                    str (sprintf "%s - %s" currentPageFormatted nextPageFormatted)]]
 
         let showDeviceDetails deviceDetails =
             div [] [
@@ -278,8 +282,8 @@ module Device =
         [Client.tabs
             (SelectTab >> dispatch) [
                 {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Free.Fa.Solid.Table}
-                {Name = "Graph"; Key = Graph; Content = loader model.Device graphs; Icon = Some FontAwesome.Free.Fa.Solid.Anchor}
-                {Name = "Settings"; Key = Tab.Settings; Content = settings; Icon = Some FontAwesome.Free.Fa.Solid.Database}
+                {Name = "Graph"; Key = Graph; Content = loader model.Device graphs; Icon = Some FontAwesome.Free.Fa.Solid.ChartLine}
+                {Name = "Settings"; Key = Tab.Settings; Content = settings; Icon = Some FontAwesome.Free.Fa.Solid.Cog}
             ]
             model.ActiveTab
             [Tabs.IsFullWidth; Tabs.IsBoxed]]

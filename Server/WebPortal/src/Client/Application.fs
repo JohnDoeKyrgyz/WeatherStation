@@ -87,7 +87,8 @@ module Application =
         | DeviceMsg cmd, PageModel.DeviceModel m ->
             let deviceModel, deviceMessage = Device.update cmd m
             {model with PageModel = PageModel.DeviceModel deviceModel}, Cmd.map DeviceMsg deviceMessage
-        | _ -> failwithf "Unexpected message"
+        | _ -> 
+            failwithf "Unexpected message"
 
 
     let urlUpdate (result : Pages.Page option) (model: Model) =
@@ -113,7 +114,7 @@ module Application =
     #if DEBUG
     |> Program.withConsoleTrace
     #endif
-    |> Program.withReactSynchronous "elmish-app"
+    |> Program.withReactBatched "elmish-app"
     #if DEBUG
     |> Program.withDebugger
     #endif
