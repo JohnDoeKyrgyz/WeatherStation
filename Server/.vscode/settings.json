@@ -3,5 +3,6 @@
   "azureFunctions.projectLanguage": "F#",
   "azureFunctions.deploySubpath": "ServerFunctions/bin/Release/netstandard2.0/publish",
   "azureFunctions.preDeployTask": "publish",
-  "debug.internalConsoleOptions": "neverOpen"
+  "debug.internalConsoleOptions": "neverOpen",
+  "FSharp.fsacRuntime": "netcore"
 }

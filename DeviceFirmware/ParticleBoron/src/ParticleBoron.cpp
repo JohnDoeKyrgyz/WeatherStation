@@ -1,3 +1,7 @@
+/******************************************************/
+//       THIS IS A GENERATED FILE - DO NOT EDIT       //
+/******************************************************/
+
 #include "application.h"
 #line 1 "c:/working/WeatherStation/DeviceFirmware/ParticleBoron/src/ParticleBoron.ino"
 
@@ -178,7 +182,7 @@ char *serialize(Reading *reading)
   buffer += 
     sprintf(
       buffer, 
-      "%d:%f:%f:%f:%f|", 
+      "%df%f:%fp%f:%f", 
       reading->version, 
       reading->batteryVoltage, 
       reading->batteryPercentage, 
