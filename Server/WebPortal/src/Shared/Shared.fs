@@ -19,9 +19,9 @@ type Status =
 type Reading = {
     DeviceTime : DateTime
     ReadingTime : DateTime
-    SupplyVoltage : double
     BatteryChargeVoltage : double
     PanelVoltage : double
+    PanelMilliamps : double
     TemperatureCelciusHydrometer : double
     TemperatureCelciusBarometer : double
     HumidityPercentHydrometer : double
