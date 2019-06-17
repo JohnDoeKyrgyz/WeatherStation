@@ -118,7 +118,6 @@ module WundergroundForwarderTests =
                     Z = 102.0
                     DeviceTime = readingTime
                     ReadingTime = readingTime
-                    SupplyVoltage = 0.0
                     BatteryChargeVoltage = 4.0
                     PanelVoltage = 16.0
                     TemperatureCelciusHydrometer = 10.8
@@ -177,7 +176,6 @@ module WundergroundForwarderTests =
                             Z = 102.0
                             DeviceTime = readingTime
                             ReadingTime = readingTime
-                            SupplyVoltage = 0.0
                             BatteryChargeVoltage = 4.0
                             PanelVoltage = 16.0
                             TemperatureCelciusHydrometer = 10.8
@@ -220,17 +218,17 @@ module WundergroundForwarderTests =
                 let message = buildParticleMessage weatherStation readingTime "100f4.006250:85.0p16.98:100.0b1.0:2.0:3.0d10.800000:86.500000a1.700000:15"
 
                 let expectedReadings = [
+                    BatteryChargeVoltage 4.006250M<volts>            
+                    BatteryPercentage 85.0M<percent>
+                    PanelVoltage 16.98M<volts>
+                    ChargeMilliamps 100.0m<milliamps>
                     SpeedMetersPerSecond 1.700000M<meters/seconds>
                     DirectionSixteenths 15<sixteenths>
                     TemperatureCelciusBarometer 1.0M<celcius>
                     PressurePascal 2.0m<pascal>
-                    HumidityPercentBarometer 3.0m<percent>
-                    PanelVoltage 16.98M<volts>
-                    ChargeMilliamps 100.0m<milliamps>
+                    HumidityPercentBarometer 3.0m<percent>                    
                     TemperatureCelciusHydrometer 10.800000M<celcius>
-                    HumidityPercentHydrometer 86.500000M<percent>
-                    BatteryChargeVoltage 4.006250M<volts>            
-                    BatteryPercentage 85.0M<percent>
+                    HumidityPercentHydrometer 86.500000M<percent>                    
                     ReadingTime readingTime
                     GustMetersPerSecond 1.700000M<meters/seconds>]
                 

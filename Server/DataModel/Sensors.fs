@@ -17,8 +17,30 @@ module Sensors =
         SampleValues : (ReadingValues * ValueType) list
     }
 
-    let anemometer =  {
+    let ina219 = {
         Id = 1uy
+        Prefix = 'p'
+        Name = "INA219"
+        Description = "Voltage / Current"
+        SampleValues = 
+            [
+                PanelVoltage 0.0m<volts>, ValueType.Float
+                ChargeMilliamps 0.0m<milliamps>, ValueType.Float
+            ] }
+
+    let internalBattery = {
+        Id = 2uy
+        Prefix = 'f'
+        Name = "Fuel Guage"
+        Description = "Onboard Power Sensor"
+        SampleValues = 
+            [
+                BatteryChargeVoltage 0.0m<volts>, ValueType.Float
+                BatteryPercentage 0.0m<percent>, ValueType.Float
+            ] }
+
+    let anemometer =  {
+        Id = 4uy
         Prefix = 'a'
         Name = "LaCrosse_TX23U"
         Description = "Anemometer"
@@ -29,7 +51,7 @@ module Sensors =
             ] }
         
     let bme280 = {        
-        Id = 2uy
+        Id = 8uy
         Prefix = 'b'
         Name ="BME280"
         Description = "Temperature / Pressure / Humidity sensor"
@@ -41,7 +63,7 @@ module Sensors =
             ] }
 
     let qmc5883l = {
-        Id = 8uy
+        Id = 16uy
         Prefix = 'c'
         Name = "QMC5883L"
         Description = "Compass"
@@ -50,18 +72,7 @@ module Sensors =
                 X 0.0m<degrees>, ValueType.Float
                 Y 0.0m<degrees>, ValueType.Float
                 Z 0.0m<degrees>, ValueType.Float
-            ] }
-        
-    let ina219 = {
-        Id = 16uy
-        Prefix = 'p'
-        Name = "INA219"
-        Description = "Voltage / Current"
-        SampleValues = 
-            [
-                PanelVoltage 0.0m<volts>, ValueType.Float
-                ChargeMilliamps 0.0m<milliamps>, ValueType.Float
-            ] }
+            ] } 
 
     let dht22 = {
         Id = 32uy
@@ -72,26 +83,15 @@ module Sensors =
             [
                 TemperatureCelciusHydrometer 0.0m<celcius>, ValueType.Float
                 HumidityPercentHydrometer 0.0m<percent>, ValueType.Float
-            ] }
-
-    let internalBattery = {
-        Id = 1uy
-        Prefix = 'f'
-        Name = "Fuel Guage"
-        Description = "Onboard Power Sensor"
-        SampleValues = 
-            [
-                BatteryChargeVoltage 0.0m<volts>, ValueType.Float
-                BatteryPercentage 0.0m<percent>, ValueType.Float
-            ] }            
+            ] }    
 
     let All = [
+        internalBattery
+        ina219
         anemometer
         bme280
-        qmc5883l
-        ina219
-        dht22
-        internalBattery
+        qmc5883l        
+        dht22        
     ]        
 
     let id sensors =
@@ -112,19 +112,18 @@ module Sensors =
         let rawValues = 
             samples
             |> List.map (readingKey >> (fun key -> regexMatch.Groups.[key].Value))
-        [for ((sample, _), value) in rawValues |> Seq.zip sensor.SampleValues -> loadReadingValue sample value]
-        
+        [for ((sample, _), value) in rawValues |> Seq.zip sensor.SampleValues -> loadReadingValue sample value]        
 
     let parseReadingOfSensors (sensors : seq<Sensor>) reading =
         let valuePattern (sampleReading : ReadingValues, valueType) =
             let name = readingKey sampleReading
             match valueType with
-            | Int -> sprintf @"(?<%s>\d+)" name
-            | Float -> sprintf @"(?<%s>\d+\.\d+)" name
+            | Int -> sprintf @"(?<%s>-?\d+)" name
+            | Float -> sprintf @"(?<%s>-?\d+\.\d+)" name
 
         let sensorMatch sensor =
             let valuesPattern = sensor.SampleValues |> Seq.map valuePattern |> String.concat ":"
-            let pattern = sprintf "%c%s" sensor.Prefix valuesPattern            
+            let pattern = sprintf "%c%s" sensor.Prefix valuesPattern
             [for regexMatch in Regex.Matches(reading, pattern) -> regexMatch]
             
         let matches =

@@ -42,7 +42,6 @@ module Model =
     type Reading = {
         DeviceTime : DateTime
         ReadingTime : DateTime
-        SupplyVoltage : double
         BatteryChargeVoltage : double
         BatteryPercentage : double
         PanelMilliamps : double
@@ -68,7 +67,6 @@ module Model =
         static member Default = {            
             DeviceTime = DateTime.MinValue
             ReadingTime = DateTime.MinValue
-            SupplyVoltage = 0.0
             BatteryPercentage = 0.0
             BatteryChargeVoltage = 0.0
             PanelVoltage = 0.0

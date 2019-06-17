@@ -104,7 +104,6 @@ module ReadingsTests =
                 
             Expect.equal reading.DeviceTime expectedReading.DeviceTime "Unexpected value"
             Expect.equal reading.ReadingTime expectedReading.ReadingTime "Unexpected value"
-            Expect.equal reading.SupplyVoltage expectedReading.SupplyVoltage "Unexpected value"
             Expect.equal reading.BatteryChargeVoltage expectedReading.BatteryChargeVoltage "Unexpected value"
             Expect.floatClose Accuracy.medium (float reading.PanelVoltage) (float expectedReading.PanelVoltage) "Unexpected value"
             Expect.equal reading.TemperatureCelciusHydrometer expectedReading.TemperatureCelciusHydrometer "Unexpected value"

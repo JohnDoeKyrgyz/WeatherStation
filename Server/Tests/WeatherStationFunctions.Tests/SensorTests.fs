@@ -70,4 +70,25 @@ module SensorTests =
                     ]
                     "Did not parse combined values"
             )
+
+            testCase "Full Reading" (fun () ->
+                let sample = "20f3.908750:69.296875p4.656000:-22.200001b22.570000:98883.906250:63.833008c3.940063:0.140991:2.772461"
+                let sensors = Sensors.All |> Sensors.id
+                let values = parseReading sensors sample
+                Expect.equal 
+                    values 
+                    [
+                        ReadingValues.BatteryChargeVoltage 3.908750m<volts>
+                        ReadingValues.BatteryPercentage 69.296875m<percent>
+                        ReadingValues.PanelVoltage 4.656000m<volts>
+                        ReadingValues.ChargeMilliamps -22.200001m<milliamps>                        
+                        ReadingValues.TemperatureCelciusBarometer 22.570000m<celcius>
+                        ReadingValues.PressurePascal 98883.906250m<pascal>
+                        ReadingValues.HumidityPercentBarometer 63.833008m<percent>
+                        ReadingValues.X 3.940063m<degrees>
+                        ReadingValues.Y 0.140991m<degrees>
+                        ReadingValues.Z 2.772461m<degrees>                        
+                    ]
+                    "Did not parse combined values"
+            )
         ]

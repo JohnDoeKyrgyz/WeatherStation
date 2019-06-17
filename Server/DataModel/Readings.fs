@@ -105,24 +105,24 @@ module Readings =
             double cleanV
 
         match value with
-        | ReadingTime time -> {reading with ReadingTime = time}
-        | DeviceTime time -> {reading with DeviceTime = time}
         | BatteryChargeVoltage voltage -> {reading with BatteryChargeVoltage = toDouble(voltage)}
-        | ChargeMilliamps milliamps -> {reading with PanelMilliamps = toDouble(milliamps)}
         | BatteryPercentage percentage -> {reading with BatteryPercentage = toDouble(percentage)}
+        | ChargeMilliamps milliamps -> {reading with PanelMilliamps = toDouble(milliamps)}
+        | DeviceTime time -> {reading with DeviceTime = time}
+        | DirectionSixteenths direction -> {reading with DirectionDegrees = sixteenthsToDegrees direction |> double}
+        | GustMetersPerSecond speed -> {reading with GustMetersPerSecond = toDouble(speed)}
+        | HumidityPercentBarometer perc -> {reading with HumidityPercentBarometer = toDouble(perc)}
+        | HumidityPercentHydrometer perc -> {reading with HumidityPercentHydrometer = toDouble(perc)}
         | PanelVoltage voltage -> {reading with PanelVoltage = toDouble(voltage)}
+        | PressurePascal perc -> {reading with PressurePascal = toDouble(perc)}
+        | ReadingTime time -> {reading with ReadingTime = time}
+        | RefreshInterval interval -> {reading with RefreshInterval = double interval}
+        | SpeedMetersPerSecond speed -> {reading with SpeedMetersPerSecond = toDouble(speed)}
         | TemperatureCelciusBarometer temp -> {reading with TemperatureCelciusBarometer = toDouble(temp)}
         | TemperatureCelciusHydrometer temp -> {reading with TemperatureCelciusHydrometer = toDouble(temp)}
-        | HumidityPercentHydrometer perc -> {reading with HumidityPercentHydrometer = toDouble(perc)}
-        | HumidityPercentBarometer perc -> {reading with HumidityPercentBarometer = toDouble(perc)}
-        | PressurePascal perc -> {reading with PressurePascal = toDouble(perc)}
-        | SpeedMetersPerSecond speed -> {reading with SpeedMetersPerSecond = toDouble(speed)}
-        | GustMetersPerSecond speed -> {reading with GustMetersPerSecond = toDouble(speed)}
-        | DirectionSixteenths direction -> {reading with DirectionDegrees = sixteenthsToDegrees direction |> double}
         | X angle -> {reading with X = toDouble(angle)}
         | Y angle -> {reading with Y = toDouble(angle)}
         | Z angle -> {reading with Z = toDouble(angle)}
-        | RefreshInterval interval -> {reading with RefreshInterval = double interval}
 
     let createReading deviceReading = 
         let readingKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)
