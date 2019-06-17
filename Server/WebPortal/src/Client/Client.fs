@@ -43,7 +43,7 @@ module Client =
             tbody [] [
                 for row in data -> tableRow (formatter row)]]
 
-    let date (date : DateTime) = sprintf "%s %s" (date.ToString("MM/dd hh:mm:ss")) (if date.Hour >= 12 then "PM" else "AM")
+    let date (date : DateTime) = sprintf "%s %s" (date.ToLocalTime().ToString("MM/dd hh:mm:ss")) (if date.Hour >= 12 then "PM" else "AM")
     let number value = sprintf "%.2f" value
 
     type TabDef<'T> = {

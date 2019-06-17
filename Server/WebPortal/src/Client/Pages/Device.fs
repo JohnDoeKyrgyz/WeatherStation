@@ -1,8 +1,5 @@
 namespace WeatherStation.Client.Pages
 
-open Thoth.Json
-open Fetch
-
 module Device =
 
     open System
@@ -15,6 +12,8 @@ module Device =
     open Fable.React
 
     open Fulma
+    open Thoth.Json
+    open Fetch
 
     open Client
 
@@ -69,7 +68,8 @@ module Device =
             This code was commented out because it takes a dependancy on Thoth
         *)
         let url = (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId)
-        let json = Encode.Auto.toString<StationSettings>(0, settings)
+        let extraCoders = Extra.empty |> Extra.withDecimal
+        let json = Encode.Auto.toString<StationSettings>(0, settings, extra = extraCoders)
         let jsonBody = RequestProperties.Body ( BodyInit.Case2(json) )
         Cmd.OfPromise.either
             (fun _ -> promise {
@@ -118,7 +118,8 @@ module Device =
         | Readings (stationDetails, fromDate, readings) ->
             match readings with
             | Loading ->
-                let tooDate = fromDate - currentModel.PageSize
+                let fromDate = fromDate.ToUniversalTime()
+                let tooDate = (fromDate - currentModel.PageSize).ToUniversalTime()
                 {currentModel with Device = Loading}, loadReadingsCmd currentModel.Key stationDetails fromDate tooDate
             | Loaded (Ok readings) ->
                 let deviceInfo = {stationDetails with Readings = readings}
@@ -168,7 +169,9 @@ module Device =
         readingsChart data [
             "direction", "blue"]
 
-    let dateFormat (date : DateTime) = date.ToString("MM/dd HH:mm")            
+    let dateFormat (date : DateTime) = 
+        let amPm = if date.Hour <= 12 then "PM" else "AM"
+        sprintf "%s %s" (date.ToLocalTime().ToString("MM/dd hh:mm")) amPm
 
     let view dispatch model =
 
@@ -177,7 +180,7 @@ module Device =
             let firstPage = defaultArg data.LastReading DateTime.Now
             let previousDate = model.CurrentPage + model.PageSize
             let previousPage = if previousDate < firstPage then previousDate else firstPage
-            let nextPage = model.CurrentPage - model.PageSize
+            let nextPage = model.CurrentPage.Subtract(model.PageSize)
             let currentPageFormatted = dateFormat model.CurrentPage
             let nextPageFormatted = dateFormat nextPage
             let buttonDefinitions = [
@@ -201,7 +204,7 @@ module Device =
                     ["Time"; "Battery"; "Panel"; "Speed"; "Direction"; "Temp"]
                     deviceDetails.Readings
                     (fun reading -> [
-                        date reading.ReadingTime
+                        date (reading.ReadingTime.ToLocalTime())
                         number reading.BatteryChargeVoltage
                         number reading.PanelVoltage
                         number reading.SpeedMetersPerSecond
