@@ -201,12 +201,13 @@ module Device =
             div [] [
                 paginator deviceDetails
                 table
-                    ["Time"; "Battery"; "Panel"; "Speed"; "Direction"; "Temp"]
+                    ["Time"; "Battery"; "Panel"; "Charge Current"; "Speed"; "Direction"; "Temp"]
                     deviceDetails.Readings
                     (fun reading -> [
                         date (reading.ReadingTime.ToLocalTime())
                         number reading.BatteryChargeVoltage
                         number reading.PanelVoltage
+                        number reading.PanelMilliamps
                         number reading.SpeedMetersPerSecond
                         string reading.DirectionDegrees
                         number reading.TemperatureCelciusBarometer])]
