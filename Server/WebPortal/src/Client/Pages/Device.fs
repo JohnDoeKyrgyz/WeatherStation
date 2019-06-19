@@ -147,7 +147,7 @@ module Device =
             "battery", "red"
             "panel", "orange"]
 
-    type Temperature = {time: string; hydrometer: float; barometer: float}
+    type Temperature = {time: string; hydrometer: float option; barometer: float option}
 
     let temperatureChart readings =
         let data = [|for reading in readings -> {time = date reading.ReadingTime; hydrometer = reading.TemperatureCelciusHydrometer; barometer = reading.TemperatureCelciusBarometer}|]
@@ -155,14 +155,14 @@ module Device =
             "hydrometer", "blue"
             "barometer", "green"]
 
-    type WindSpeed = {time: string; speed: float}
+    type WindSpeed = {time: string; speed: float option}
 
     let windSpeedChart readings =
         let data = [|for reading in readings -> {time = date reading.ReadingTime; speed = reading.SpeedMetersPerSecond}|]
         readingsChart data [
             "speed", "blue"]
 
-    type WindDirection = {time: string; direction: float}
+    type WindDirection = {time: string; direction: float option}
 
     let windDirectionChart readings =
         let data = [|for reading in readings -> {time = date reading.ReadingTime; direction = reading.DirectionDegrees}|]
@@ -205,12 +205,12 @@ module Device =
                     deviceDetails.Readings
                     (fun reading -> [
                         date (reading.ReadingTime.ToLocalTime())
-                        number reading.BatteryChargeVoltage
+                        number reading.BatteryChargeVoltage 
                         number reading.PanelVoltage
                         number reading.PanelMilliamps
-                        number reading.SpeedMetersPerSecond
+                        numberOptional reading.SpeedMetersPerSecond
                         string reading.DirectionDegrees
-                        number reading.TemperatureCelciusBarometer])]
+                        numberOptional reading.TemperatureCelciusBarometer])]
 
         let graphs data =
             div [] [

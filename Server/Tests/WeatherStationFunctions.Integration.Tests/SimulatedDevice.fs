@@ -22,7 +22,11 @@ let connect (secrets : Secrets.Root) =
     let connectionString = secrets.DeviceConnectionString
     DeviceClient.CreateFromConnectionString(connectionString, TransportType.Mqtt)
 
-let sensors = Sensors.All
+let sensors = [
+    Sensors.bme280
+    Sensors.ina219
+    Sensors.internalBattery
+    Sensors.qmc5883l]
 
 let random = Random()
 let generateRandomSensorReading (sensor : Sensor) =

@@ -3,6 +3,7 @@ group Functions
 	storage: none
     source https://api.nuget.org/v3/index.json
 
+	nuget FSharp.Core
 	nuget Microsoft.NET.Sdk.Functions
 	nuget FSharp.Data
 	nuget Microsoft.Azure.WebJobs.Extensions.EventHubs	
