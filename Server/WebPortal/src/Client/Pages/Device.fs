@@ -169,10 +169,6 @@ module Device =
         readingsChart data [
             "direction", "blue"]
 
-    let dateFormat (date : DateTime) =
-        let amPm = if date.Hour <= 12 then "PM" else "AM"
-        sprintf "%s %s" (date.ToLocalTime().ToString("MM/dd hh:mm")) amPm
-
     let view dispatch model =
 
         let paginator data =
@@ -181,8 +177,8 @@ module Device =
             let previousDate = model.CurrentPage + model.PageSize
             let previousPage = if previousDate < firstPage then previousDate else firstPage
             let nextPage = model.CurrentPage.Subtract(model.PageSize)
-            let currentPageFormatted = dateFormat model.CurrentPage
-            let nextPageFormatted = dateFormat nextPage
+            let currentPageFormatted = date model.CurrentPage
+            let nextPageFormatted = date nextPage
             let buttonDefinitions = [
                 FontAwesome.Free.Fa.Solid.FastBackward, firstPage
                 FontAwesome.Free.Fa.Solid.Backward, previousPage
