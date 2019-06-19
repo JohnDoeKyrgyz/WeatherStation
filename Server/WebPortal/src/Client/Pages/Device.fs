@@ -169,7 +169,7 @@ module Device =
         readingsChart data [
             "direction", "blue"]
 
-    let dateFormat (date : DateTime) = 
+    let dateFormat (date : DateTime) =
         let amPm = if date.Hour <= 12 then "PM" else "AM"
         sprintf "%s %s" (date.ToLocalTime().ToString("MM/dd hh:mm")) amPm
 
@@ -194,7 +194,7 @@ module Device =
                         yield Button.button [
                             Button.Color IsPrimary
                             Button.OnClick (onNavigate key)] [Icon.icon [] [FontAwesome.Fa.i [icon] []]]]
-                Level.item [][                    
+                Level.item [][
                     str (sprintf "%s - %s" currentPageFormatted nextPageFormatted)]]
 
         let showDeviceDetails deviceDetails =
@@ -205,11 +205,11 @@ module Device =
                     deviceDetails.Readings
                     (fun reading -> [
                         date (reading.ReadingTime.ToLocalTime())
-                        number reading.BatteryChargeVoltage 
+                        number reading.BatteryChargeVoltage
                         number reading.PanelVoltage
                         number reading.PanelMilliamps
                         numberOptional reading.SpeedMetersPerSecond
-                        string reading.DirectionDegrees
+                        numberOptional reading.DirectionDegrees
                         numberOptional reading.TemperatureCelciusBarometer])]
 
         let graphs data =
