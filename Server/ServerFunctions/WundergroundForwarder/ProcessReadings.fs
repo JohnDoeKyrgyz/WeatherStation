@@ -20,7 +20,10 @@ module ProcessReadings =
     let fixReadings recentReadings (weatherStation : WeatherStation) values =
 
         let readingTime = readingTime values
-        let recentWindSpeeds = [for reading in recentReadings -> reading.SpeedMetersPerSecond]
+        let recentWindSpeeds = [
+            for reading in recentReadings do 
+                let speed = reading.SpeedMetersPerSecond
+                if speed.IsSome then yield speed.Value]
 
         let additionalReadings = [
             if recentWindSpeeds.Length > 0 then

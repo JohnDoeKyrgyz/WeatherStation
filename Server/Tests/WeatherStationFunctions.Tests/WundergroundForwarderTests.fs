@@ -104,30 +104,29 @@ module WundergroundForwarderTests =
             testAsync "Empty particle data" {
                 let message = buildParticleMessage weatherStation readingTime String.Empty
                 let! reading = readingTest log [] readingTime weatherStation message [ReadingTime readingTime]
-                Expect.equal "WindSpeed should be blank" reading.SpeedMetersPerSecond 0.0
+                Expect.equal "WindSpeed should be blank" reading.SpeedMetersPerSecond None
                 Expect.equal "BatteryCharge should be blank" reading.BatteryChargeVoltage 0.0
                 Expect.equal "Unexpected DeviceTime" reading.DeviceTime readingTime
             }            
             testAsync "Basic reading" {
                 let expectedReading = {
-                    RefreshInterval = 100.0
                     BatteryPercentage = 85.0
                     PanelMilliamps = 30.0
-                    X = 100.0
-                    Y = 101.0
-                    Z = 102.0
+                    X = Some 100.0
+                    Y = Some 101.0
+                    Z = Some 102.0
                     DeviceTime = readingTime
                     ReadingTime = readingTime
                     BatteryChargeVoltage = 4.0
                     PanelVoltage = 16.0
-                    TemperatureCelciusHydrometer = 10.8
-                    TemperatureCelciusBarometer = 1.0
-                    HumidityPercentHydrometer = 86.5
-                    HumidityPercentBarometer = 3.0
-                    PressurePascal = 2.0
-                    GustMetersPerSecond = 10.0
-                    SpeedMetersPerSecond = 10.0
-                    DirectionDegrees = 10.0 * double degreesPerSixteenth
+                    TemperatureCelciusHydrometer = Some 10.8
+                    TemperatureCelciusBarometer = Some 1.0
+                    HumidityPercentHydrometer = Some 86.5
+                    HumidityPercentBarometer = Some 3.0
+                    PressurePascal = Some 2.0
+                    GustMetersPerSecond = Some 10.0
+                    SpeedMetersPerSecond = Some 10.0
+                    DirectionDegrees = Some (10.0 * double degreesPerSixteenth)
                     SourceDevice = weatherStation.DeviceId
                     RowKey = String.Empty
                 }
@@ -168,24 +167,23 @@ module WundergroundForwarderTests =
                     let expectedWindDirection = if expectedWindDirection < 0.0 then 16.0 + expectedWindDirection else expectedWindDirection
                     yield testAsync testName {
                         let expectedReading = {
-                            RefreshInterval = 100.0
                             BatteryPercentage = 85.0
                             PanelMilliamps = 30.0
-                            X = 100.0
-                            Y = 101.0
-                            Z = 102.0
+                            X = Some 100.0
+                            Y = Some 101.0
+                            Z = Some 102.0
                             DeviceTime = readingTime
                             ReadingTime = readingTime
                             BatteryChargeVoltage = 4.0
                             PanelVoltage = 16.0
-                            TemperatureCelciusHydrometer = 10.8
-                            TemperatureCelciusBarometer = 1.0
-                            HumidityPercentHydrometer = 86.5
-                            HumidityPercentBarometer = 3.0
-                            PressurePascal = 2.0
-                            GustMetersPerSecond = 10.0
-                            SpeedMetersPerSecond = 10.0
-                            DirectionDegrees = expectedWindDirection * float degreesPerSixteenth
+                            TemperatureCelciusHydrometer = Some 10.8
+                            TemperatureCelciusBarometer = Some 1.0
+                            HumidityPercentHydrometer = Some 86.5
+                            HumidityPercentBarometer = Some 3.0
+                            PressurePascal = Some 2.0
+                            GustMetersPerSecond = Some 10.0
+                            SpeedMetersPerSecond = Some 10.0
+                            DirectionDegrees = Some (expectedWindDirection * float degreesPerSixteenth)
                             SourceDevice = weatherStation.DeviceId
                             RowKey = String.Empty
                         }
@@ -253,7 +251,7 @@ module WundergroundForwarderTests =
                 | [reading] ->
                     Expect.equal "Unexpected DeviceId" reading.SourceDevice weatherStation.DeviceId
                     Expect.isGreaterThanOrEqual "Unexpected ReadingTime" (reading.ReadingTime, readingTime)
-                    Expect.equal "Unexpected SpeedMetersPerSecond" reading.SpeedMetersPerSecond 1.70 
+                    Expect.equal "Unexpected SpeedMetersPerSecond" reading.SpeedMetersPerSecond (Some 1.70)
                 | _ -> failwith "Unexpected readings"
 
                 do! clearWeatherStations

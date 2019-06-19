@@ -46,18 +46,17 @@ module Model =
         BatteryPercentage : double
         PanelMilliamps : double
         PanelVoltage : double
-        TemperatureCelciusHydrometer : double
-        TemperatureCelciusBarometer : double
-        HumidityPercentHydrometer : double
-        HumidityPercentBarometer : double
-        PressurePascal : double
-        GustMetersPerSecond : double
-        SpeedMetersPerSecond : double
-        DirectionDegrees : double
-        X : double
-        Y : double
-        Z : double
-        RefreshInterval : double
+        TemperatureCelciusHydrometer : double option
+        TemperatureCelciusBarometer : double option
+        HumidityPercentHydrometer : double option
+        HumidityPercentBarometer : double option
+        PressurePascal : double option
+        GustMetersPerSecond : double option
+        SpeedMetersPerSecond : double option
+        DirectionDegrees : double option
+        X : double option
+        Y : double option
+        Z : double option
         [<PartitionKey>]
         SourceDevice : string
         [<RowKey>]
@@ -71,18 +70,17 @@ module Model =
             BatteryChargeVoltage = 0.0
             PanelVoltage = 0.0
             PanelMilliamps = 0.0
-            TemperatureCelciusHydrometer = 0.0
-            TemperatureCelciusBarometer = 0.0
-            HumidityPercentHydrometer = 0.0
-            HumidityPercentBarometer = 0.0
-            PressurePascal = 0.0
-            GustMetersPerSecond = 0.0
-            SpeedMetersPerSecond = 0.0
-            DirectionDegrees = 0.0
-            X = 0.0
-            Y = 0.0
-            Z = 0.0
-            RefreshInterval = 0.0
+            TemperatureCelciusHydrometer = None
+            TemperatureCelciusBarometer = None
+            HumidityPercentHydrometer = None
+            HumidityPercentBarometer = None
+            PressurePascal = None
+            GustMetersPerSecond = None
+            SpeedMetersPerSecond = None
+            DirectionDegrees = None
+            X = None
+            Y = None
+            Z = None
             SourceDevice = null
             RowKey = null
         }

@@ -92,14 +92,14 @@ module ReadingsTests =
                         BatteryPercentage (toPercent expectedReading.BatteryPercentage)
                         ChargeMilliamps (toMilliamps expectedReading.PanelMilliamps)
                         PanelVoltage (toVolts expectedReading.PanelVoltage)
-                        TemperatureCelciusHydrometer (toCelcius expectedReading.TemperatureCelciusHydrometer)
-                        TemperatureCelciusBarometer (toCelcius expectedReading.TemperatureCelciusBarometer)
-                        HumidityPercentHydrometer (toPercent expectedReading.HumidityPercentHydrometer)
-                        HumidityPercentBarometer (toPercent expectedReading.HumidityPercentBarometer)
-                        PressurePascal (toPascal expectedReading.PressurePascal)
-                        SpeedMetersPerSecond (toSpeed expectedReading.SpeedMetersPerSecond)
-                        GustMetersPerSecond (toSpeed expectedReading.GustMetersPerSecond)
-                        DirectionSixteenths (toDirection (expectedReading.DirectionDegrees / (360.0 / 16.0)))
+                        TemperatureCelciusHydrometer (toCelcius expectedReading.TemperatureCelciusHydrometer.Value)
+                        TemperatureCelciusBarometer (toCelcius expectedReading.TemperatureCelciusBarometer.Value)
+                        HumidityPercentHydrometer (toPercent expectedReading.HumidityPercentHydrometer.Value)
+                        HumidityPercentBarometer (toPercent expectedReading.HumidityPercentBarometer.Value)
+                        PressurePascal (toPascal expectedReading.PressurePascal.Value)
+                        SpeedMetersPerSecond (toSpeed expectedReading.SpeedMetersPerSecond.Value)
+                        GustMetersPerSecond (toSpeed expectedReading.GustMetersPerSecond.Value)
+                        DirectionSixteenths (toDirection (expectedReading.DirectionDegrees.Value / (360.0 / 16.0)))
                     ]
                 
             Expect.equal reading.DeviceTime expectedReading.DeviceTime "Unexpected value"

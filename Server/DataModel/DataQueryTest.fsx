@@ -45,14 +45,14 @@ let refreshTestTable tableName =
 
 refreshTestTable "TestWeatherStations"
 let weatherStation = {
-    DeviceType = Hologram
+    DeviceType = Particle
     DeviceId = "1234"
     WundergroundStationId = "abc"
     WundergroundPassword = "asd"
     DirectionOffsetDegrees = Some 0
     Latitude = 0.0
     Longitude = 0.0
-    LastReading = DateTime.Now
+    LastReading = Some DateTime.Now
 }
 
 Insert weatherStation

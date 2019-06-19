@@ -22,14 +22,14 @@ type Reading = {
     BatteryChargeVoltage : double
     PanelVoltage : double
     PanelMilliamps : double
-    TemperatureCelciusHydrometer : double
-    TemperatureCelciusBarometer : double
-    HumidityPercentHydrometer : double
-    HumidityPercentBarometer : double
-    PressurePascal : double
-    GustMetersPerSecond : double
-    SpeedMetersPerSecond : double
-    DirectionDegrees : double
+    TemperatureCelciusHydrometer : double option
+    TemperatureCelciusBarometer : double option
+    HumidityPercentHydrometer : double option
+    HumidityPercentBarometer : double option
+    PressurePascal : double option
+    GustMetersPerSecond : double option
+    SpeedMetersPerSecond : double option
+    DirectionDegrees : double option
 }
 
 [<CLIMutable>]
