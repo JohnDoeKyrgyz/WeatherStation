@@ -12,19 +12,20 @@ module ReadingsTests =
         Values : ReadingValues list
     }
 
-    let buildParticleMessage (weatherStation : WeatherStation) (readingTime : DateTime) data =
+    let buildParticleMessage event (weatherStation : WeatherStation) (readingTime : DateTime) data =
         let readingTimeFormat = readingTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         sprintf
             """
             {
                 "data": "%s",
                 "device_id": "%s",
-                "event": "Reading",
+                "event": "%s",
                 "published_at": "%s"
             }
             """
             data
             weatherStation.DeviceId
+            event
             readingTimeFormat
 
     let readingTest log existingReadings readingTime weatherStation message expectedReadings =
@@ -32,7 +33,6 @@ module ReadingsTests =
             let wundergroundParameters = ref None
             let weatherStationSave = ref None
             let readingSave = ref None
-            let statusMessageSave = ref None
             do!
                 processEventHubMessage
                     log
@@ -43,7 +43,7 @@ module ReadingsTests =
                     (fun saveReading -> async {readingSave := Some saveReading})
                     (fun _ _ -> async { return existingReadings })
                     (async {return fun key defaultValue -> async {return {Key = key; Value = defaultValue; Group = ""}}})
-                    (fun saveStatusMessage -> async {return ()})
+                    (fun saveStatusMessage -> failwithf "Not expected")
                     message
                 
             let wundergroundParameters = !wundergroundParameters
@@ -77,7 +77,7 @@ module ReadingsTests =
 
     let particleDeviceReadingTest log expectedReading weatherStation readingTime data = 
         async {
-            let message = buildParticleMessage weatherStation readingTime data
+            let message = buildParticleMessage "Reading" weatherStation readingTime data
             let toVolts (doubleV : double) = 1.0m<_> * decimal doubleV
             let toCelcius (doubleV : double) = 1.0m<_> * decimal doubleV
             let toPercent (doubleV : double) = 1.0m<_> * decimal doubleV

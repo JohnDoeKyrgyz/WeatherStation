@@ -54,3 +54,4 @@ module DataSetup =
         
     let clearReadings = clear<Reading> "Readings"        
     let clearWeatherStations = clear<WeatherStation> "WeatherStations"
+    let clearStatusMessages = clear<StatusMessage> "StatusMessages"
