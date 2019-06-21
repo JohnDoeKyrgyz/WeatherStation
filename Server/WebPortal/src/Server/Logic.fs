@@ -1,9 +1,9 @@
 namespace WeatherStation
 
 module Logic =
-        
+
     open System
-    
+
     open FSharp.Control.Tasks
     open FSharp.Data
 
@@ -15,7 +15,7 @@ module Logic =
 
     let toOption value = if isNull value then None else Some value
 
-    let getWeatherStations activeThreshold allStations = 
+    let getWeatherStations activeThreshold allStations =
         async {
             let! stations = allStations
             return [
@@ -69,8 +69,8 @@ module Logic =
     }
 
     [<Literal>]
-    let particleSettingsJson = __SOURCE_DIRECTORY__ + "/../../../../DeviceFirmware/ParticleElectron/src/Settings.json"
-    type ParticleSettings = JsonProvider< particleSettingsJson >
+    let ParticleSettingsJson = __SOURCE_DIRECTORY__ + "/../../../../DeviceFirmware/ParticleElectron/src/Settings.json"
+    type ParticleSettings = JsonProvider< ParticleSettingsJson >
 
     let updateParticleDeviceSettings (key : StationKey) (settings : StationSettings) =
         if parseDeviceType key.DeviceType <> Particle then failwithf "DeviceType %s is not supported" key.DeviceType
@@ -97,5 +97,5 @@ module Logic =
             | Error error -> return Error error.Message
         }
 
-    
+
 

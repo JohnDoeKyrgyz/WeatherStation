@@ -39,6 +39,15 @@ module Model =
         Sensors : int
     }
 
+    type StatusMessage = {
+        [<PartitionKey>]
+        DeviceType : string
+        [<RowKey>]
+        DeviceId : string
+        StatusMessage : string
+        CreatedOn : DateTime
+    }
+
     type Reading = {
         DeviceTime : DateTime
         ReadingTime : DateTime

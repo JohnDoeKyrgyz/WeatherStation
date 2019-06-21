@@ -1,4 +1,5 @@
 namespace WeatherStation.Functions
+open Particle
 
 module WundergroundForwarder =
     open System
@@ -17,8 +18,72 @@ module WundergroundForwarder =
             Choice1Of2 (parser content)
         with ex -> Choice2Of2 ex
 
-    let parsers = 
-        [Particle, Particle.parseValues]
+    let handleDeviceReading 
+        (log: ILogger) 
+        postToWunderground 
+        getWeatherStation
+        saveWeatherStation
+        saveReading
+        getReadings
+        settingsGetter 
+        deviceType 
+        (deviceReading : Readings.DeviceReadings) =
+        async {
+            log.LogInformation(sprintf "%A" deviceReading)
+            log.LogInformation(sprintf "Searching for device %A %s in registry" deviceType deviceReading.DeviceId)
+                
+            let! (weatherStation : WeatherStation option) = 
+                async {
+                    match! getWeatherStation deviceType deviceReading.DeviceId with
+                    | None -> 
+                        log.LogInformation(sprintf "%A %s not found. Searching for device %A %s in registry" deviceType deviceReading.DeviceId DeviceType.Test deviceReading.DeviceId)
+                        return! getWeatherStation DeviceType.Test deviceReading.DeviceId
+                    | value -> return value
+                }                        
+
+            if weatherStation.IsNone then
+                log.LogError(sprintf "Device [%s] is not provisioned" deviceReading.DeviceId)
+            else
+                let weatherStation = weatherStation.Value
+                let! settingsRepository = settingsGetter
+                let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
+                let readingCutOff = DateTime.Now.Subtract(readingsWindow)
+                    
+                let! recentReadings = getReadings deviceReading.DeviceId readingCutOff
+                let values = fixReadings recentReadings weatherStation deviceReading.Readings
+                log.LogInformation(sprintf "Fixed Values %A" values)
+            
+                if not (isNull weatherStation.WundergroundStationId) then
+                    try
+                        let valuesSeq = values |> Seq.ofList
+                        let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
+                        log.LogInformation(sprintf "%A" wundergroundResponse)
+                    with
+                    | ex -> log.LogError("Error while posting to Wunderground", ex)
+                else
+                    log.LogWarning("No WundergroundId. No data posted to Wunderground.")                        
+                    
+                let deviceReading = {deviceReading with Readings = values}
+                let reading = Readings.createReading deviceReading deviceReading.Message                      
+
+                log.LogInformation(sprintf "Saving Reading %A" reading)
+                do! saveReading reading
+
+                let updatedWeatherStation = { weatherStation with LastReading = Some( reading.ReadingTime ) }
+                do! saveWeatherStation updatedWeatherStation
+        }
+
+    let handleStatusMessage 
+        (log: ILogger) 
+        saveStatusMessage
+        (statusMessage : StatusMessage) =
+        async {
+            log.LogInformation(sprintf "Saving StatusMessage %s for device %s" statusMessage.StatusMessage statusMessage.DeviceId)
+            do! saveStatusMessage statusMessage
+        }                
+
+    let parsers = [
+        Particle.parseParticleEvent]
 
     let rec innerMostException (ex : exn) =
         printfn "%A" ex
@@ -32,79 +97,43 @@ module WundergroundForwarder =
         saveReading
         getReadings
         settingsGetter
+        saveStatusMessage
         eventHubMessage =
 
         log.LogInformation(eventHubMessage)
 
         let parseAttempts = [
-            for (key, parser) in parsers do
-                yield key, (tryParse (parser log) eventHubMessage)]
+            for parser in parsers -> tryParse (parser log) eventHubMessage]
 
         let successfulAttempts = [
-            for (key, attempt) in parseAttempts do
+            for attempt in parseAttempts do
                 match attempt with
-                | Choice1Of2 result -> yield key, result
+                | Choice1Of2 result -> yield result
                 | _ -> ()]
+
+        let handleDeviceReading = handleDeviceReading log postToWunderground getWeatherStation saveWeatherStation saveReading getReadings settingsGetter
+        let handleStatusMessage = handleStatusMessage log saveStatusMessage
 
         if successfulAttempts.Length > 0 
         then
-            [for (deviceType, deviceReading) in successfulAttempts do
-                yield async {
-                    log.LogInformation(sprintf "%A" deviceReading)
-                    log.LogInformation(sprintf "Searching for device %A %s in registry" deviceType deviceReading.DeviceId)
-                        
-                    let! (weatherStation : WeatherStation option) = 
-                        async {
-                            match! getWeatherStation deviceType deviceReading.DeviceId with
-                            | None -> 
-                                log.LogInformation(sprintf "%A %s not found. Searching for device %A %s in registry" deviceType deviceReading.DeviceId DeviceType.Test deviceReading.DeviceId)
-                                return! getWeatherStation DeviceType.Test deviceReading.DeviceId
-                            | value -> return value
-                        }                        
-
-                    if weatherStation.IsNone then
-                        log.LogError(sprintf "Device [%s] is not provisioned" deviceReading.DeviceId)
-                    else
-                        let weatherStation = weatherStation.Value
-                        let! settingsRepository = settingsGetter
-                        let! readingsWindow = SystemSettings.averageReadingsWindow settingsRepository
-                        let readingCutOff = DateTime.Now.Subtract(readingsWindow)
-                            
-                        let! recentReadings = getReadings deviceReading.DeviceId readingCutOff
-                        let values = fixReadings recentReadings weatherStation deviceReading.Readings
-                        log.LogInformation(sprintf "Fixed Values %A" values)
-                    
-                        if not (isNull weatherStation.WundergroundStationId) then
-                            try
-                                let valuesSeq = values |> Seq.ofList
-                                let! wundergroundResponse = postToWunderground weatherStation.WundergroundStationId weatherStation.WundergroundPassword valuesSeq log
-                                log.LogInformation(sprintf "%A" wundergroundResponse)
-                            with
-                            | ex -> log.LogError("Error while posting to Wunderground", ex)
-                        else
-                            log.LogWarning("No WundergroundId. No data posted to Wunderground.")                        
-                            
-                        let deviceReading = {deviceReading with Readings = values}
-                        let reading = Readings.createReading deviceReading deviceReading.Message                      
-
-                        log.LogInformation(sprintf "Saving Reading %A" reading)
-                        do! saveReading reading
-
-                        let updatedWeatherStation = { weatherStation with LastReading = Some( reading.ReadingTime ) }
-                        do! saveWeatherStation updatedWeatherStation }]
+            [for parsedEvent in successfulAttempts do
+                yield
+                    match parsedEvent with
+                    | Particle.ParticeEvent.Reading deviceReading -> handleDeviceReading DeviceType.Particle deviceReading
+                    | Particle.ParticeEvent.StatusMessage statusMessage -> handleStatusMessage statusMessage
+                ]
                 |> Async.Parallel
                 |> Async.Ignore        
         else
             async {
                 log.LogInformation("No values parsed")
-                for (key, attempt) in parseAttempts do
+                for attempt in parseAttempts do
                     let message =
                         match attempt with
                         | Choice2Of2 ex -> 
                             string (innerMostException ex)
                         | _ -> "no exception"
 
-                    log.LogInformation(string key)
                     log.LogError(message)}
 
     let processEventHubMessageWithAzureStorage postToWunderground log eventHubMessage =
@@ -128,6 +157,10 @@ module WundergroundForwarder =
             let! repo = AzureStorage.settingsRepository connectionString
             return repo.GetSettingWithDefault
         }
+        let saveStatusMessage statusMessage = async {
+            let! repo = AzureStorage.statusMessageRepository connectionString
+            do! repo.Save statusMessage
+        }
         processEventHubMessage 
             log 
             postToWunderground
@@ -136,6 +169,7 @@ module WundergroundForwarder =
             saveReading
             getReadings
             settingsGetter
+            saveStatusMessage
             eventHubMessage
 
     [<FunctionName("WundergroundForwarder")>]

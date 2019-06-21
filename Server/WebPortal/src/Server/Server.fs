@@ -2,7 +2,7 @@ namespace WeatherStation
 
 module Server =
     open System
-    open System.IO    
+    open System.IO
     open System.Configuration
 
     open Microsoft.Extensions.Logging
@@ -14,7 +14,7 @@ module Server =
     open Giraffe
     open Giraffe.Serialization
 
-    open FSharp.Control.Tasks    
+    open FSharp.Control.Tasks
 
     open WeatherStation.Data
     open WeatherStation.Shared
@@ -26,7 +26,7 @@ module Server =
     #if DEBUG
     Console.Beep()
     #endif
-    
+
     let connectionString = ConfigurationManager.ConnectionStrings.["WeatherStationStorage"].ConnectionString
 
     let read reader next ctx =
@@ -81,7 +81,7 @@ module Server =
                 UpdatedSettings = updatedSettings
             }
             return! Successful.OK detailedResponse next ctx
-        | None -> return! Successful.OK "Cleared settings" next ctx            
+        | None -> return! Successful.OK "Cleared settings" next ctx
     }
 
     [<CLIMutable>]
@@ -93,7 +93,7 @@ module Server =
     }
 
     let webApp =
-        choose [        
+        choose [
             GET >=> route "/api/stations" >=> (read getStations)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}" (getStationDetails >> read)
             GET >=>
@@ -101,22 +101,22 @@ module Server =
                     "/api/stations/{DeviceType}/{DeviceId}/{FromDate}/{TooDate}"
                     (fun key -> getReadingsPage {DeviceType = key.DeviceType; DeviceId = key.DeviceId} (UrlDateTime.fromUrlDate key.FromDate) (UrlDateTime.fromUrlDate key.TooDate) |> read)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (getSettings >> read)
-            POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (fun key -> bindJson (setSettings key))
-        ]            
+            POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (setSettings >> bindJson)
+        ]
 
     let configureSerialization (services:IServiceCollection) =
         let fableJsonSettings = Newtonsoft.Json.JsonSerializerSettings()
         fableJsonSettings.Converters.Add(Fable.JsonConverter())
         services.AddSingleton<IJsonSerializer>(NewtonsoftJsonSerializer fableJsonSettings)
 
-    let tryGetEnv = System.Environment.GetEnvironmentVariable >> function null | "" -> None | x -> Some x  
+    let tryGetEnv = System.Environment.GetEnvironmentVariable >> function null | "" -> None | x -> Some x
 
-    let publicPath = tryGetEnv "public_path" |> Option.defaultValue "../Client/public" |> Path.GetFullPath      
+    let publicPath = tryGetEnv "public_path" |> Option.defaultValue "../Client/public" |> Path.GetFullPath
 
     let configureAzure (services:IServiceCollection) =
         tryGetEnv "APPINSIGHTS_INSTRUMENTATIONKEY"
         |> Option.map services.AddApplicationInsightsTelemetry
-        |> Option.defaultValue services        
+        |> Option.defaultValue services
 
     let app = application {
         url ("http://0.0.0.0:" + port.ToString() + "/")

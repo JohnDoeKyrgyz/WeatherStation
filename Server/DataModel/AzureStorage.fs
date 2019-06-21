@@ -34,3 +34,4 @@ module AzureStorage =
     let weatherStationRepository connectionString = getOrCreateRepository "WeatherStations" Repository.createWeatherStationsRepository connectionString
     let settingsRepository connectionString = getOrCreateRepository "SystemSettings" Repository.createSystemSettingRepository connectionString
     let readingsRepository connectionString = getOrCreateRepository "Readings" Repository.createReadingRepository connectionString
+    let statusMessageRepository connectionString = getOrCreateRepository "StatusMessage" Repository.createStatusMessageRepository connectionString

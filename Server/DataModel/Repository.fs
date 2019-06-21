@@ -26,6 +26,10 @@ module Repository =
         abstract member GetPage : deviceId:string -> from:DateTime -> too:DateTime -> Async<Reading list>
         abstract member GetRecentReadings : deviceId:string -> cutOff:DateTime -> Async<Reading list>
 
+    type IStatusMessagesRepository =
+        inherit IRepository<StatusMessage>
+        abstract member GetDeviceStatuses : deviceId:string -> cutOff:DateTime -> Async<StatusMessage list>
+
     let createTableIfNecessary (connection : CloudTableClient) tableName =
         let tableReference = connection.GetTableReference(tableName)
         async {
@@ -133,8 +137,19 @@ module Repository =
                 }
             override this.Save(reading) =
                 let updatedReading = {reading with ReadingTime = reading.ReadingTime}
-                base.Save(updatedReading)                
+                base.Save(updatedReading)
 
+    type StatusMessageRepository(connection, tableName) =
+        inherit AzureStorageRepository<StatusMessage>(connection, tableName)
+        interface IStatusMessagesRepository with
+            member this.GetDeviceStatuses deviceId (cutOff: DateTime) =                           
+                async {
+                    let! statuses =
+                        Query.all<StatusMessage>
+                        |> Query.where <@ fun statusMessage key -> key.PartitionKey = deviceId && statusMessage.CreatedOn > cutOff @>
+                        |> runQuery connection tableName
+                    return statuses
+                }
     let createRepository tableName constructor connection =
         async {
             do! createTableIfNecessary connection tableName
@@ -150,6 +165,10 @@ module Repository =
         async {
             let! repository = createRepository "Readings" ReadingsRepository connection
             return repository :> IReadingsRepository}
+    let createStatusMessageRepository connection = 
+        async {
+            let! repository = createRepository "StatusMessage" StatusMessageRepository connection
+            return repository :> IStatusMessagesRepository}            
     let createSystemSettingRepository connection = 
         async {
             let! repository = createRepository "Settings" SystemSettingsRepository connection
