@@ -68,6 +68,7 @@ module WundergroundForwarderTests =
                 save
                 (fun _ _ -> async { return readings })
                 (async { return (fun _ _ -> failwith "Did not expect settings retrieval")})
+                (fun _ -> failwith "Did not expect save StatusMessage")
 
         testList "Error Handling" [
             testCaseAsync "Empty message" (processEventHubMessage log None [] "")
@@ -129,6 +130,7 @@ module WundergroundForwarderTests =
                     DirectionDegrees = Some (10.0 * double degreesPerSixteenth)
                     SourceDevice = weatherStation.DeviceId
                     RowKey = String.Empty
+                    Message = String.Empty
                 }
                 do! particleDeviceReadingTest log expectedReading weatherStation readingTime "100:f4.00:85.0p16.0:30.0b1.0:2.0:3.0d10.800000:86.500000a10.00:10"
             }
@@ -149,6 +151,7 @@ module WundergroundForwarderTests =
                         (fun saveReading -> async {readingSave := Some saveReading})
                         (fun _ _ -> async { return [] })
                         (async {return fun key defaultValue -> async {return {Key = key; Value = defaultValue; Group = ""}}})
+                        (fun _ -> failwith "Did not expect save StatusMessage")
                         message
 
                 Expect.isNone "Wunderground should not have been called" !wundergroundParameters
@@ -186,6 +189,7 @@ module WundergroundForwarderTests =
                             DirectionDegrees = Some (expectedWindDirection * float degreesPerSixteenth)
                             SourceDevice = weatherStation.DeviceId
                             RowKey = String.Empty
+                            Message = String.Empty
                         }
                         let data = sprintf "100f4.00:85.0p16.0:30.0b1.0:2.0:3.0d10.800000:86.500000a10.0:%d" (int windDirection)
                         let weatherStation = {weatherStation with DirectionOffsetDegrees = Some (int rotationDegrees)}

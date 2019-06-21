@@ -12,7 +12,7 @@ module ReadingsTests =
         Values : ReadingValues list
     }
 
-    let buildParticleMessage weatherStation (readingTime : DateTime) data =
+    let buildParticleMessage (weatherStation : WeatherStation) (readingTime : DateTime) data =
         let readingTimeFormat = readingTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         sprintf
             """
@@ -32,6 +32,7 @@ module ReadingsTests =
             let wundergroundParameters = ref None
             let weatherStationSave = ref None
             let readingSave = ref None
+            let statusMessageSave = ref None
             do!
                 processEventHubMessage
                     log
@@ -42,6 +43,7 @@ module ReadingsTests =
                     (fun saveReading -> async {readingSave := Some saveReading})
                     (fun _ _ -> async { return existingReadings })
                     (async {return fun key defaultValue -> async {return {Key = key; Value = defaultValue; Group = ""}}})
+                    (fun saveStatusMessage -> async {return ()})
                     message
                 
             let wundergroundParameters = !wundergroundParameters
