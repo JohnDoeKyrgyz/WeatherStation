@@ -96,6 +96,7 @@ module Readings =
     type DeviceReadings = {
         DeviceId : string
         Readings : ReadingValues list
+        Message : string
     }    
 
     let applyReading (reading : Reading) value =
@@ -124,9 +125,9 @@ module Readings =
         | Z angle -> {reading with Z = toDouble(angle) |> Some}
         | RefreshInterval _ -> reading
 
-    let createReading deviceReading = 
+    let createReading deviceReading message = 
         let readingKey = String.Format("{0:D19}", DateTime.MaxValue.Ticks - DateTime.UtcNow.Ticks)
-        let reading = {Reading.Default with RowKey = readingKey}
+        let reading = {Reading.Default with RowKey = readingKey; Message = message}
         let reading = deviceReading.Readings |> List.fold applyReading reading
         let reading =
             if reading.DeviceTime = DateTime.MinValue

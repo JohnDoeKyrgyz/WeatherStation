@@ -18,4 +18,4 @@ module Particle =
             WeatherStation.Sensors.parseReading 0xFFuy particleReading.Data
             @ [ReadingTime (particleReading.PublishedAt.UtcDateTime)]
 
-        { Readings = sensorValues; DeviceId = particleReading.DeviceId}
+        { Readings = sensorValues; DeviceId = particleReading.DeviceId; Message = particleReading.Data}

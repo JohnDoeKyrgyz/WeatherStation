@@ -12,12 +12,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="paket.references" />
-    <Content Include="WundergroundForwarder\HologramStatusUpdate.json" />
-    <Content Include="WundergroundForwarder\ParticleStatusUpdate.json" />
-    <Compile Include="WundergroundForwarder\Particle.fs" />
-    <Compile Include="WundergroundForwarder\ProcessReadings.fs" />
-    <Compile Include="WundergroundForwarder\WundergroundPost.fs" />
-    <Compile Include="WundergroundForwarder\run.fs" />    
+    <Content Include="IoTEventHandler\HologramStatusUpdate.json" />
+    <Content Include="IoTEventHandler\ParticleStatusUpdate.json" />
+    <Compile Include="IoTEventHandler\Particle.fs" />
+    <Compile Include="IoTEventHandler\ProcessReadings.fs" />
+    <Compile Include="IoTEventHandler\WundergroundPost.fs" />
+    <Compile Include="IoTEventHandler\run.fs" />    
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataModel\DataModel.fsproj" />

@@ -57,6 +57,7 @@ module Model =
         X : double option
         Y : double option
         Z : double option
+        Message : string
         [<PartitionKey>]
         SourceDevice : string
         [<RowKey>]
@@ -81,6 +82,7 @@ module Model =
             X = None
             Y = None
             Z = None
+            Message = null
             SourceDevice = null
             RowKey = null
         }

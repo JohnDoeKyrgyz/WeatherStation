@@ -85,7 +85,7 @@ module WundergroundForwarder =
                             log.LogWarning("No WundergroundId. No data posted to Wunderground.")                        
                             
                         let deviceReading = {deviceReading with Readings = values}
-                        let reading = Readings.createReading deviceReading                        
+                        let reading = Readings.createReading deviceReading deviceReading.Message                      
 
                         log.LogInformation(sprintf "Saving Reading %A" reading)
                         do! saveReading reading

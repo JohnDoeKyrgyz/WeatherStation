@@ -3,7 +3,7 @@
     "net46":{
       "dependencies": {
         "FSharp.Interop.Dynamic": "3.0.0",
-        "FSharp.Data": "2.4.6"
+        "FSharp.Data": "3.1.1"
       }
     }
   }
