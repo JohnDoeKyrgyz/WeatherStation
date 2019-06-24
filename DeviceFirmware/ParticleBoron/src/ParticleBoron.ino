@@ -2,13 +2,12 @@
 #define RBG_NOTIFICATIONS_OFF
 #define FIRMWARE_VERSION "1.0"
 
-#define ANEMOMETER_TRIES 3
+#define ANEMOMETER_TRIES 5
 #define SEND_TRIES 3
 #define WATCHDOG_TIMEOUT 120000 //milliseconds
 
 #define LED D7
 #define ANEMOMETER A4
-#define WAKEUP_BUDDY_ADDRESS 8
 
 SYSTEM_THREAD(ENABLED);
 SYSTEM_MODE(MANUAL);
@@ -129,21 +128,13 @@ void deepSleep(unsigned long seconds)
   {
     Wire.begin();
   }
-
-  //signal the ATTINY 85 to wake us up
-  Wire.beginTransmission(WAKEUP_BUDDY_ADDRESS);
-  Wire.write(seconds);
-  Wire.write(seconds >> 8);
-  Wire.write(seconds >> 16);
-  Wire.write(seconds >> 24);
-  Wire.endTransmission();
   
   Serial.flush();
   fuelGuage.sleep();
   watchDog.dispose();
   Wire.end();
 
-  System.sleep(SLEEP_MODE_DEEP);
+  System.sleep({}, RISING,SLEEP_NETWORK_STANDBY, seconds);
 }
 
 void onSettingsUpdate(const char *event, const char *data)
