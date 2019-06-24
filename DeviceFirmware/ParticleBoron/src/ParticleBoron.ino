@@ -134,7 +134,7 @@ void deepSleep(unsigned long seconds)
   watchDog.dispose();
   Wire.end();
 
-  System.sleep({}, RISING,SLEEP_NETWORK_STANDBY, seconds);
+  System.sleep({}, RISING, SLEEP_NETWORK_STANDBY, seconds);
 }
 
 void onSettingsUpdate(const char *event, const char *data)
@@ -164,7 +164,7 @@ char *serialize(Reading *reading)
       reading->batteryPercentage, 
       reading->panelVoltage, 
       reading->panelCurrent);
-  if (reading->bmeRead)
+  if (reading->bmeRead)  
   {
     buffer += sprintf(buffer, "b%f:%f:%f", reading->bmeTemperature, reading->pressure, reading->bmeHumidity);
   }
