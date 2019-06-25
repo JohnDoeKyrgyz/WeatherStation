@@ -61,6 +61,10 @@ module Server =
         let! readings = readings connectionString key fromDate toDate
         return Ok (readings |> List.map createReading) }
 
+    let getMessagesPage key fromDate toDate = async {
+        let! messages = messages connectionString key fromDate toDate
+        return Ok (messages |> List.map createStatusMessage) }
+
     let getSettings key = async {
         let! settings = weatherStationSettings connectionString key
         return Ok settings
@@ -98,8 +102,12 @@ module Server =
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}" (getStationDetails >> read)
             GET >=>
                 routeBind<PageKey>
-                    "/api/stations/{DeviceType}/{DeviceId}/{FromDate}/{TooDate}"
+                    "/api/stations/{DeviceType}/{DeviceId}/readings/{FromDate}/{TooDate}"
                     (fun key -> getReadingsPage {DeviceType = key.DeviceType; DeviceId = key.DeviceId} (UrlDateTime.fromUrlDate key.FromDate) (UrlDateTime.fromUrlDate key.TooDate) |> read)
+            GET >=>
+                routeBind<PageKey>
+                    "/api/stations/{DeviceType}/{DeviceId}/messages/{FromDate}/{TooDate}"
+                    (fun key -> getMessagesPage {DeviceType = key.DeviceType; DeviceId = key.DeviceId} (UrlDateTime.fromUrlDate key.FromDate) (UrlDateTime.fromUrlDate key.TooDate) |> read)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (getSettings >> read)
             POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (setSettings >> bindJson)
         ]

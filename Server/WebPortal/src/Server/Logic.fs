@@ -50,6 +50,11 @@ module Logic =
         DirectionDegrees = reading.DirectionDegrees
     }
 
+    let createStatusMessage (message : Model.StatusMessage) = {
+        Message = message.StatusMessage
+        CreatedOn = message.CreatedOn
+    }
+
     let getWeatherStationDetails pageSizeHours data = async {
         match! data with
         | Some (station : WeatherStation, readings : Model.Reading list ) ->

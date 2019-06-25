@@ -25,12 +25,24 @@ module Data =
         | None -> return None
     }
 
-    let readings connectionString key fromDate tooDate  = async {
+    let paged fromDate tooDate query =
         if fromDate >= tooDate then failwithf "fromDate %A should be less than tooDate %A" fromDate tooDate
-        let! readingsRepository = readingsRepository connectionString
-        let! readings = readingsRepository.GetPage key.DeviceId fromDate tooDate
-        return readings
-    }
+        query
+
+    let readings connectionString key fromDate tooDate =
+        async {
+            let! readingsRepository = readingsRepository connectionString
+            let! readings = readingsRepository.GetPage key.DeviceId fromDate tooDate
+            return readings
+        }
+        |> paged fromDate tooDate
+
+    let messages connectionString key fromDate tooDate =
+        async {
+            let! repository = statusMessageRepository connectionString
+            return! repository.GetDeviceStatuses key.DeviceId fromDate tooDate
+        }
+        |> paged fromDate tooDate
 
     let weatherStationSettings connectionString key = async {
         let! weatherStationRepository = weatherStationRepository connectionString

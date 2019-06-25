@@ -32,6 +32,11 @@ type Reading = {
     DirectionDegrees : double option
 }
 
+type StatusMessage = {
+    Message : string
+    CreatedOn : DateTime
+}
+
 [<CLIMutable>]
 type StationKey = {
     DeviceId : string
@@ -64,7 +69,7 @@ type StationSettings = {
     BrownoutMinutes : int
     SleepTime : int
     DiagnosticCycles : int
-    UseDeepSleep : bool    
+    UseDeepSleep : bool
 }
 with
     static member Default = {Brownout = true; BrownoutPercentage = 0.2m; BrownoutMinutes = 2880; SleepTime = 360; DiagnosticCycles = 0; UseDeepSleep = true; Version = 1}

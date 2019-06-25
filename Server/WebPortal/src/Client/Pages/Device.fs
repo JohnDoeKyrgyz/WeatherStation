@@ -46,7 +46,7 @@ module Device =
         let url =
             let formattedFromDate = UrlDateTime.toUrlDate fromDate
             let formattedTooDate = UrlDateTime.toUrlDate tooDate
-            sprintf "/api/stations/%s/%s/%s/%s" key.DeviceType key.DeviceId formattedTooDate formattedFromDate
+            sprintf "/api/stations/%s/%s/readings/%s/%s" key.DeviceType key.DeviceId formattedTooDate formattedFromDate
         let result response = Readings (stationDetails, fromDate, response)
         Cmd.OfPromise.either
             (fetchAs url)
