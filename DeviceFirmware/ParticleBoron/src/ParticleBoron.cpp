@@ -10,7 +10,6 @@ void onError(const char *message);
 void watchDogTimeout();
 void deepSleep(unsigned long seconds);
 void onSettingsUpdate(const char *event, const char *data);
-void startup();
 void setup();
 void loop();
 #line 2 "c:/working/WeatherStation/DeviceFirmware/ParticleBoron/src/ParticleBoron.ino"
@@ -25,7 +24,7 @@ void loop();
 #define ANEMOMETER A4
 
 SYSTEM_THREAD(ENABLED);
-SYSTEM_MODE(MANUAL);
+SYSTEM_MODE(SEMI_AUTOMATIC);
 
 #include <Wire.h>
 #include "Compass.h"
@@ -41,7 +40,6 @@ Adafruit_BME280 bme280;
 LaCrosse_TX23 laCrosseTX23(ANEMOMETER);
 Adafruit_INA219 powerMonitor;
 FuelGauge fuelGuage;
-PMIC pmic;
 Compass compassSensor;
 
 ApplicationWatchdog watchDog(WATCHDOG_TIMEOUT, watchDogTimeout);
@@ -135,21 +133,24 @@ void deepSleep(unsigned long seconds)
 {
   Serial.printlnf("Deep Sleep for %d seconds. Brownout = %d, SoC = %f, settings.diagnositicCycles = %d", seconds, brownout, systemSoC, settings.diagnositicCycles);
 
-  Cellular.off();
-  delay(4000);
-  
-  //make sure that the I2C bus is enabled before we try to request a reset time from the wakeup buddy.
-  if(!Wire.isEnabled())
-  {
-    Wire.begin();
-  }
-  
   Serial.flush();
   fuelGuage.sleep();
   watchDog.dispose();
-  Wire.end();
 
-  System.sleep({}, RISING, SLEEP_NETWORK_STANDBY, seconds);
+  if(seconds > 360)
+  {
+    System.sleep({}, RISING, seconds);
+  }
+  else
+  {
+    System.sleep({}, RISING, SLEEP_NETWORK_STANDBY, seconds);
+  }
+
+  Serial.println("Wakeup"); 
+
+  //Disable the RGB LED
+  RGB.control(true);
+  RGB.color(0, 0, 0);  
 }
 
 void onSettingsUpdate(const char *event, const char *data)
@@ -193,14 +194,6 @@ char *serialize(Reading *reading)
   }
   return messageBuffer;
 }
-
-void startup()
-{
-  //Turn off the status LED to save power
-  RGB.control(true);
-  RGB.color(0, 0, 0);  
-}
-STARTUP(startup());
 
 void setup()
 {
