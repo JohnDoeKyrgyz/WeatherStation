@@ -26,7 +26,6 @@ Adafruit_BME280 bme280;
 LaCrosse_TX23 laCrosseTX23(ANEMOMETER);
 Adafruit_INA219 powerMonitor;
 FuelGauge fuelGuage;
-PMIC pmic;
 Compass compassSensor;
 
 ApplicationWatchdog watchDog(WATCHDOG_TIMEOUT, watchDogTimeout);
