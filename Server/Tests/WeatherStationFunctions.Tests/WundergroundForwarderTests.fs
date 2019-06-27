@@ -238,7 +238,8 @@ module WundergroundForwarderTests =
             testAsync "Status Message" {
                 do! loadWeatherStations [weatherStation]                
                 let status = "Brownout"
-                let message = buildParticleMessage "STATUS" weatherStation readingTime status
+                let messageTime = DateTime.Now
+                let message = buildParticleMessage "STATUS" weatherStation messageTime status
 
                 let wundergroundParameters = ref None
                 do!                    
@@ -247,7 +248,7 @@ module WundergroundForwarderTests =
                     }) log message
                 
                 let wundergroundParameters = !wundergroundParameters
-                Expect.isSome "No call to wunderground" wundergroundParameters
+                Expect.isNone "No call to wunderground" wundergroundParameters
 
                 let! statusMessageRepository = AzureStorage.statusMessageRepository connectionString
                 let! statusMessages = statusMessageRepository.GetAll()
@@ -256,7 +257,7 @@ module WundergroundForwarderTests =
 
                 let statusMessage = statusMessages.[0]
                 Expect.equal (sprintf "Message should be %s" status) status statusMessage.StatusMessage
-                Expect.isLessThan "CreatedOn should be less than now" (DateTime.Now, statusMessage.CreatedOn)
+                Expect.equal "Message time should be the CreatedOn time" (string messageTime) (string statusMessage.CreatedOn)
 
                 do! clearStatusMessages
                 do! clearWeatherStations
