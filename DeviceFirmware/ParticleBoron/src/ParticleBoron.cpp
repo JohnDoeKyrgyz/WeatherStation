@@ -10,23 +10,21 @@ void onError(const char *message);
 void watchDogTimeout();
 void deepSleep(unsigned long seconds);
 void onSettingsUpdate(const char *event, const char *data);
-void startup();
 void setup();
 void loop();
 #line 2 "c:/working/WeatherStation/DeviceFirmware/ParticleBoron/src/ParticleBoron.ino"
 #define RBG_NOTIFICATIONS_OFF
 #define FIRMWARE_VERSION "1.0"
 
-#define ANEMOMETER_TRIES 3
+#define ANEMOMETER_TRIES 5
 #define SEND_TRIES 3
 #define WATCHDOG_TIMEOUT 120000 //milliseconds
 
 #define LED D7
 #define ANEMOMETER A4
-#define WAKEUP_BUDDY_ADDRESS 8
 
 SYSTEM_THREAD(ENABLED);
-SYSTEM_MODE(MANUAL);
+SYSTEM_MODE(SEMI_AUTOMATIC);
 
 #include <Wire.h>
 #include "Compass.h"
@@ -42,7 +40,6 @@ Adafruit_BME280 bme280;
 LaCrosse_TX23 laCrosseTX23(ANEMOMETER);
 Adafruit_INA219 powerMonitor;
 FuelGauge fuelGuage;
-PMIC pmic;
 Compass compassSensor;
 
 ApplicationWatchdog watchDog(WATCHDOG_TIMEOUT, watchDogTimeout);
@@ -136,29 +133,24 @@ void deepSleep(unsigned long seconds)
 {
   Serial.printlnf("Deep Sleep for %d seconds. Brownout = %d, SoC = %f, settings.diagnositicCycles = %d", seconds, brownout, systemSoC, settings.diagnositicCycles);
 
-  Cellular.off();
-  delay(4000);
-  
-  //make sure that the I2C bus is enabled before we try to request a reset time from the wakeup buddy.
-  if(!Wire.isEnabled())
-  {
-    Wire.begin();
-  }
-
-  //signal the ATTINY 85 to wake us up
-  Wire.beginTransmission(WAKEUP_BUDDY_ADDRESS);
-  Wire.write(seconds);
-  Wire.write(seconds >> 8);
-  Wire.write(seconds >> 16);
-  Wire.write(seconds >> 24);
-  Wire.endTransmission();
-  
   Serial.flush();
   fuelGuage.sleep();
   watchDog.dispose();
-  Wire.end();
 
-  System.sleep(SLEEP_MODE_DEEP);
+  if(seconds > 360)
+  {
+    System.sleep({}, RISING, seconds);
+  }
+  else
+  {
+    System.sleep({}, RISING, SLEEP_NETWORK_STANDBY, seconds);
+  }
+
+  Serial.println("Wakeup"); 
+
+  //Disable the RGB LED
+  RGB.control(true);
+  RGB.color(0, 0, 0);  
 }
 
 void onSettingsUpdate(const char *event, const char *data)
@@ -188,7 +180,7 @@ char *serialize(Reading *reading)
       reading->batteryPercentage, 
       reading->panelVoltage, 
       reading->panelCurrent);
-  if (reading->bmeRead)
+  if (reading->bmeRead)  
   {
     buffer += sprintf(buffer, "b%f:%f:%f", reading->bmeTemperature, reading->pressure, reading->bmeHumidity);
   }
@@ -203,14 +195,6 @@ char *serialize(Reading *reading)
   return messageBuffer;
 }
 
-void startup()
-{
-  //Turn off the status LED to save power
-  RGB.control(true);
-  RGB.color(0, 0, 0);  
-}
-STARTUP(startup());
-
 void setup()
 {
   Serial.begin(115200);
@@ -220,15 +204,6 @@ void setup()
 
   //don't send reset info. This will just take up all our bandwith since we are using a deep sleep
   System.disable(SYSTEM_FLAG_PUBLISH_RESET_INFO);
-
-  Serial.print("Configure power management...");
-  pmic.begin();
-  pmic.setInputVoltageLimit(5080);  //  for 6V Solar Panels
-  pmic.setInputCurrentLimit(2000) ; // 2000 mA, higher than req'd
-  pmic.setChargeVoltage(4208);      //  Set Li-Po charge termination voltage to 4.21V,  Monitor the Enclosure Temps
-  pmic.setChargeCurrent(0, 0, 1, 1, 1, 0); // 1408 mA [0+0+512mA+256mA+128mA+0] + 512 Offset
-  pmic.enableDPDM();
-  Serial.println("!");
 
   //connect to the cloud once we have taken all our measurements
   Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
