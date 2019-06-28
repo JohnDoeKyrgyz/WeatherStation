@@ -68,6 +68,7 @@ struct Reading
 
 Reading initialReading;
 char messageBuffer[255];
+char statusBuffer[255];
 float systemSoC;
 
 void publishStatusMessage(const char* message){  
@@ -131,6 +132,10 @@ void watchDogTimeout()
 
 void deepSleep(unsigned long seconds)
 {
+  //Disable the RGB LED
+  RGB.control(true);
+  RGB.color(0, 0, 0);
+
   Serial.printlnf("Deep Sleep for %d seconds. Brownout = %d, SoC = %f, settings.diagnositicCycles = %d", seconds, brownout, systemSoC, settings.diagnositicCycles);
 
   Serial.flush();
@@ -146,11 +151,7 @@ void deepSleep(unsigned long seconds)
     System.sleep({}, RISING, SLEEP_NETWORK_STANDBY, seconds);
   }
 
-  Serial.println("Wakeup"); 
-
-  //Disable the RGB LED
-  RGB.control(true);
-  RGB.color(0, 0, 0);  
+  Serial.println("Wakeup");
 }
 
 void onSettingsUpdate(const char *event, const char *data)
@@ -163,7 +164,7 @@ void onSettingsUpdate(const char *event, const char *data)
   Serial.println(data);
   digitalWrite(LED, LOW);
 
-  char *buffer = messageBuffer;
+  char *buffer = statusBuffer;
   sprintf(buffer, "SETTINGS %d", settings.version);
   publishStatusMessage(buffer);
 }
@@ -248,7 +249,9 @@ void setup()
     {
       onError("ERROR: Could not get initial wind reading");
     }
-  }  
+  }
+
+  publishStatusMessage("STARTUP");
 }
 
 void loop()
@@ -261,9 +264,8 @@ void loop()
     Serial.printlnf("Brownout threshold %f exceeded by system battery percentage %f", settings.brownoutPercentage, systemSoC);
     Particle.process();
 
-    char *buffer = messageBuffer;
+    char *buffer = statusBuffer;
     sprintf(buffer, "BROWNOUT %f:%d", systemSoC, settings.brownoutMinutes);
-    
     publishStatusMessage(buffer);
 
     delay(4000);

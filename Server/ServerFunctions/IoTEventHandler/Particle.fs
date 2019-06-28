@@ -27,7 +27,7 @@ module Particle =
                 @ [ReadingTime (particleReading.PublishedAt.UtcDateTime)]
 
             Reading { Readings = sensorValues; DeviceId = particleReading.DeviceId; Message = particleReading.Data}
-        | "STATUS" ->
+        | "Status" ->
             StatusMessage {
                 DeviceId = particleReading.DeviceId
                 StatusMessage = particleReading.Data

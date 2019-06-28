@@ -239,7 +239,7 @@ module WundergroundForwarderTests =
                 do! loadWeatherStations [weatherStation]                
                 let status = "Brownout"
                 let messageTime = DateTime.Now
-                let message = buildParticleMessage "STATUS" weatherStation messageTime status
+                let message = buildParticleMessage "Status" weatherStation messageTime status
 
                 let wundergroundParameters = ref None
                 do!                    
