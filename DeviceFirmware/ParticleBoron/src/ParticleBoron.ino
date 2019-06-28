@@ -54,6 +54,7 @@ struct Reading
 
 Reading initialReading;
 char messageBuffer[255];
+char statusBuffer[255];
 float systemSoC;
 
 void publishStatusMessage(const char* message){  
@@ -149,7 +150,7 @@ void onSettingsUpdate(const char *event, const char *data)
   Serial.println(data);
   digitalWrite(LED, LOW);
 
-  char *buffer = messageBuffer;
+  char *buffer = statusBuffer;
   sprintf(buffer, "SETTINGS %d", settings.version);
   publishStatusMessage(buffer);
 }
@@ -234,7 +235,9 @@ void setup()
     {
       onError("ERROR: Could not get initial wind reading");
     }
-  }  
+  }
+
+  publishStatusMessage("STARTUP");
 }
 
 void loop()
@@ -247,9 +250,8 @@ void loop()
     Serial.printlnf("Brownout threshold %f exceeded by system battery percentage %f", settings.brownoutPercentage, systemSoC);
     Particle.process();
 
-    char *buffer = messageBuffer;
+    char *buffer = statusBuffer;
     sprintf(buffer, "BROWNOUT %f:%d", systemSoC, settings.brownoutMinutes);
-    
     publishStatusMessage(buffer);
 
     delay(4000);
