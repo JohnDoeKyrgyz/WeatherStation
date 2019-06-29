@@ -27,6 +27,7 @@ LaCrosse_TX23 laCrosseTX23(ANEMOMETER);
 Adafruit_INA219 powerMonitor;
 FuelGauge fuelGuage;
 Compass compassSensor;
+PMIC pmic;
 
 ApplicationWatchdog watchDog(WATCHDOG_TIMEOUT, watchDogTimeout);
 
@@ -184,6 +185,10 @@ char *serialize(Reading *reading)
 
 void setup()
 {
+  //Turn off charging to allow the USB connection to only be used for serial output.
+  pmic.begin();
+  pmic.disableCharging();
+
   Serial.begin(115200);
 
   duration = millis();
