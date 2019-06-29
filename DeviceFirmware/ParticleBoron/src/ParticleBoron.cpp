@@ -10,6 +10,7 @@ void onError(const char *message);
 void watchDogTimeout();
 void deepSleep(unsigned long seconds);
 void onSettingsUpdate(const char *event, const char *data);
+void connect();
 void setup();
 void loop();
 #line 2 "c:/working/WeatherStation/DeviceFirmware/ParticleBoron/src/ParticleBoron.ino"
@@ -41,6 +42,7 @@ LaCrosse_TX23 laCrosseTX23(ANEMOMETER);
 Adafruit_INA219 powerMonitor;
 FuelGauge fuelGuage;
 Compass compassSensor;
+PMIC pmic;
 
 ApplicationWatchdog watchDog(WATCHDOG_TIMEOUT, watchDogTimeout);
 
@@ -196,26 +198,38 @@ char *serialize(Reading *reading)
   return messageBuffer;
 }
 
-void setup()
+void connect() 
 {
-  Serial.begin(115200);
-
-  duration = millis();
-  Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
-
-  //don't send reset info. This will just take up all our bandwith since we are using a deep sleep
-  System.disable(SYSTEM_FLAG_PUBLISH_RESET_INFO);
-
-  //connect to the cloud once we have taken all our measurements
-  Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
-  
   //begin connecting to the cloud
   Serial.println("Connecting...");
   Cellular.on();
   Cellular.connect();
   Particle.connect();
   Particle.process();
+}
 
+void setup()
+{
+  //Turn off charging to allow the USB connection to only be used for serial output.
+  pmic.begin();
+  pmic.disableCharging();
+
+  Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
+
+  Serial.begin(115200); 
+
+  connect();
+  publishStatusMessage("STARTUP");
+}
+
+void loop()
+{
+  duration = millis();
+  Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
+
+  //don't send reset info. This will just take up all our bandwith since we are using a deep sleep
+  System.disable(SYSTEM_FLAG_PUBLISH_RESET_INFO);
+  
   //Load saved settings;
   Serial.print("Loaded settings...");
   settings = loadSettings();
@@ -240,7 +254,6 @@ void setup()
       pinMode(LED, OUTPUT);
       digitalWrite(LED, HIGH);
       settings.diagnositicCycles = settings.diagnositicCycles - 1;
-
       saveSettings(settings);
     }
 
@@ -251,11 +264,6 @@ void setup()
     }
   }
 
-  publishStatusMessage("STARTUP");
-}
-
-void loop()
-{
   watchDog.checkin();
   Particle.process();
 
@@ -308,6 +316,8 @@ void loop()
     //send serialized reading to the cloud
     char *publishedReading = serialize(&reading);
     Serial.println(publishedReading);
+
+    connect();
 
     Serial.print("Waiting for connection...");
     watchDog.checkin();
