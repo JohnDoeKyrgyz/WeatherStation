@@ -1,6 +1,6 @@
 
 #define RBG_NOTIFICATIONS_OFF
-#define FIRMWARE_VERSION "1.0"
+#define FIRMWARE_VERSION "2.0"
 
 #define ANEMOMETER_TRIES 5
 #define SEND_TRIES 3
@@ -8,6 +8,8 @@
 
 #define LED D7
 #define ANEMOMETER A4
+
+#define CHARGE_CURRENT_THRESHOLD 1.0
 
 SYSTEM_THREAD(ENABLED);
 SYSTEM_MODE(SEMI_AUTOMATIC);
@@ -57,6 +59,7 @@ Reading initialReading;
 char messageBuffer[255];
 char statusBuffer[255];
 float systemSoC;
+bool charging = false;
 
 void publishStatusMessage(const char* message){  
   Serial.println(message);
@@ -230,6 +233,7 @@ void loop()
   {
     Serial.print("Initializing sensors...");    
     powerMonitor.begin();
+    powerMonitor.setCalibration_16V_400mA();
     bme280.begin(0x76);
     compassSensor.begin();
     Serial.println("!");
@@ -296,6 +300,15 @@ void loop()
       Serial.print(initialReading.windSpeed);
       Serial.print(", ");
       Serial.println(reading.windSpeed);
+    }
+
+    //Publish a message if the panel starts or stops charging the battery
+    bool currentCharging = reading.panelCurrent > CHARGE_CURRENT_THRESHOLD;
+    if(currentCharging != charging)
+    {
+      const char* message = currentCharging ? "PANEL CHARGING" : "PANEL OFF";
+      publishStatusMessage(message);
+      charging = currentCharging;
     }
 
     //send serialized reading to the cloud

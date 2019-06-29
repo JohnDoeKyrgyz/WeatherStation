@@ -1,3 +1,7 @@
+/******************************************************/
+//       THIS IS A GENERATED FILE - DO NOT EDIT       //
+/******************************************************/
+
 #include "application.h"
 #line 1 "c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronINA219/src/BoronBME280.ino"
 void setup(void);
@@ -16,7 +20,7 @@ void setup(void)
 
   Serial.println("Hello!");
   
-  // Initialize the INA219.
+  // Initialize the INA219.P
   // By default the initialization will use the largest range (32V, 2A).  However
   // you can call a setCalibration function to change this range (see comments).
   Serial.println("begin");
