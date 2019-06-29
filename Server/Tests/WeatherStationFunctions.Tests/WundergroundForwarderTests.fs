@@ -161,7 +161,7 @@ module WundergroundForwarderTests =
             testAsync "Status Message" {
                 let weatherStation = {weatherStation with WundergroundStationId = null}
                 let data = "Brownout"
-                let message = buildParticleMessage "STATUS" weatherStation readingTime data
+                let message = buildParticleMessage "Status" weatherStation readingTime data
                 let statusMessageSave = ref None
                 do!
                     processEventHubMessage

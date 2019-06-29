@@ -18,3 +18,4 @@ Server/.fake/
 *.bin
 /DeviceFirmware/ParticleBoron/shared
 Server/paket-files/paket.processlock
+**/symbolCache.db
