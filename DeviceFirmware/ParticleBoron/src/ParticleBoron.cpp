@@ -74,7 +74,6 @@ Reading initialReading;
 char messageBuffer[255];
 char statusBuffer[255];
 float systemSoC;
-bool charging = false;
 
 void waitForConnection()
 {
@@ -224,9 +223,6 @@ void setup()
 
   Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
 
-  //don't send reset info. This will just take up all our bandwith since we are using a deep sleep
-  System.disable(SYSTEM_FLAG_PUBLISH_RESET_INFO);
-
   //Load saved settings;
   Serial.print("Loaded settings...");
   settings = loadSettings();
@@ -240,6 +236,7 @@ bool checkBrownout()
   systemSoC = fuelGuage.getSoC();
   bool brownout = settings.brownout && systemSoC < settings.brownoutPercentage;
   Serial.println("!");
+  Serial.flush();
   return brownout;
 }
 
@@ -256,6 +253,10 @@ void connect()
 void loop()
 {
   duration = millis();
+
+  Serial.begin(115200);
+  Serial.println("-----------------------");
+  Serial.flush();
 
   ApplicationWatchdog watchDog = ApplicationWatchdog(WATCHDOG_TIMEOUT, watchDogTimeout);
 
@@ -329,18 +330,14 @@ void loop()
     }
 
     //Publish a message if the panel starts or stops charging the battery
-    bool currentCharging = 
-      reading.panelCurrent <= CHARGE_CURRENT_LOW_THRESHOLD
-      || reading.panelCurrent >= CHARGE_CURRENT_HIGH_THRESHOLD;
-    if(currentCharging != charging)
+    bool charging = 
+      reading.panelCurrent >= CHARGE_CURRENT_LOW_THRESHOLD
+      && reading.panelCurrent <= CHARGE_CURRENT_HIGH_THRESHOLD;
+    if(!charging)
     {
-      const char* message = currentCharging ? "PANEL CHARGING" : "PANEL OFF";
+      const char* message = charging ? "PANEL CHARGING" : "PANEL OFF";
       publishStatusMessage(message);
-      charging = currentCharging;
-      if(!charging)
-      {
-        deepSleep(settings.brownoutMinutes * 60);
-      }
+      deepSleep(settings.brownoutMinutes * 60);
     }
 
     //send serialized reading to the cloud
