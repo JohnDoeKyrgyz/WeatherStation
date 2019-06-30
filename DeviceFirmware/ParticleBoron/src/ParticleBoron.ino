@@ -240,10 +240,6 @@ void loop()
 {
   duration = millis();
 
-  Serial.begin(115200);
-  Serial.println("-----------------------");
-  Serial.flush();
-
   ApplicationWatchdog watchDog = ApplicationWatchdog(WATCHDOG_TIMEOUT, watchDogTimeout);
 
   connect();
@@ -297,8 +293,7 @@ void loop()
       && reading.panelCurrent <= CHARGE_CURRENT_HIGH_THRESHOLD;
     if(!charging)
     {
-      const char* message = charging ? "PANEL CHARGING" : "PANEL OFF";
-      publishStatusMessage(message);
+      publishStatusMessage("PANEL OFF");
       deepSleep(settings.brownoutMinutes * 60);      
     }
 
