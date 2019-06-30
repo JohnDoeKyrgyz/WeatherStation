@@ -324,6 +324,10 @@ void loop()
       const char* message = currentCharging ? "PANEL CHARGING" : "PANEL OFF";
       publishStatusMessage(message);
       charging = currentCharging;
+      if(!charging)
+      {
+        deepSleep(settings.brownoutMinutes * 60);
+      }
     }
 
     //send serialized reading to the cloud
