@@ -5,13 +5,15 @@
 #include "application.h"
 #line 1 "c:/working/WeatherStation/DeviceFirmware/ParticleBoron/src/ParticleBoron.ino"
 
+void waitForConnection();
 void publishStatusMessage(const char* message);
 void onError(const char *message);
 void watchDogTimeout();
 void deepSleep(unsigned long seconds);
 void onSettingsUpdate(const char *event, const char *data);
-void connect();
 void setup();
+bool checkBrownout();
+void connect();
 void loop();
 #line 2 "c:/working/WeatherStation/DeviceFirmware/ParticleBoron/src/ParticleBoron.ino"
 #define RBG_NOTIFICATIONS_OFF
@@ -24,7 +26,8 @@ void loop();
 #define LED D7
 #define ANEMOMETER A4
 
-#define CHARGE_CURRENT_THRESHOLD 1.0
+#define CHARGE_CURRENT_LOW_THRESHOLD 1.0
+#define CHARGE_CURRENT_HIGH_THRESHOLD 400.0
 
 SYSTEM_THREAD(ENABLED);
 SYSTEM_MODE(SEMI_AUTOMATIC);
@@ -46,11 +49,8 @@ FuelGauge fuelGuage;
 Compass compassSensor;
 PMIC pmic;
 
-ApplicationWatchdog watchDog(WATCHDOG_TIMEOUT, watchDogTimeout);
-
 Settings settings;
 unsigned long duration;
-bool brownout;
 
 struct Reading
 {
@@ -76,11 +76,21 @@ char statusBuffer[255];
 float systemSoC;
 bool charging = false;
 
+void waitForConnection()
+{
+  if(!Particle.connected)
+  {
+    Serial.print("Waiting for connection...");
+    waitUntil(Particle.connected);
+    Serial.println("!");    
+  }
+  Particle.process();
+}
+
 void publishStatusMessage(const char* message){  
   Serial.println(message);
-  waitUntil(Particle.connected);
+  waitForConnection();
   Particle.publish("Status", message, 60, PRIVATE, WITH_ACK);
-  Particle.process();
 }
 
 void onError(const char *message)
@@ -130,7 +140,6 @@ bool readCompass(Reading *reading)
 void watchDogTimeout()
 {
   publishStatusMessage("WATCHDOG_TIMEOUT");
-
   Serial.flush();
   System.reset();
 }
@@ -145,7 +154,6 @@ void deepSleep(unsigned long seconds)
 
   Serial.flush();
   fuelGuage.sleep();
-  watchDog.dispose();
 
   if(seconds > 360)
   {
@@ -155,8 +163,6 @@ void deepSleep(unsigned long seconds)
   {
     System.sleep({}, RISING, SLEEP_NETWORK_STANDBY, seconds);
   }
-
-  Serial.println("Wakeup");
 }
 
 void onSettingsUpdate(const char *event, const char *data)
@@ -201,16 +207,6 @@ char *serialize(Reading *reading)
   return messageBuffer;
 }
 
-void connect() 
-{
-  //begin connecting to the cloud
-  Serial.println("Connecting...");
-  Cellular.on();
-  Cellular.connect();
-  Particle.connect();
-  Particle.process();
-}
-
 void setup()
 {
   //Turn off charging to allow the USB connection to only be used for serial output.
@@ -221,30 +217,60 @@ void setup()
 
   Serial.begin(115200); 
 
-  connect();
-  publishStatusMessage("STARTUP");
+  Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
+
+  //don't send reset info. This will just take up all our bandwith since we are using a deep sleep
+  System.disable(SYSTEM_FLAG_PUBLISH_RESET_INFO);
+
+  //Load saved settings;
+  Serial.print("Loaded settings...");
+  settings = loadSettings();
+  Serial.println("!");
+}
+
+bool checkBrownout()
+{
+  Serial.print("Checking brownout...");
+  fuelGuage.begin();
+  systemSoC = fuelGuage.getSoC();
+  bool brownout = settings.brownout && systemSoC < settings.brownoutPercentage;
+  Serial.println("!");
+  return brownout;
+}
+
+void connect()
+{
+  //begin connecting to the cloud
+  Serial.println("Connecting...");
+  Cellular.on();
+  Cellular.connect();
+  Particle.connect();
+  Particle.process();
 }
 
 void loop()
 {
   duration = millis();
-  Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
 
-  //don't send reset info. This will just take up all our bandwith since we are using a deep sleep
-  System.disable(SYSTEM_FLAG_PUBLISH_RESET_INFO);
-  
-  //Load saved settings;
-  Serial.print("Loaded settings...");
-  settings = loadSettings();
-  Serial.println("!");
+  ApplicationWatchdog watchDog = ApplicationWatchdog(WATCHDOG_TIMEOUT, watchDogTimeout);
 
-  Serial.print("Checking brownout...");
-  fuelGuage.begin();
-  systemSoC = fuelGuage.getSoC();
-  brownout = settings.brownout && systemSoC < settings.brownoutPercentage;
-  Serial.println("!");
+  connect();
 
-  if(!brownout)
+  if(checkBrownout()) 
+  {
+    Serial.printlnf("Brownout threshold %f exceeded by system battery percentage %f", settings.brownoutPercentage, systemSoC);
+    Particle.process();
+
+    char *buffer = statusBuffer;
+    sprintf(buffer, "BROWNOUT %f:%d", systemSoC, settings.brownoutMinutes);
+    publishStatusMessage(buffer);
+
+    delay(4000);
+    Particle.process();
+
+    deepSleep(settings.brownoutMinutes * 60);
+  }
+  else
   {
     Serial.print("Initializing sensors...");    
     powerMonitor.begin();
@@ -265,28 +291,8 @@ void loop()
     if (!(initialReading.anemometerRead = readAnemometer(&initialReading)))
     {
       onError("ERROR: Could not get initial wind reading");
-    }
-  }
-
-  watchDog.checkin();
-  Particle.process();
-
-  if (brownout)
-  {
-    Serial.printlnf("Brownout threshold %f exceeded by system battery percentage %f", settings.brownoutPercentage, systemSoC);
-    Particle.process();
-
-    char *buffer = statusBuffer;
-    sprintf(buffer, "BROWNOUT %f:%d", systemSoC, settings.brownoutMinutes);
-    publishStatusMessage(buffer);
-
-    delay(4000);
-    Particle.process();
-
-    deepSleep(settings.brownoutMinutes * 60);
-  }
-  else
-  {
+    }  
+  
     Reading reading;
     reading.version = settings.version;
 
@@ -318,7 +324,9 @@ void loop()
     }
 
     //Publish a message if the panel starts or stops charging the battery
-    bool currentCharging = reading.panelCurrent > CHARGE_CURRENT_THRESHOLD;
+    bool currentCharging = 
+      reading.panelCurrent <= CHARGE_CURRENT_LOW_THRESHOLD
+      || reading.panelCurrent >= CHARGE_CURRENT_HIGH_THRESHOLD;
     if(currentCharging != charging)
     {
       const char* message = currentCharging ? "PANEL CHARGING" : "PANEL OFF";
@@ -334,14 +342,7 @@ void loop()
     char *publishedReading = serialize(&reading);
     Serial.println(publishedReading);
 
-    connect();
-
-    Serial.print("Waiting for connection...");
-    watchDog.checkin();
-    waitUntil(Particle.connected);
-    Serial.println("!");
-
-    Particle.process();
+    waitForConnection();
 
     int tries = SEND_TRIES;
     bool sentReading = false;
@@ -384,8 +385,9 @@ void loop()
     Serial.printlnf("DURATION %d", millis() - duration);
 
     Particle.process();
+    Serial.flush();
+    watchDog.dispose();
 
-    Serial.flush(); 
     sleepAction();
   }
 }
