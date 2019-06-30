@@ -100,9 +100,16 @@ bool readAnemometer(Reading *reading)
 bool readVoltage(Reading *reading)
 {
   reading->batteryVoltage = fuelGuage.getVCell();
+  Serial.printlnf("Battery Voltage = %f", reading->batteryVoltage);
+
   reading->batteryPercentage = fuelGuage.getSoC();
+  Serial.printlnf("Battery Percentage = %f", reading->batteryPercentage);
+
   reading->panelVoltage = powerMonitor.getBusVoltage_V();
+  Serial.printlnf("Panel Voltage = %f", reading->panelVoltage);
+
   reading->panelCurrent = powerMonitor.getCurrent_mA();
+  Serial.printlnf("Panel Current = %f", reading->panelCurrent);
   return true;
 }
 
@@ -132,8 +139,6 @@ void deepSleep(unsigned long seconds)
   //Disable the RGB LED
   RGB.control(true);
   RGB.color(0, 0, 0);
-
-  Serial.printlnf("Deep Sleep for %d seconds. Brownout = %d, SoC = %f, settings.diagnositicCycles = %d", seconds, brownout, systemSoC, settings.diagnositicCycles);
 
   Serial.flush();
   fuelGuage.sleep();
