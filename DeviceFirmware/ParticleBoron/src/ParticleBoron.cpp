@@ -167,6 +167,9 @@ void deepSleep(unsigned long seconds)
   {
     System.sleep({}, RISING, SLEEP_NETWORK_STANDBY, seconds);
   }
+
+  Serial.println("Wakeup");
+  loop();
 }
 
 void onSettingsUpdate(const char *event, const char *data)
@@ -305,6 +308,17 @@ void loop()
     Serial.println("Reading...");
     readVoltage(&reading);
 
+    //Publish a message if the panel starts or stops charging the battery
+    bool charging = 
+      reading.panelCurrent >= CHARGE_CURRENT_LOW_THRESHOLD
+      && reading.panelCurrent <= CHARGE_CURRENT_HIGH_THRESHOLD;
+    if(!charging)
+    {
+      const char* message = charging ? "PANEL CHARGING" : "PANEL OFF";
+      publishStatusMessage(message);
+      deepSleep(settings.brownoutMinutes * 60);      
+    }
+
     if (!(reading.bmeRead = readBme280(&reading)))
     {
       onError("ERROR: BME280 temp/pressure sensor");
@@ -327,17 +341,6 @@ void loop()
       Serial.print(initialReading.windSpeed);
       Serial.print(", ");
       Serial.println(reading.windSpeed);
-    }
-
-    //Publish a message if the panel starts or stops charging the battery
-    bool charging = 
-      reading.panelCurrent >= CHARGE_CURRENT_LOW_THRESHOLD
-      && reading.panelCurrent <= CHARGE_CURRENT_HIGH_THRESHOLD;
-    if(!charging)
-    {
-      const char* message = charging ? "PANEL CHARGING" : "PANEL OFF";
-      publishStatusMessage(message);
-      deepSleep(settings.brownoutMinutes * 60);
     }
 
     //send serialized reading to the cloud
