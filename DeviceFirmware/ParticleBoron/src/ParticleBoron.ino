@@ -305,19 +305,6 @@ void loop()
     Serial.println("Reading...");
     readVoltage(&reading);
 
-    //Publish a message if the panel starts or stops charging the battery
-    bool charging = 
-      reading.panelCurrent >= CHARGE_CURRENT_LOW_THRESHOLD
-      && reading.panelCurrent <= CHARGE_CURRENT_HIGH_THRESHOLD;
-    if(!charging)
-    {
-      publishStatusMessage("PANEL OFF");
-      if(settings.panelOffMinutes > 0)
-      {
-        deepSleep(settings.panelOffMinutes * 60);
-      }
-    }
-
     if (!(reading.bmeRead = readBme280(&reading)))
     {
       onError("ERROR: BME280 temp/pressure sensor");
@@ -361,12 +348,23 @@ void loop()
 
     Serial.printlnf(" %s!", sentReading ? "+" : "-");    
 
-    //Allow particle to process before going into deep sleep
-    Particle.process();
-
     Serial.printlnf("DIAGNOSTIC COUNT %d", settings.diagnositicCycles);
     digitalWrite(LED, LOW);
 
+    //Publish a message if the panel starts or stops charging the battery
+    bool charging = 
+      reading.panelCurrent >= CHARGE_CURRENT_LOW_THRESHOLD
+      && reading.panelCurrent <= CHARGE_CURRENT_HIGH_THRESHOLD;
+    if(!charging)
+    {
+      publishStatusMessage("PANEL OFF");
+      if(settings.panelOffMinutes > 0)
+      {
+        deepSleep(settings.panelOffMinutes * 60);
+      }
+    }
+
+    //sleep till the next reading
     void (*sleepAction)();
     const char *sleepMessage;
     if (settings.useDeepSleep)
@@ -390,7 +388,6 @@ void loop()
 
     Particle.process();
     Serial.flush();
-    watchDog.dispose();
 
     sleepAction();
   }
