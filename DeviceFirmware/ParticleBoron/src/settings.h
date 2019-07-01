@@ -12,6 +12,7 @@ typedef struct Settings
     unsigned long sleepTime;
     unsigned int diagnositicCycles;
     bool useDeepSleep;
+    unsigned long panelOffMinutes;
 } Settings;
 
 DynamicJsonDocument& serialize(Settings& settings);

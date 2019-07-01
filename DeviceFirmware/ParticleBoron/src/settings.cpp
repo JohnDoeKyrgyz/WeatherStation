@@ -1,7 +1,7 @@
 #include "settings.h"
 #include "Particle.h"
 
-#define SERIALIZED_SETTINGS_SIZE JSON_OBJECT_SIZE(7) + 110
+#define SERIALIZED_SETTINGS_SIZE JSON_OBJECT_SIZE(8) + 110
 
 Settings DefaultSettings = {
     0, //version
@@ -10,7 +10,8 @@ Settings DefaultSettings = {
     0, //brownoutMinutes
     30, //sleepTime
     1, //diagnositicCycles
-    false //useDeepSleep
+    false, //useDeepSleep
+    120 //panelOffMinutes
 };
 
 DynamicJsonDocument jsonBuffer(SERIALIZED_SETTINGS_SIZE);
@@ -24,6 +25,7 @@ DynamicJsonDocument& serialize(Settings& settings)
     jsonBuffer["sleepTime"] = settings.sleepTime;
     jsonBuffer["diagnositicCycles"] = settings.diagnositicCycles;
     jsonBuffer["useDeepSleep"] = settings.useDeepSleep;
+    jsonBuffer["panelOffMinutes"] = settings.panelOffMinutes;
 
     return jsonBuffer;
 }
@@ -43,6 +45,7 @@ const Settings& deserialize(const char* json)
     result->sleepTime = jsonBuffer["sleepTime"];
     result->diagnositicCycles = jsonBuffer["diagnositicCycles"];
     result->useDeepSleep = jsonBuffer["useDeepSleep"];
+    result->panelOffMinutes = jsonBuffer["panelOffMinutes"];
 
     return *result;
 }

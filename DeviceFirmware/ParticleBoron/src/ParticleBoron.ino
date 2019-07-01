@@ -294,7 +294,10 @@ void loop()
     if(!charging)
     {
       publishStatusMessage("PANEL OFF");
-      deepSleep(settings.brownoutMinutes * 60);      
+      if(settings.panelOffMinutes > 0)
+      {
+        deepSleep(settings.panelOffMinutes * 60);
+      }
     }
 
     if (!(reading.bmeRead = readBme280(&reading)))
