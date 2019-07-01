@@ -20,7 +20,7 @@ void loop();
 #define FIRMWARE_VERSION "2.0"
 
 #define ANEMOMETER_TRIES 5
-#define SEND_TRIES 3
+#define SEND_TRIES 30
 #define WATCHDOG_TIMEOUT 120000 //milliseconds
 
 #define LED D7
@@ -74,6 +74,7 @@ Reading initialReading;
 char messageBuffer[255];
 char statusBuffer[255];
 float systemSoC;
+bool firstLoop = true;
 
 void waitForConnection()
 {
@@ -87,9 +88,22 @@ void waitForConnection()
 }
 
 void publishStatusMessage(const char* message){  
-  Serial.println(message);
+  Serial.print(message);
+  Serial.print(" ");
   waitForConnection();
-  Particle.publish("Status", message, 60, PRIVATE, WITH_ACK);
+  int tries = 0;
+  bool result;
+  while(!(result = Particle.publish("Status", message, 60, PRIVATE, WITH_ACK)) && ++tries < SEND_TRIES)
+  {
+    Serial.print(".");
+    delay(3000);
+    Particle.process();
+  }
+  Serial.println();
+  if(!result)
+  {
+    Serial.println("ERROR: Could not publish status message");
+  }
 }
 
 void onError(const char *message)
@@ -152,6 +166,8 @@ void watchDogTimeout()
 
 void deepSleep(unsigned long seconds)
 {
+  digitalWrite(LED, LOW);
+
   //Disable the RGB LED
   RGB.control(true);
   RGB.color(0, 0, 0);
@@ -168,7 +184,7 @@ void deepSleep(unsigned long seconds)
     System.sleep({}, RISING, SLEEP_NETWORK_STANDBY, seconds);
   }
 
-  Serial.println("Wakeup");
+  //return to the beginning of the LOOP function
   loop();
 }
 
@@ -229,7 +245,7 @@ void setup()
   //Load saved settings;
   Serial.print("Loaded settings...");
   settings = loadSettings();
-  Serial.println("!");
+  Serial.println("!");  
 }
 
 bool checkBrownout()
@@ -256,10 +272,15 @@ void connect()
 void loop()
 {
   duration = millis();
-
   ApplicationWatchdog watchDog = ApplicationWatchdog(WATCHDOG_TIMEOUT, watchDogTimeout);
 
   connect();
+
+  if(firstLoop)
+  {
+    publishStatusMessage("START");
+    firstLoop = false;
+  }
 
   if(checkBrownout()) 
   {
@@ -269,9 +290,6 @@ void loop()
     char *buffer = statusBuffer;
     sprintf(buffer, "BROWNOUT %f:%d", systemSoC, settings.brownoutMinutes);
     publishStatusMessage(buffer);
-
-    delay(4000);
-    Particle.process();
 
     deepSleep(settings.brownoutMinutes * 60);
   }
@@ -311,7 +329,10 @@ void loop()
     if(!charging)
     {
       publishStatusMessage("PANEL OFF");
-      deepSleep(settings.brownoutMinutes * 60);      
+      if(settings.panelOffMinutes > 0)
+      {
+        deepSleep(settings.panelOffMinutes * 60);
+      }
     }
 
     if (!(reading.bmeRead = readBme280(&reading)))

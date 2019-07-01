@@ -91,7 +91,8 @@ module Logic =
                         settings.BrownoutMinutes,
                         settings.SleepTime,
                         settings.DiagnosticCycles,
-                        settings.UseDeepSleep)
+                        settings.UseDeepSleep,
+                        settings.PanelOffMinutes)
                 let serializedSettings = particleSettings.JsonValue.ToString()
                 try
                     let! result = particleCloud.PublishEventAsync("Settings", serializedSettings)

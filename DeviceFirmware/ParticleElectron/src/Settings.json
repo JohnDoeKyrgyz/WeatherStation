@@ -5,5 +5,6 @@
     "brownoutMinutes": 1,
     "sleepTime": 160,
     "diagnositicCycles": 2,
-    "useDeepSleep": true
+    "useDeepSleep": true,
+    "panelOffMinutes": 20
 }

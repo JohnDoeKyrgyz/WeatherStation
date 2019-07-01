@@ -70,12 +70,12 @@ module Device =
         let url = (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId)
         let extraCoders = Extra.empty |> Extra.withDecimal
         let json = Encode.Auto.toString<StationSettings>(0, settings, extra = extraCoders)
-        let jsonBody = RequestProperties.Body ( BodyInit.Case2(json) )
+        let jsonBody = Body ( BodyInit.Case2(json) )
         Cmd.OfPromise.either
             (fun _ -> promise {
                 let! result =
                     [
-                        RequestProperties.Method HttpMethod.POST
+                        Method HttpMethod.POST
                         requestHeaders [ContentType "application/json"]
                         jsonBody
                     ]
@@ -97,8 +97,8 @@ module Device =
         let initialModel = {Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = NotLoading; PageSize = TimeSpan.FromDays 2.0; CurrentPage = DateTime.Now}
         initialModel, loadStationCmd key
 
-    module P = Fable.React.Props
-    module R = Fable.React.Helpers
+    module P = Props
+    module R = Helpers
 
     let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         match msg with
@@ -131,7 +131,7 @@ module Device =
             {currentModel with Settings = Loaded (Result.Ok contents)}, Cmd.none
         | UpdateSettings ->
             match currentModel.Settings with
-            | Loaded (Result.Ok (Some settings)) ->
+            | Loaded (Ok (Some settings)) ->
                 {currentModel with  UpdateResult = Loading}, updateSettings currentModel.Key settings
             | _ -> failwith "Settings not loaded"
         | SettingsUpdated result ->
@@ -227,8 +227,8 @@ module Device =
                 | Loaded result ->
                     let color, header, message =
                         match result with
-                        | Ok response -> Color.IsSuccess, "Success", response
-                        | Error exn -> Color.IsDanger, "Error", exn.Message
+                        | Ok response -> IsSuccess, "Success", response
+                        | Error exn -> IsDanger, "Error", exn.Message
                     [Message.message [Message.Option.Color color][
                         Message.header [] [
                             str header
@@ -237,7 +237,7 @@ module Device =
                 | NotLoading -> []
 
             yield! loader model.Settings (fun settings ->
-                let readValue f = FSharp.Core.Option.map f settings
+                let readValue f = Option.map f settings
                 let setValue builder value =
                     match settings with
                     | Some settings -> Some (builder settings value)
@@ -276,6 +276,11 @@ module Device =
                         (readValue (fun settings -> settings.UseDeepSleep))
                         (setValue (fun settings value -> {settings with UseDeepSleep = value}))
                     |> simpleFormControl "Use Deep Sleep"
+
+                    intInput
+                        (readValue (fun settings -> settings.PanelOffMinutes))
+                        (setValue (fun settings value -> {settings with PanelOffMinutes = value}))
+                    |> simpleFormControl "Panel Off Minutes"
 
                     button "Save" (fun _ -> dispatch UpdateSettings) FontAwesome.Free.Fa.Solid.Save])]
 
