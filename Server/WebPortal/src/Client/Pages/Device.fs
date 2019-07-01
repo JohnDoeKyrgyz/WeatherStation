@@ -94,7 +94,7 @@ module Device =
             (Error >> Loaded >> Settings)
 
     let init key : Model * Cmd<Msg> =
-        let initialModel = {Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = NotLoading; PageSize = TimeSpan.FromDays 2.0; CurrentPage = DateTime.Now}
+        let initialModel = {Device = Loading; Key = key; ActiveTab = Graph; Settings = Loading; UpdateResult = NotLoading; PageSize = TimeSpan.FromDays 2.0; CurrentPage = DateTime.Now}
         initialModel, loadStationCmd key
 
     module P = Props
@@ -147,12 +147,18 @@ module Device =
             "battery", "red"
             "panel", "orange"]
 
-    type Temperature = {time: string; hydrometer: float option; barometer: float option}
+    type Charge = {time: string; current: float}
+
+    let chargeChart readings =
+        let data = [|for reading in readings -> {time = date reading.ReadingTime; current = reading.PanelMilliamps}|]
+        readingsChart data [
+            "current", "orange"]
+
+    type Temperature = {time: string; barometer: float option}
 
     let temperatureChart readings =
-        let data = [|for reading in readings -> {time = date reading.ReadingTime; hydrometer = reading.TemperatureCelciusHydrometer; barometer = reading.TemperatureCelciusBarometer}|]
+        let data = [|for reading in readings -> {time = date reading.ReadingTime; barometer = reading.TemperatureCelciusBarometer}|]
         readingsChart data [
-            "hydrometer", "blue"
             "barometer", "green"]
 
     type WindSpeed = {time: string; speed: float option}
@@ -213,6 +219,8 @@ module Device =
                 paginator data
                 h2 [] [str "Voltage"]
                 voltageChart data.Readings
+                h2 [] [str "Battery Charge Current"]
+                chargeChart data.Readings
                 h2 [] [str "Temperature (Celcius)"]
                 temperatureChart data.Readings
                 h2 [] [str "Wind Speed (Meters / Second)"]
@@ -284,10 +292,10 @@ module Device =
 
                     button "Save" (fun _ -> dispatch UpdateSettings) FontAwesome.Free.Fa.Solid.Save])]
 
-        [Client.tabs
+        [tabs
             (SelectTab >> dispatch) [
+                {Name = "Graphs"; Key = Graph; Content = loader model.Device graphs; Icon = Some FontAwesome.Free.Fa.Solid.ChartLine}
                 {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Free.Fa.Solid.Table}
-                {Name = "Graph"; Key = Graph; Content = loader model.Device graphs; Icon = Some FontAwesome.Free.Fa.Solid.ChartLine}
                 {Name = "Settings"; Key = Tab.Settings; Content = settings; Icon = Some FontAwesome.Free.Fa.Solid.Cog}
             ]
             model.ActiveTab
