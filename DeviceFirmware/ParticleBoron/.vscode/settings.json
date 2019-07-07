@@ -12,6 +12,5 @@
         "xutility": "cpp",
         "chrono": "cpp",
         "*.tcc": "cpp"
-    },
-    "particle.targetDevice": "e00fce685147ee5c038e1725"
+    }
 }

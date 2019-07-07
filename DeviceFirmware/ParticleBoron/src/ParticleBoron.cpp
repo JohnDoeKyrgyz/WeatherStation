@@ -30,7 +30,7 @@ void loop();
 #define CHARGE_CURRENT_HIGH_THRESHOLD 400.0
 
 SYSTEM_THREAD(ENABLED);
-SYSTEM_MODE(SEMI_AUTOMATIC);
+SYSTEM_MODE(MANUAL);
 
 #include <Wire.h>
 #include "Compass.h"
@@ -138,7 +138,7 @@ bool readVoltage(Reading *reading)
   reading->panelVoltage = powerMonitor.getBusVoltage_V();
   Serial.printlnf("Panel Voltage = %f", reading->panelVoltage);
 
-  reading->panelCurrent = powerMonitor.getCurrent_mA();
+  reading->panelVoltage = powerMonitor.getBusVoltage_V();
   Serial.printlnf("Panel Current = %f", reading->panelCurrent);
   return true;
 }
@@ -232,14 +232,17 @@ char *serialize(Reading *reading)
 
 void setup()
 {
-  //Turn off charging to allow the USB connection to only be used for serial output.
+  //Allow the PMIC to charge the battery from a solar panel
   pmic.begin();
-  pmic.disableCharging();
+  pmic.setInputVoltageLimit(5080);  //  for 6V Solar Panels
+  pmic.setInputCurrentLimit(2000) ; // 2000 mA, higher than req'd
+  pmic.setChargeVoltage(4208);      //  Set Li-Po charge termination voltage to 4.21V,  Monitor the Enclosure Temps
+  pmic.setChargeCurrent(0, 0, 1, 1, 1, 0); // 1408 mA [0+0+512mA+256mA+128mA+0] + 512 Offset
+  pmic.enableDPDM();
 
   Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
-
+  
   Serial.begin(115200); 
-
   Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
 
   //Load saved settings;
@@ -274,27 +277,33 @@ void loop()
   duration = millis();
   ApplicationWatchdog watchDog = ApplicationWatchdog(WATCHDOG_TIMEOUT, watchDogTimeout);
 
-  connect();
-
-  if(firstLoop)
-  {
-    publishStatusMessage("START");
-    firstLoop = false;
-  }
-
   if(checkBrownout()) 
   {
     Serial.printlnf("Brownout threshold %f exceeded by system battery percentage %f", settings.brownoutPercentage, systemSoC);
-    Particle.process();
-
-    char *buffer = statusBuffer;
-    sprintf(buffer, "BROWNOUT %f:%d", systemSoC, settings.brownoutMinutes);
-    publishStatusMessage(buffer);
+    
+    //signal the LED red and white
+    RGB.control(true);
+    for(int i = 0; i < 4; i++)
+    {
+      RGB.color(255, 0, 0); //red
+      delay(100);
+      RGB.color(255, 255, 255); //white
+      delay(100);
+    }
+    RGB.control(false);
 
     deepSleep(settings.brownoutMinutes * 60);
   }
   else
   {
+    connect();
+    
+    if(firstLoop)
+    {
+      publishStatusMessage("START");
+      firstLoop = false;
+    }
+
     Serial.print("Initializing sensors...");    
     powerMonitor.begin();
     powerMonitor.setCalibration_16V_400mA();
@@ -367,6 +376,19 @@ void loop()
 
     Serial.printlnf("DIAGNOSTIC COUNT %d", settings.diagnositicCycles);
     digitalWrite(LED, LOW);
+
+    //Check for a brownout condition after sending the reading. The connection to the cell tower will be enabled, and we can send a message
+    if(checkBrownout()) 
+    {
+      Serial.printlnf("Brownout threshold %f exceeded by system battery percentage %f", settings.brownoutPercentage, systemSoC);
+      Particle.process();
+
+      char *buffer = statusBuffer;
+      sprintf(buffer, "BROWNOUT %f:%d", systemSoC, settings.brownoutMinutes);
+      publishStatusMessage(buffer);
+
+      deepSleep(settings.brownoutMinutes * 60);
+    }
 
     //Publish a message if the panel starts or stops charging the battery
     bool charging = 
