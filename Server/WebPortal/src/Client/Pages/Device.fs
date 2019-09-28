@@ -250,10 +250,12 @@ module Device =
                         (setValue (fun settings value -> {settings with Brownout = value}))
                     |> simpleFormControl "Brownout"
 
-                    decimalInput
-                        (readValue (fun settings -> settings.BrownoutPercentage))
-                        (setValue (fun settings value -> {settings with BrownoutPercentage = value}))
-                    |> simpleFormControl "Brownout Percentage"
+                    formControl
+                        "Brownout Percentage"
+                        (decimalInput
+                            (readValue (fun settings -> settings.BrownoutPercentage))
+                            (setValue (fun settings value -> {settings with BrownoutPercentage = value})))[
+                            Help.help [][str "Percentage of Charge (0 - 100)"]]
 
                     intInput
                         (readValue (fun settings -> settings.BrownoutMinutes))
