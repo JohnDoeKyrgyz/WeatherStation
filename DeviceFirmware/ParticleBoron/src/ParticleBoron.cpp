@@ -135,10 +135,17 @@ bool readVoltage(Reading *reading)
   reading->batteryPercentage = fuelGuage.getSoC();
   Serial.printlnf("Battery Percentage = %f", reading->batteryPercentage);
 
-  reading->panelVoltage = powerMonitor.getBusVoltage_V();
+  //sample the Adafruit_INA219 several times to make sure we have an accurage reading
+  for(int i = 0; i < 3; i ++)
+  {
+    float busVoltage = powerMonitor.getBusVoltage_V();
+    float current = powerMonitor.getCurrent_mA();
+    
+    if(busVoltage > reading->panelVoltage) reading->panelVoltage = busVoltage;
+    if(current > reading -> panelCurrent) reading->panelCurrent = current;
+  }
+  
   Serial.printlnf("Panel Voltage = %f", reading->panelVoltage);
-
-  reading->panelVoltage = powerMonitor.getBusVoltage_V();
   Serial.printlnf("Panel Current = %f", reading->panelCurrent);
   return true;
 }
