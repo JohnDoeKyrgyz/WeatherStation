@@ -147,6 +147,13 @@ module Device =
             "battery", "red"
             "panel", "orange"]
 
+    type Power = {time: string; power: float}
+
+    let chargePowerChart readings =
+        let data = [|for reading in readings -> {time = date reading.ReadingTime; power = (reading.PanelVoltage * reading.PanelMilliamps) / 1000.0}|]
+        readingsChart data [
+            "power", "orange"]            
+
     type Temperature = {time: string; hydrometer: float option; barometer: float option}
 
     let temperatureChart readings =
@@ -213,6 +220,8 @@ module Device =
                 paginator data
                 h2 [] [str "Voltage"]
                 voltageChart data.Readings
+                h2 [] [str "Charge Power (Watts)"]
+                chargePowerChart data.Readings
                 h2 [] [str "Temperature (Celcius)"]
                 temperatureChart data.Readings
                 h2 [] [str "Wind Speed (Meters / Second)"]
