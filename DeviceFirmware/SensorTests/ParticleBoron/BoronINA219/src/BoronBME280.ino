@@ -9,6 +9,10 @@ void setup(void)
   Serial.begin(115200);
   delay(10000);
 
+  //Power peripherals from D2 so that they can be turned off
+  pinMode(D2, OUTPUT);
+  digitalWrite(D2, HIGH);
+
   Serial.println("Hello!");
   
   // Initialize the INA219

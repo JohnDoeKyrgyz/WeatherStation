@@ -1,7 +1,7 @@
 {
     "C_Cpp.default.configurationProvider": "particle.particle-vscode-core",
     "particle.targetPlatform": "boron",
-    "particle.firmwareVersion": "0.9.0",
-    "cortex-debug.openocdPath": "C:\\Users\\jatwood\\.particle\\toolchains\\openocd\\0.10.0-particle.1\\bin\\openocd.exe",
-    "particle.targetDevice": "WeatherStationTestBed"
+    "particle.firmwareVersion": "1.4.0",
+    "cortex-debug.openocdPath": "${command:particle.getDebuggerOpenocdPath}",
+    "particle.targetDevice": ""
 }

@@ -10,6 +10,10 @@ void setup()
   Particle.disconnect();
   Cellular.off();
 
+  //Drive the I2C devices off of D2, so that they can be turned off
+  pinMode(D2, OUTPUT);
+  digitalWrite(D2, HIGH);
+
   delay(10000);
   Serial.println("I2C Scanner");
 

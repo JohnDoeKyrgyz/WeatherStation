@@ -1,3 +1,7 @@
+/******************************************************/
+//       THIS IS A GENERATED FILE - DO NOT EDIT       //
+/******************************************************/
+
 #include "application.h"
 #line 1 "c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronI2CScanner/src/BoronI2CScanner.ino"
 
@@ -14,6 +18,9 @@ void setup()
   
   Particle.disconnect();
   Cellular.off();
+
+  pinMode(D2, OUTPUT);
+  digitalWrite(D2, HIGH);
 
   delay(10000);
   Serial.println("I2C Scanner");

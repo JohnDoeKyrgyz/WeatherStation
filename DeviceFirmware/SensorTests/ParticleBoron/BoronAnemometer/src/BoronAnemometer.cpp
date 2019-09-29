@@ -1,3 +1,7 @@
+/******************************************************/
+//       THIS IS A GENERATED FILE - DO NOT EDIT       //
+/******************************************************/
+
 #include "application.h"
 #line 1 "c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronAnemometer/src/BoronAnemometer.ino"
 void setup();
@@ -14,7 +18,11 @@ LaCrosse_TX23 laCrosseTX23(ANEMOMETER);
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Anemometer test");  
+  Serial.println("Anemometer test");
+
+  //power peripherals from D2 so that they can be turned off
+  pinMode(D2, OUTPUT);
+  digitalWrite(D2, HIGH);
 }
 
 // loop() runs over and over again, as quickly as it can execute.

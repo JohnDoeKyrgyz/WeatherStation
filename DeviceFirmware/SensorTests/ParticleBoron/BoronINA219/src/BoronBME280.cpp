@@ -18,9 +18,13 @@ void setup(void)
   Serial.begin(115200);
   delay(10000);
 
+  //Power peripherals from D2 so that they can be turned off
+  pinMode(D2, OUTPUT);
+  digitalWrite(D2, HIGH);
+
   Serial.println("Hello!");
   
-  // Initialize the INA219.P
+  // Initialize the INA219
   // By default the initialization will use the largest range (32V, 2A).  However
   // you can call a setCalibration function to change this range (see comments).
   Serial.println("begin");
@@ -28,7 +32,7 @@ void setup(void)
   // To use a slightly lower 32V, 1A range (higher precision on amps):
   //ina219.setCalibration_32V_1A();
   // Or to use a lower 16V, 400mA range (higher precision on volts and amps):
-  //ina219.setCalibration_16V_400mA();
+  ina219.setCalibration_16V_400mA();
 
   Serial.println("Measuring voltage and current with INA219 ...");
 }
