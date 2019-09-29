@@ -2,11 +2,13 @@
 #define RBG_NOTIFICATIONS_OFF
 #define FIRMWARE_VERSION "2.0"
 
-#define ANEMOMETER_TRIES 5
+#define ANEMOMETER_TRIES 10
 #define SEND_TRIES 30
 #define WATCHDOG_TIMEOUT 120000 //milliseconds
 
+#define PERIPHERAL_POWER D2
 #define LED D7
+#define BUZZER D7
 #define ANEMOMETER A4
 
 #define CHARGE_CURRENT_LOW_THRESHOLD 1.0
@@ -107,6 +109,11 @@ bool readAnemometer(Reading *reading)
   {
     Serial.println();
   }
+  if(read)
+  {
+    Serial.printlnf("Wind Speed = %f", reading->windSpeed);
+    Serial.printlnf("Wind Direction = %f", reading->windDirection);
+  }    
   return read;
 }
 
@@ -238,7 +245,13 @@ void setup()
   //Load saved settings;
   Serial.print("Loaded settings...");
   settings = loadSettings();
-  Serial.println("!");  
+  Serial.println("!");
+
+  //Turn off the peripherals to start
+  pinMode(PERIPHERAL_POWER, OUTPUT);
+  digitalWrite(PERIPHERAL_POWER, LOW);
+
+  pinMode(BUZZER, OUTPUT);
 }
 
 bool checkBrownout()
@@ -260,6 +273,51 @@ void connect()
   Cellular.connect();
   Particle.connect();
   Particle.process();
+}
+
+bool selfTest()
+{
+  Reading reading;
+
+  Serial.println("Self Test...");
+  bool anemometer = readAnemometer(&reading);
+  Serial.printlnf("Anemometer %d", anemometer);
+
+  bool bme280 = readBme280(&reading);
+  Serial.printlnf("Temp / Humidity %d", bme280);
+
+  bool compass = readCompass(&reading);
+  Serial.printlnf("Compass %d", compass);
+
+  bool panelPower = readVoltage(&reading);
+  Serial.printlnf("Power %d", panelPower);
+
+  bool result = anemometer && bme280 && compass && panelPower;
+
+  if(result)
+  {
+    Serial.println("Self test SUCCESS");
+
+    //one long buzz
+    digitalWrite(BUZZER, HIGH);
+    delay(500);
+    digitalWrite(BUZZER, LOW);
+  }
+  else
+  {
+    Serial.println("Self test FAIL");
+
+    //three short beeps
+    for(int i = 0; i < 3; i++)
+    {
+      digitalWrite(BUZZER, HIGH);
+      delay(250);
+      digitalWrite(BUZZER, LOW);
+      delay(250);
+    }
+  }
+
+  return result;
 }
 
 void loop()
@@ -288,11 +346,16 @@ void loop()
   {
     connect();
     
-    if(firstLoop)
+    //signal LED if in Diagnostic Mode
+    if (settings.diagnositicCycles > 0)
     {
-      publishStatusMessage("START");
-      firstLoop = false;
+      pinMode(LED, OUTPUT);
+      digitalWrite(LED, HIGH);
+      settings.diagnositicCycles = settings.diagnositicCycles - 1;
+      saveSettings(settings);
     }
+
+    digitalWrite(PERIPHERAL_POWER, HIGH);
 
     Serial.print("Initializing sensors...");    
     powerMonitor.begin();
@@ -300,13 +363,13 @@ void loop()
     bme280.begin(0x76);
     compassSensor.begin();
     Serial.println("!");
-    
-    if (settings.diagnositicCycles > 0)
+
+    if(firstLoop)
     {
-      pinMode(LED, OUTPUT);
-      digitalWrite(LED, HIGH);
-      settings.diagnositicCycles = settings.diagnositicCycles - 1;
-      saveSettings(settings);
+      selfTest();
+
+      publishStatusMessage("START");
+      firstLoop = false;
     }
 
     //take an initial wind reading
@@ -333,6 +396,8 @@ void loop()
     {
       onError("ERROR: Could not read anemometer");
     }
+
+    digitalWrite(PERIPHERAL_POWER, LOW);
     
     //take the greater of the initial wind reading or the most recent wind reading
     if (!reading.anemometerRead || (reading.anemometerRead && initialReading.anemometerRead && initialReading.windSpeed > reading.windSpeed))
