@@ -42,7 +42,7 @@ Sensor *sensors[] = {&panel, &barometer, &anemometer, &battery, &compassSensor};
 
 void waitForConnection()
 {
-  if (!Particle.connected)
+  if (!Particle.connected())
   {
     Serial.print("Waiting for connection...");
     waitUntil(Particle.connected);
