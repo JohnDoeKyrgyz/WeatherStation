@@ -5,11 +5,50 @@
 #include <Adafruit_INA219.h>
 
 
-//Adafruit_INA219 powerMonitor;
-//FuelGauge fuelGuage;
+
 //Compass compassSensor;
-//PMIC pmic;
 #include <math.h>
+
+class BatteryPower : Sensor {
+    private:
+        FuelGauge fuelGuage;
+    public:
+        int getReadingSize() {
+            return 12;
+        }
+        bool getReading(char* reading){
+            float batteryVoltage = fuelGuage.getVCell();
+            float batteryPercentage = fuelGuage.getSoC();
+            reading += sprintf(reading, "p%9.6f:%3.2f", batteryVoltage, batteryPercentage);
+            return true;
+        }
+        bool begin(){
+            return true;
+        }
+};
+
+class PanelPower : Sensor {
+    private:
+        Adafruit_INA219 powerMonitor;
+    public:
+        int getReadingSize() {
+            return 20;
+        }
+        bool getReading(char* reading){  
+            float panelVoltage = powerMonitor.getBusVoltage_V();
+            float panelCurrent = powerMonitor.getCurrent_mA();
+            bool read = panelVoltage < 16;
+            if(read){
+                reading += sprintf(reading, "p%9.6f:%9.6f", panelVoltage, panelCurrent);
+            }
+            return read;
+        }
+        bool begin(){
+            powerMonitor.begin();
+            powerMonitor.setCalibration_16V_400mA();
+            return true;
+        }
+};
 
 class Anemometer : Sensor {
     private:
