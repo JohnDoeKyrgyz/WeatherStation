@@ -2,13 +2,14 @@
 #define RBG_NOTIFICATIONS_OFF
 #define FIRMWARE_VERSION "2.0"
 
-#define ANEMOMETER_TRIES 10
+#define ANEMOMETER_TRIES 5
+#define POWER_MONITOR_TRIES 3
 #define SEND_TRIES 30
 #define WATCHDOG_TIMEOUT 120000 //milliseconds
 
 #define PERIPHERAL_POWER D2
 #define LED D7
-#define BUZZER D7
+#define BUZZER D6
 #define ANEMOMETER A4
 
 #define CHARGE_CURRENT_LOW_THRESHOLD 1.0
@@ -42,6 +43,7 @@ struct Reading
   unsigned int version;
   float batteryVoltage;
   float batteryPercentage;
+  bool panelRead;
   float panelVoltage;
   float panelCurrent;
   bool anemometerRead;
@@ -112,7 +114,7 @@ bool readAnemometer(Reading *reading)
   if(read)
   {
     Serial.printlnf("Wind Speed = %f", reading->windSpeed);
-    Serial.printlnf("Wind Direction = %f", reading->windDirection);
+    Serial.printlnf("Wind Direction = %d", reading->windDirection);
   }    
   return read;
 }
@@ -124,20 +126,13 @@ bool readVoltage(Reading *reading)
 
   reading->batteryPercentage = fuelGuage.getSoC();
   Serial.printlnf("Battery Percentage = %f", reading->batteryPercentage);
-
-  //sample the Adafruit_INA219 several times to make sure we have an accurage reading
-  for(int i = 0; i < 3; i ++)
-  {
-    float busVoltage = powerMonitor.getBusVoltage_V();
-    float current = powerMonitor.getCurrent_mA();
-    
-    if(busVoltage > reading->panelVoltage) reading->panelVoltage = busVoltage;
-    if(current > reading -> panelCurrent) reading->panelCurrent = current;
-  }
+  
+  reading->panelVoltage = powerMonitor.getBusVoltage_V();
+  reading->panelCurrent = powerMonitor.getCurrent_mA();
   
   Serial.printlnf("Panel Voltage = %f", reading->panelVoltage);
   Serial.printlnf("Panel Current = %f", reading->panelCurrent);
-  return true;
+  return reading->panelVoltage < 16;
 }
 
 bool readBme280(Reading *reading)
@@ -206,12 +201,14 @@ char *serialize(Reading *reading)
   buffer += 
     sprintf(
       buffer, 
-      "%df%f:%fp%f:%f", 
+      "%df%f:%f", 
       reading->version, 
       reading->batteryVoltage, 
-      reading->batteryPercentage, 
-      reading->panelVoltage, 
-      reading->panelCurrent);
+      reading->batteryPercentage);
+  if(reading->panelRead)
+  {
+    buffer += sprintf(buffer, "p%f:%f", reading->panelVoltage, reading->panelCurrent);
+  }   
   if (reading->bmeRead)  
   {
     buffer += sprintf(buffer, "b%f:%f:%f", reading->bmeTemperature, reading->pressure, reading->bmeHumidity);
@@ -251,7 +248,9 @@ void setup()
   pinMode(PERIPHERAL_POWER, OUTPUT);
   digitalWrite(PERIPHERAL_POWER, LOW);
 
+  //Configure the buzzer for output
   pinMode(BUZZER, OUTPUT);
+  digitalWrite(BUZZER, LOW);
 }
 
 bool checkBrownout()
@@ -296,28 +295,42 @@ bool selfTest()
 
   if(result)
   {
-    Serial.println("Self test SUCCESS");
+    Serial.println("Self test SUCCESS\n");
 
     //one long buzz
+    pinMode(BUZZER, OUTPUT);
     digitalWrite(BUZZER, HIGH);
     delay(500);
     digitalWrite(BUZZER, LOW);
+    pinMode(BUZZER, INPUT);
   }
   else
   {
-    Serial.println("Self test FAIL");
+    Serial.println("Self test FAIL\n");
 
     //three short beeps
     for(int i = 0; i < 3; i++)
     {
+      pinMode(BUZZER, OUTPUT);
       digitalWrite(BUZZER, HIGH);
       delay(250);
       digitalWrite(BUZZER, LOW);
       delay(250);
+      pinMode(BUZZER, INPUT);
     }
   }
 
   return result;
+}
+
+void initializeSensors()
+{
+  Serial.print("Initializing sensors...");    
+  powerMonitor.begin();
+  powerMonitor.setCalibration_16V_400mA();
+  bme280.begin(0x76);
+  compassSensor.begin();
+  Serial.println("!");
 }
 
 void loop()
@@ -357,12 +370,7 @@ void loop()
 
     digitalWrite(PERIPHERAL_POWER, HIGH);
 
-    Serial.print("Initializing sensors...");    
-    powerMonitor.begin();
-    powerMonitor.setCalibration_16V_400mA();
-    bme280.begin(0x76);
-    compassSensor.begin();
-    Serial.println("!");
+    initializeSensors();
 
     if(firstLoop)
     {
@@ -382,7 +390,22 @@ void loop()
     reading.version = settings.version;
 
     Serial.println("Reading...");
-    readVoltage(&reading);
+    int tries = 0;
+    while(!(reading.panelRead = readVoltage(&reading)) && tries++ < POWER_MONITOR_TRIES)
+    {
+      digitalWrite(PERIPHERAL_POWER, LOW);
+      delay(100);
+      digitalWrite(PERIPHERAL_POWER, HIGH);
+      delay(100);
+      Wire.reset();
+      delay(100);
+      initializeSensors();
+    }
+
+    if(!reading.panelRead)
+    {
+      onError("ERROR: INA219 power monitor sensor");
+    }
 
     if (!(reading.bmeRead = readBme280(&reading)))
     {
@@ -416,7 +439,7 @@ void loop()
 
     waitForConnection();
 
-    int tries = SEND_TRIES;
+    tries = SEND_TRIES;
     bool sentReading = false;
     do
     {
@@ -446,17 +469,20 @@ void loop()
     }
 
     //Publish a message if the panel starts or stops charging the battery
-    bool charging = 
-      reading.panelCurrent >= CHARGE_CURRENT_LOW_THRESHOLD
-      && reading.panelCurrent <= CHARGE_CURRENT_HIGH_THRESHOLD;
-    if(!charging)
+    if(reading.panelRead)
     {
-      publishStatusMessage("PANEL OFF");
-      if(settings.panelOffMinutes > 0)
+      bool charging = 
+        reading.panelCurrent >= CHARGE_CURRENT_LOW_THRESHOLD
+        && reading.panelCurrent <= CHARGE_CURRENT_HIGH_THRESHOLD;
+      if(!charging)
       {
-        deepSleep(settings.panelOffMinutes * 60);
+        publishStatusMessage("PANEL OFF");
+        if(settings.panelOffMinutes > 0)
+        {
+          deepSleep(settings.panelOffMinutes * 60);
+        }
       }
-    }
+    }    
 
     //sleep till the next reading
     void (*sleepAction)();
