@@ -17,7 +17,10 @@
         "functional": "cpp",
         "tuple": "cpp",
         "type_traits": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "deque": "cpp",
+        "queue": "cpp",
+        "random": "cpp"
     },
     "particle.targetDevice": ""
 }
