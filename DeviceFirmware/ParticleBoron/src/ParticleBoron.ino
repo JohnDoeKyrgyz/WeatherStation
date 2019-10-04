@@ -36,7 +36,7 @@ bool firstLoop = true;
 CompassSensor compassSensor;
 BatteryPower battery;
 PanelPower panel;
-Anemometer anemometer(ANEMOMETER, ANEMOMETER_TRIES);
+Anemometer anemometer(ANEMOMETER, 2, ANEMOMETER_TRIES);
 Barometer barometer;
 Sensor *sensors[] = {&panel, &barometer, &anemometer, &battery, &compassSensor};
 

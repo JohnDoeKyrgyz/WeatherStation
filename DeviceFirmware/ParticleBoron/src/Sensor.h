@@ -92,33 +92,42 @@ public:
     float current() { return _current; }
 };
 
+#include <assert.h>
 class Anemometer : public Sensor
 {
 private:
     LaCrosse_TX23 laCrosseTX23;
-    int maxTries;
+    int _maxTries;
+    int _samples;
 
 public:
-    Anemometer(const int pin, const int maxTries) : Sensor(13, "anemometer"), laCrosseTX23(pin)
+    Anemometer(const int pin, const int samples, const int maxTries) : Sensor(13, "anemometer"), laCrosseTX23(pin)
     {
-        this->maxTries = maxTries;
-    }
-    int getReadingSize()
-    {
-        return 13;
+        assert(maxTries > samples);
+
+        _maxTries = maxTries;
+        _samples = samples;
     }
     bool getReading(char *reading)
     {
         bool read = false;
         int tries = 0;
-        float speed = 0.0;
-        int direction = 0;
-        while (!(read = laCrosseTX23.read(speed, direction)) && tries++ < maxTries)
-            ;
-        if (read)
+        float maxSpeed = 0.0, speed = 0.0;
+        int direction;
+        int sampleCount = 0;
+        for(int i = 0; tries++ < _maxTries && i < _samples; i++)
         {
-            reading += sprintf(reading, "a%9.6f:%2d", speed, direction);
+            if(laCrosseTX23.read(speed, direction))
+            {
+                sampleCount++;
+                if(speed > maxSpeed) maxSpeed = speed;
+            }
         }
+        if (sampleCount > 0)
+        {
+            reading += sprintf(reading, "a%9.6f:%2d", maxSpeed, direction);
+        }
+        
         return read;
     }
     bool begin()
