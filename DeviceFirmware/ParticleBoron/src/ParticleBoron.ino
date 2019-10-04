@@ -1,6 +1,6 @@
 
 #define RBG_NOTIFICATIONS_OFF
-#define FIRMWARE_VERSION "2.0"
+#define FIRMWARE_VERSION "3.0"
 
 #define ANEMOMETER_TRIES 5
 #define POWER_MONITOR_TRIES 3
@@ -38,7 +38,8 @@ BatteryPower battery;
 PanelPower panel;
 Anemometer anemometer(ANEMOMETER, 2, ANEMOMETER_TRIES);
 Barometer barometer;
-Sensor *sensors[] = {&panel, &barometer, &anemometer, &battery, &compassSensor};
+//Sensor *sensors[] = {&panel, &barometer, &anemometer, &battery, &compassSensor};
+Sensor *sensors[] = {&battery, &panel, &anemometer, &barometer};
 
 void waitForConnection()
 {
@@ -133,9 +134,13 @@ void setup()
   pmic.setChargeCurrent(0, 0, 1, 1, 1, 0); // 1408 mA [0+0+512mA+256mA+128mA+0] + 512 Offset
   pmic.enableDPDM();
 
+  fuelGuage.begin();
+
   Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
 
   Serial.begin(115200);
+  delay(10000);
+
   Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
 
   //Load saved settings;
@@ -154,8 +159,7 @@ void setup()
 
 void checkBrownout()
 {
-  Serial.print("Checking brownout...");
-  fuelGuage.begin();
+  Serial.print("Checking brownout...");  
   float systemSoC = fuelGuage.getSoC();
   bool brownout = settings.brownout && systemSoC < settings.brownoutPercentage;
   Serial.println("!");
@@ -194,7 +198,7 @@ void connect()
   //begin connecting to the cloud
   Serial.println("Connecting...");
   Cellular.on();
-  Cellular.connect();
+  Cellular.connect();  
   Particle.connect();
   Particle.process();
 }
@@ -202,8 +206,7 @@ void connect()
 bool initializeSensors()
 {
   bool result = true;
-  for (auto sensor : sensors)
-    result &= sensor->begin();
+  for (auto sensor : sensors) result &= sensor->begin();
   return result;
 }
 
@@ -225,8 +228,6 @@ bool selfTest()
 
   if (result)
   {
-    Serial.println("Self test SUCCESS\n");
-
     //one long buzz
     pinMode(BUZZER, OUTPUT);
     digitalWrite(BUZZER, HIGH);
@@ -236,8 +237,6 @@ bool selfTest()
   }
   else
   {
-    Serial.println("Self test FAIL\n");
-
     //three short beeps
     for (int i = 0; i < 3; i++)
     {
@@ -260,8 +259,6 @@ void loop()
 
   checkBrownout();
 
-  connect();
-
   //signal LED if in Diagnostic Mode
   if (settings.diagnositicCycles > 0)
   {
@@ -271,46 +268,57 @@ void loop()
     saveSettings(settings);
   }
 
+  //begin connecting to the cloud
+  connect();
+
+  bool selfTestSuccess = false;
+  int sensorCount = sizeof(sensors) / sizeof(sensors[0]);
+  bool results[sensorCount];
+  bool initialized;
+
   digitalWrite(PERIPHERAL_POWER, HIGH);
+  initialized = initializeSensors();
+  selfTestSuccess = firstLoop && initialized && selfTest();
 
-  if (initializeSensors())
+  if (initialized)
   {
-    if (firstLoop)
-    {
-      if (selfTest())
-      {
-        publishStatusMessage("START");
-      }
-      else
-      {
-        onError("SELF TEST FAIL");
-      }
-      firstLoop = false;
-    }
-
-    char *buffer = messageBuffer;
-    int sensorCount = sizeof(sensors) / sizeof(sensors[0]);
-    bool results[sensorCount];
+    char *buffer = messageBuffer;    
     for (int i = 0; i < sensorCount; i++)
     {
       Sensor *sensor = sensors[i];
       results[i] = sensor->getReading(buffer);
-    }
-
-    for (int i = 0; i < sensorCount; i++)
-    {
-      if (!results[i])
-      {
-        sprintf(statusBuffer, "ERROR: %s", sensors[i]->Name);
-        onError(statusBuffer);
-      }
-    }
+      watchDog.checkin();
+    }    
   }
 
   digitalWrite(PERIPHERAL_POWER, LOW);
 
   //send serialized reading to the cloud
   waitForConnection();
+
+  for (int i = 0; i < sensorCount; i++)
+  {
+    if (!results[i])
+    {
+      sprintf(statusBuffer, "ERROR: %s", sensors[i]->Name);
+      onError(statusBuffer);
+    }
+  }
+
+  if(firstLoop)
+  {
+    firstLoop = false;
+    if (selfTestSuccess)
+    {
+      publishStatusMessage("START");
+    }
+    else
+    {
+      onError("SELF TEST FAIL");
+    }
+  }
+  
+  Serial.println(messageBuffer);
 
   int tries = SEND_TRIES;
   bool sentReading = false;
@@ -367,10 +375,10 @@ void loop()
   }
 
   Serial.printlnf("%s SLEEP %d", sleepMessage, settings.sleepTime);
-  Serial.printlnf("DURATION %d", millis() - duration);
-
-  Particle.process();
+  Serial.printlnf("DURATION %d\n\n", millis() - duration);
   Serial.flush();
 
+  Particle.process();
+  
   sleepAction();
 }

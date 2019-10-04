@@ -5,12 +5,11 @@ class Sensor
 {
 public:
     const char *Name;
-    const int ReadingSize;
-    Sensor(int readingSize, const char *name) : ReadingSize(readingSize)
+    Sensor(const char *name)
     {
         Name = name;
     }
-    virtual bool getReading(char *reading);
+    virtual bool getReading(char*& reading);
     virtual bool begin();
 };
 
@@ -24,14 +23,14 @@ public:
 class CompassSensor : public Sensor
 {
 private:
-    Compass compassSensor;
+    Compass compassSensor;    
 
 public:
-    CompassSensor() : Sensor(12, "compass") {}
-    bool getReading(char *buffer)
+    CompassSensor() : Sensor("compass") {}
+    bool getReading(char*& buffer)
     {
         CompassReading reading = compassSensor.getReading();
-        buffer += sprintf(buffer, "c%3.0f:%3.0f:%3.0f", reading.x, reading.y, reading.z);
+        buffer += sprintf(buffer, "c%f:%f:%f", reading.x, reading.y, reading.z);
         return true;
     }
     bool begin()
@@ -46,12 +45,12 @@ private:
     FuelGauge fuelGuage;
 
 public:
-    BatteryPower() : Sensor(14, "battery") {}
-    bool getReading(char *reading)
+    BatteryPower() : Sensor("battery") {}
+    bool getReading(char*& reading)
     {
         float batteryVoltage = fuelGuage.getVCell();
         float batteryPercentage = fuelGuage.getSoC();
-        reading += sprintf(reading, "p%9.6f:%3.2f", batteryVoltage, batteryPercentage);
+        reading += sprintf(reading, "p%f:%f", batteryVoltage, batteryPercentage);
         return true;
     }
     bool begin()
@@ -69,15 +68,15 @@ private:
     float _current;
 
 public:
-    PanelPower() : Sensor(21, "panel") {}
-    bool getReading(char *reading)
+    PanelPower() : Sensor("panel") {}
+    bool getReading(char*& reading)
     {
         _voltage = powerMonitor.getBusVoltage_V();
         _current = powerMonitor.getCurrent_mA();
         _read = _voltage < 16;
         if (_read)
         {
-            reading += sprintf(reading, "p%9.6f:%9.6f", _voltage, _current);
+            reading += sprintf(reading, "p%f:%f", _voltage, _current);
         }
         return _read;
     }
@@ -101,14 +100,14 @@ private:
     int _samples;
 
 public:
-    Anemometer(const int pin, const int samples, const int maxTries) : Sensor(13, "anemometer"), laCrosseTX23(pin)
+    Anemometer(const int pin, const int samples, const int maxTries) : Sensor("anemometer"), laCrosseTX23(pin)
     {
         assert(maxTries > samples);
 
         _maxTries = maxTries;
         _samples = samples;
     }
-    bool getReading(char *reading)
+    bool getReading(char*& reading)
     {
         bool read = false;
         int tries = 0;
@@ -119,13 +118,14 @@ public:
         {
             if(laCrosseTX23.read(speed, direction))
             {
+                read = true;
                 sampleCount++;
                 if(speed > maxSpeed) maxSpeed = speed;
             }
         }
         if (sampleCount > 0)
         {
-            reading += sprintf(reading, "a%9.6f:%2d", maxSpeed, direction);
+            reading += sprintf(reading, "a%f:%d", maxSpeed, direction);
         }
         
         return read;
@@ -144,14 +144,14 @@ private:
     Adafruit_BME280 bme280;
 
 public:
-    Barometer() : Sensor(24, "barometer") {}
-    bool getReading(char *reading)
+    Barometer() : Sensor("barometer") {}
+    bool getReading(char*& reading)
     {
         float bmeTemperature = bme280.readTemperature();
         float pressure = bme280.readPressure();
         float bmeHumidity = bme280.readHumidity();
         bool result = !isnan(bmeTemperature) && !isnan(pressure) && pressure > 0.0 && !isnan(bmeHumidity);
-        reading += sprintf(reading, "b%9.6f:%9.6f:%9.6f", bmeTemperature, pressure, bmeHumidity);
+        reading += sprintf(reading, "b%f:%f:%f", bmeTemperature, pressure, bmeHumidity);
         return result;
     }
     bool begin()
