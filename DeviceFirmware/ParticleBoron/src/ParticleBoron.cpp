@@ -19,7 +19,7 @@ bool selfTest();
 void loop();
 #line 2 "c:/working/WeatherStation/DeviceFirmware/ParticleBoron/src/ParticleBoron.ino"
 #define RBG_NOTIFICATIONS_OFF
-#define FIRMWARE_VERSION "2.0"
+#define FIRMWARE_VERSION "3.0"
 
 #define ANEMOMETER_TRIES 5
 #define POWER_MONITOR_TRIES 3
@@ -58,7 +58,7 @@ PanelPower panel;
 Anemometer anemometer(ANEMOMETER, 2, ANEMOMETER_TRIES);
 Barometer barometer;
 //Sensor *sensors[] = {&panel, &barometer, &anemometer, &battery, &compassSensor};
-Sensor *sensors[] = {&panel, &barometer, &anemometer, &battery};
+Sensor *sensors[] = {&battery, &panel, &anemometer, &barometer};
 
 void waitForConnection()
 {
@@ -301,7 +301,9 @@ void loop()
 
   if (initialized)
   {
-    char *buffer = messageBuffer;    
+    char *buffer = messageBuffer;
+    buffer += sprintf(buffer, "d%d", settings.version);
+
     for (int i = 0; i < sensorCount; i++)
     {
       Sensor *sensor = sensors[i];

@@ -282,7 +282,9 @@ void loop()
 
   if (initialized)
   {
-    char *buffer = messageBuffer;    
+    char *buffer = messageBuffer;
+    buffer += sprintf(buffer, "d%d", settings.version);
+
     for (int i = 0; i < sensorCount; i++)
     {
       Sensor *sensor = sensors[i];

@@ -123,7 +123,7 @@ public:
                 if(speed > maxSpeed) maxSpeed = speed;
             }
         }
-        if (sampleCount > 0)
+        if (read)
         {
             reading += sprintf(reading, "a%f:%d", maxSpeed, direction);
         }
