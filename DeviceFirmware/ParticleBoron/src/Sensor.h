@@ -50,7 +50,7 @@ public:
     {
         float batteryVoltage = fuelGuage.getVCell();
         float batteryPercentage = fuelGuage.getSoC();
-        reading += sprintf(reading, "p%f:%f", batteryVoltage, batteryPercentage);
+        reading += sprintf(reading, "f%f:%f", batteryVoltage, batteryPercentage);
         return true;
     }
     bool begin()
