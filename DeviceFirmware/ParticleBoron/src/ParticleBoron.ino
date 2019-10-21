@@ -106,6 +106,7 @@ void deepSleep(unsigned long seconds)
   }
 
   //return to the beginning of the LOOP function
+  fuelGuage.wakeup();
   loop();
 }
 
