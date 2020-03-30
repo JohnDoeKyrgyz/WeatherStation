@@ -10,7 +10,7 @@ Settings DefaultSettings = {
     0, //brownoutMinutes
     30, //sleepTime
     1, //diagnositicCycles
-    false, //useDeepSleep
+    true, //useDeepSleep
     120 //panelOffMinutes
 };
 
@@ -54,8 +54,9 @@ const Settings& loadSettings()
 {
     Settings eepromSettings;
     EEPROM.get(0,eepromSettings);
-    Settings& result = DefaultSettings;
-    if(eepromSettings.version >= 0)
+    Settings& result = DefaultSettings;    
+
+    if(eepromSettings.version < 0xFFFFFFFF)
     {
         result = *(Settings*)malloc(sizeof(Settings));
         result = eepromSettings;
