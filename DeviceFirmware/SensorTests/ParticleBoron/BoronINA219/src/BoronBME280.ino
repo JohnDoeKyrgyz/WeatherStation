@@ -3,6 +3,7 @@ SYSTEM_MODE(MANUAL);
 #include "adafruit-ina219.h"
 
 Adafruit_INA219 ina219;
+FuelGauge fuel;
 
 void setup(void) 
 {    
@@ -26,6 +27,8 @@ void setup(void)
   ina219.setCalibration_16V_400mA();
 
   Serial.println("Measuring voltage and current with INA219 ...");
+
+  Particle.connect();
 }
 
 void loop(void) 
@@ -45,6 +48,11 @@ void loop(void)
   Serial.print("Load Voltage:  "); Serial.print(loadvoltage); Serial.println(" V");
   Serial.print("Current:       "); Serial.print(current_mA); Serial.println(" mA");
   Serial.println("");
+
+  char messageBuffer[100];
+  snprintf(messageBuffer, sizeof(messageBuffer),"bus %f, current %f, battery %f, battery percent %f", busvoltage, current_mA, fuel.getVCell(), fuel.getSoC());
+  Particle.publish("reading", messageBuffer, PRIVATE);
+  Particle.process();
 
   delay(2000);
 }
