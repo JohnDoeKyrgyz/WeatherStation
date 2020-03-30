@@ -85,6 +85,17 @@ void watchDogTimeout()
   System.reset();
 }
 
+void initializePowerSettings()
+{
+  //Allow the PMIC to charge the battery from a solar panel
+  pmic.begin();
+  pmic.setInputVoltageLimit(5080);         //  for 6V Solar Panels
+  pmic.setInputCurrentLimit(2000);         // 2000 mA, higher than req'd
+  pmic.setChargeVoltage(4208);             //  Set Li-Po charge termination voltage to 4.21V,  Monitor the Enclosure Temps
+  pmic.setChargeCurrent(0, 0, 1, 1, 1, 0); // 1408 mA [0+0+512mA+256mA+128mA+0] + 512 Offset
+  pmic.enableDPDM();  
+}
+
 void deepSleep(unsigned long seconds)
 {
   digitalWrite(LED, LOW);
@@ -105,6 +116,8 @@ void deepSleep(unsigned long seconds)
     System.sleep({}, RISING, SLEEP_NETWORK_STANDBY, seconds);
   }
 
+  initializePowerSettings();
+
   //return to the beginning of the LOOP function
   fuelGuage.wakeup();
   loop();
@@ -118,6 +131,11 @@ void onSettingsUpdate(const char *event, const char *data)
 
   Serial.print("SETTINGS UPDATE: ");
   Serial.println(data);
+
+  beep(500);
+  delay(500);
+  beep(500);
+
   digitalWrite(LED, LOW);
 
   char *buffer = statusBuffer;
@@ -125,16 +143,22 @@ void onSettingsUpdate(const char *event, const char *data)
   publishStatusMessage(buffer);
 }
 
+void beep(int duration)
+{
+  pinMode(BUZZER, OUTPUT);
+  digitalWrite(BUZZER, HIGH);
+  delay(200);
+  digitalWrite(BUZZER, LOW);
+  pinMode(BUZZER, INPUT);
+}
+
 void setup()
 {
-  //Allow the PMIC to charge the battery from a solar panel
-  pmic.begin();
-  pmic.setInputVoltageLimit(5080);         //  for 6V Solar Panels
-  pmic.setInputCurrentLimit(2000);         // 2000 mA, higher than req'd
-  pmic.setChargeVoltage(4208);             //  Set Li-Po charge termination voltage to 4.21V,  Monitor the Enclosure Temps
-  pmic.setChargeCurrent(0, 0, 1, 1, 1, 0); // 1408 mA [0+0+512mA+256mA+128mA+0] + 512 Offset
-  pmic.enableDPDM();
+  pinMode(BUZZER, OUTPUT);
+  beep(200);
 
+  initializePowerSettings();  
+  
   fuelGuage.begin();
 
   Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
@@ -153,9 +177,9 @@ void setup()
   pinMode(PERIPHERAL_POWER, OUTPUT);
   digitalWrite(PERIPHERAL_POWER, LOW);
 
-  //Configure the buzzer for output
-  pinMode(BUZZER, OUTPUT);
-  digitalWrite(BUZZER, LOW);
+  beep(150);
+  delay(150);
+  beep(150);
 }
 
 void checkBrownout()
@@ -175,9 +199,12 @@ void checkBrownout()
       Particle.process();
 
       char *buffer = statusBuffer;
-      sprintf(buffer, "BROWNOUT %f:%d", systemSoC, settings.brownoutMinutes);
-      publishStatusMessage(buffer);
+      sprintf(buffer, "BROWNOUT battery percentange %f, check again in %d minutes", systemSoC, settings.brownoutMinutes);
+      publishStatusMessage(buffer);      
     }
+
+    //long beep
+    beep(3000);
 
     //signal the LED red and white
     RGB.control(true);
@@ -229,24 +256,15 @@ bool selfTest()
 
   if (result)
   {
-    //one long buzz
-    pinMode(BUZZER, OUTPUT);
-    digitalWrite(BUZZER, HIGH);
-    delay(500);
-    digitalWrite(BUZZER, LOW);
-    pinMode(BUZZER, INPUT);
+    beep(500);
   }
   else
   {
     //three short beeps
     for (int i = 0; i < 3; i++)
     {
-      pinMode(BUZZER, OUTPUT);
-      digitalWrite(BUZZER, HIGH);
+      beep(250);
       delay(250);
-      digitalWrite(BUZZER, LOW);
-      delay(250);
-      pinMode(BUZZER, INPUT);
     }
   }
 
@@ -341,8 +359,7 @@ void loop()
   //Publish a message if the panel starts or stops charging the battery
   if (panel.read())
   {
-    bool charging =
-        panel.current() >= CHARGE_CURRENT_LOW_THRESHOLD && panel.current() <= CHARGE_CURRENT_HIGH_THRESHOLD;
+    bool charging = panel.current() >= CHARGE_CURRENT_LOW_THRESHOLD && panel.current() <= CHARGE_CURRENT_HIGH_THRESHOLD;
     if (charging && !panelOn)
     {
       publishStatusMessage("PANEL ON");
