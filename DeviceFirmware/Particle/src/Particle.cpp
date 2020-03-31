@@ -128,6 +128,7 @@ void deepSleep(unsigned long seconds)
   Serial.flush();
   fuelGuage.sleep();
 
+  #if PLATFORM_ID == 13 //BORON
   if (seconds > 360)
   {
     System.sleep({}, RISING, seconds);
@@ -136,6 +137,18 @@ void deepSleep(unsigned long seconds)
   {
     System.sleep({}, RISING, SLEEP_NETWORK_STANDBY, seconds);
   }
+  #elif PLATFORM_ID == 10 //ELECTRON
+  SystemSleepConfiguration config;
+  auto mode =
+    seconds > 360
+    ? SystemSleepMode::HIBERNATE
+    : SystemSleepMode::STOP;
+  config
+    .mode(mode)
+    .gpio(WKP, RISING)
+    .duration(seconds);    
+  System.sleep(config);
+  #endif
 
   initializePowerSettings();
 
@@ -175,6 +188,8 @@ void beep(int duration)
 
 void setup()
 {
+  EEPROM.clear();
+
   pinMode(BUZZER, OUTPUT);
   beep(200);
 

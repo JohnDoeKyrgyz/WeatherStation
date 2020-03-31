@@ -1,6 +1,6 @@
 {
     "particle.firmwareVersion": "1.5.0-rc.2",
-    "particle.targetPlatform": "boron",
+    "particle.targetPlatform": "electron",
     "cortex-debug.openocdPath": "${command:particle.getDebuggerOpenocdPath}",
     "files.associations": {
         "array": "cpp",
@@ -22,6 +22,5 @@
         "queue": "cpp",
         "random": "cpp",
         "future": "cpp"
-    },
-    "particle.targetDevice": ""
+    }
 }
