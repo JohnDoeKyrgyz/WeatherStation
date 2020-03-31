@@ -20,3 +20,6 @@ Server/.fake/
 Server/paket-files/paket.processlock
 **/symbolCache.db
 symbolCache.db
+
+.fake
+.ionide
