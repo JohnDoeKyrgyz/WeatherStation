@@ -3,7 +3,7 @@
 /******************************************************/
 
 #include "Particle.h"
-#line 1 "c:/working/WeatherStation/DeviceFirmware/ParticleBoron/src/ParticleBoron.ino"
+#line 1 "c:/working/WeatherStation/DeviceFirmware/Particle/src/Particle.ino"
 
 void waitForConnection();
 void publishStatusMessage(const char *message);
@@ -19,7 +19,7 @@ void connect();
 bool initializeSensors();
 bool selfTest();
 void loop();
-#line 2 "c:/working/WeatherStation/DeviceFirmware/ParticleBoron/src/ParticleBoron.ino"
+#line 2 "c:/working/WeatherStation/DeviceFirmware/Particle/src/Particle.ino"
 #define RBG_NOTIFICATIONS_OFF
 #define FIRMWARE_VERSION "3.0"
 
