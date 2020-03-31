@@ -188,8 +188,6 @@ void beep(int duration)
 
 void setup()
 {
-  EEPROM.clear();
-
   pinMode(BUZZER, OUTPUT);
   beep(200);
 
