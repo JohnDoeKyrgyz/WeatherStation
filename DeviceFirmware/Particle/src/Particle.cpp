@@ -280,6 +280,8 @@ void connect()
 
 bool initializeSensors()
 {
+  Wire.reset();
+  
   bool result = true;
   for (auto sensor : sensors) 
   {
