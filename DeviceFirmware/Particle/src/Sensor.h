@@ -49,7 +49,7 @@ public:
     bool getReading(char*& reading)
     {
         float batteryVoltage = fuelGuage.getVCell();
-        float batteryPercentage = fuelGuage.getSoC();
+        float batteryPercentage = fuelGuage.getNormalizedSoC();
         reading += sprintf(reading, "f%f:%f", batteryVoltage, batteryPercentage);
         return true;
     }
