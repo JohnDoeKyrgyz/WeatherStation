@@ -1,5 +1,5 @@
 {
-    "particle.firmwareVersion": "1.5.0-rc.2",
+    "particle.firmwareVersion": "1.5.0",
     "particle.targetPlatform": "boron",
     "cortex-debug.openocdPath": "${command:particle.getDebuggerOpenocdPath}",
     "files.associations": {
