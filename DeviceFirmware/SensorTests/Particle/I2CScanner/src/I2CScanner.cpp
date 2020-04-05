@@ -2,12 +2,12 @@
 //       THIS IS A GENERATED FILE - DO NOT EDIT       //
 /******************************************************/
 
-#include "application.h"
-#line 1 "c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronI2CScanner/src/BoronI2CScanner.ino"
+#include "Particle.h"
+#line 1 "c:/working/WeatherStation/DeviceFirmware/SensorTests/Particle/I2CScanner/src/I2CScanner.ino"
 
 void setup();
 void loop();
-#line 2 "c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronI2CScanner/src/BoronI2CScanner.ino"
+#line 2 "c:/working/WeatherStation/DeviceFirmware/SensorTests/Particle/I2CScanner/src/I2CScanner.ino"
 SYSTEM_MODE(MANUAL);
 
 #include <Wire.h>

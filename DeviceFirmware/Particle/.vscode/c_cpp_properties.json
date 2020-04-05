@@ -62,7 +62,8 @@
                 ]
             },
             "cStandard": "c11",
-            "cppStandard": "c++17"
+            "cppStandard": "c++17",
+            "configurationProvider": "particle.particle-vscode-core"
         },
         {
             "name": "Win32",

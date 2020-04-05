@@ -21,6 +21,7 @@
         "deque": "cpp",
         "queue": "cpp",
         "random": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "algorithm": "cpp"
     }
 }

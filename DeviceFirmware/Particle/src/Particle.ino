@@ -6,14 +6,12 @@
 #define POWER_MONITOR_TRIES 3
 #define SEND_TRIES 30
 #define WATCHDOG_TIMEOUT 120000 //milliseconds
+#define MINIMUM_RUNTIME 5000 //milliseconds
 
 #define PERIPHERAL_POWER D2
 #define LED D7
 #define BUZZER D6
 #define ANEMOMETER A4
-
-#define CHARGE_CURRENT_LOW_THRESHOLD 1.0
-#define CHARGE_CURRENT_HIGH_THRESHOLD 400.0
 
 SYSTEM_THREAD(ENABLED);
 SYSTEM_MODE(MANUAL);
@@ -44,6 +42,9 @@ Anemometer anemometer(ANEMOMETER, 2, ANEMOMETER_TRIES);
 Barometer barometer;
 //Sensor *sensors[] = {&panel, &barometer, &anemometer, &battery, &compassSensor};
 Sensor *sensors[] = {&battery, &panel, &anemometer, &barometer};
+const int sensorCount = sizeof(sensors) / sizeof(sensors[0]);
+bool sensorReadResults[sensorCount];
+ApplicationWatchdog watchDog = ApplicationWatchdog(WATCHDOG_TIMEOUT, watchDogTimeout);
 
 void waitForConnection()
 {
@@ -121,7 +122,6 @@ void deepSleep(unsigned long seconds)
     System.sleep({}, RISING, SLEEP_NETWORK_STANDBY, seconds);
   }
   #elif PLATFORM_ID == 10 //ELECTRON
-
   if(seconds > 900)
   {
     System.sleep(SLEEP_MODE_DEEP, seconds);
@@ -166,48 +166,6 @@ void beep(int duration)
   digitalWrite(BUZZER, LOW);
 }
 
-void setup()
-{
-  //if the user pressed reset, redo the setup
-  int resetReason = System.resetReason();
-  if(resetReason == RESET_REASON_PIN_RESET || resetReason == RESET_REASON_UPDATE){
-    setupComplete = false;
-  }
-
-  pinMode(BUZZER, OUTPUT);
-  if(!setupComplete){
-    beep(200);
-  }  
-
-  fuelGuage.begin();
-
-  initializePowerSettings();
-
-  Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
-
-  Serial.begin(115200);
-  if(!setupComplete){
-    delay(10000);
-  }  
-
-  Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
-
-  //Load saved settings;
-  Serial.print("Loaded settings...");
-  settings = loadSettings();
-  Serial.println("!");
-
-  //Turn off the peripherals to start
-  pinMode(PERIPHERAL_POWER, OUTPUT);
-  digitalWrite(PERIPHERAL_POWER, LOW);
-
-  if(!setupComplete){
-    beep(150);
-    delay(150);
-    beep(150);
-  }  
-}
-
 void checkBrownout()
 {
   Serial.print("Checking brownout...");  
@@ -219,15 +177,6 @@ void checkBrownout()
   if (brownout)
   {
     Serial.printlnf("Brownout threshold %f exceeded by system battery percentage %f", settings.brownoutPercentage, systemSoC);
-
-    if (Particle.connected())
-    {
-      Particle.process();
-
-      char *buffer = statusBuffer;
-      sprintf(buffer, "BROWNOUT battery percentange %f, check again in %d minutes", systemSoC, settings.brownoutMinutes);
-      publishStatusMessage(buffer);      
-    }
 
     //long beep
     beep(3000);
@@ -269,21 +218,31 @@ bool initializeSensors()
   return result;
 }
 
+bool readSensors()
+{
+  char *buffer = messageBuffer;
+  buffer += sprintf(buffer, "d%d", settings.version);
+
+  int readSensors = 0;
+  for (int i = 0; i < sensorCount; i++)
+  {
+    Sensor *sensor = sensors[i];
+    bool read = sensor->getReading(buffer);
+    sensorReadResults[i] = read;
+    if(read)
+    {
+      readSensors++;
+    }
+    
+    watchDog.checkin();
+  }
+  return readSensors == sensorCount;
+}
+
 bool selfTest()
 {
   Serial.println("Self Test...");
-
-  bool result = true;
-  char *buffer = messageBuffer;
-  for (auto sensor : sensors)
-  {
-    bool success = sensor->getReading(buffer);
-    if (!success)
-    {
-      Serial.printlnf("Could not read %s", sensor->Name);
-    }
-    result &= success;
-  }
+  bool result = readSensors();
 
   if (result)
   {
@@ -298,15 +257,53 @@ bool selfTest()
       delay(250);
     }
   }
-
   return result;
+}
+
+void setup()
+{
+  fuelGuage.begin();
+  initializePowerSettings();
+  
+  Serial.begin(115200);
+
+  //Turn off the peripherals to start
+  pinMode(PERIPHERAL_POWER, OUTPUT);
+  digitalWrite(PERIPHERAL_POWER, LOW);
+
+  //if the user pressed reset, redo the setup
+  int resetReason = System.resetReason();
+  if(resetReason == RESET_REASON_PIN_RESET || resetReason == RESET_REASON_UPDATE){
+    setupComplete = false;
+  }
+
+  Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
+
+  //short beep to indicate startup
+  pinMode(BUZZER, OUTPUT);
+  if(!setupComplete){
+    beep(200);
+    delay(5000);
+  }  
+
+  Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
+
+  //Load saved settings;
+  Serial.print("Loaded settings...");
+  settings = loadSettings();
+  Serial.println("!");
+
+  if(!setupComplete){
+    beep(150);
+    delay(150);
+    beep(150);
+  }  
 }
 
 void loop()
 {
   duration = millis();
-  ApplicationWatchdog watchDog = ApplicationWatchdog(WATCHDOG_TIMEOUT, watchDogTimeout);
-
+  
   checkBrownout();
 
   //signal LED if in Diagnostic Mode
@@ -321,13 +318,10 @@ void loop()
   //begin connecting to the cloud
   connect();
 
-  bool selfTestSuccess = false;
-  int sensorCount = sizeof(sensors) / sizeof(sensors[0]);
-  bool results[sensorCount];  
-
   digitalWrite(PERIPHERAL_POWER, HIGH);
   bool initialized = initializeSensors();
 
+  bool selfTestSuccess = false;
   selfTestSuccess = setupComplete || (initialized && selfTest());
 
   if (initialized)
@@ -338,7 +332,7 @@ void loop()
     for (int i = 0; i < sensorCount; i++)
     {
       Sensor *sensor = sensors[i];
-      results[i] = sensor->getReading(buffer);
+      sensorReadResults[i] = sensor->getReading(buffer);
       watchDog.checkin();
     }    
   }
@@ -348,12 +342,17 @@ void loop()
   //send serialized reading to the cloud
   waitForConnection();
 
+  int successfulyReadSensors = 0;
   for (int i = 0; i < sensorCount; i++)
   {
-    if (!results[i])
+    if (!sensorReadResults[i])
     {
       sprintf(statusBuffer, "ERROR: %s", sensors[i]->Name);
       onError(statusBuffer);
+    }
+    else
+    {
+      ++successfulyReadSensors;
     }
   }
 
@@ -372,17 +371,20 @@ void loop()
   
   Serial.println(messageBuffer);
 
-  int tries = SEND_TRIES;
-  bool sentReading = false;
-  do
+  if(initialized && successfulyReadSensors > 0)
   {
-    watchDog.checkin();
-    Serial.print("Sending reading... ");
-    sentReading = Particle.publish("Reading", messageBuffer, 60, PRIVATE, WITH_ACK);
-    Serial.print(".");
-  } while (!sentReading && --tries > 0);
+    int tries = SEND_TRIES;
+    bool sentReading = false;
+    do
+    {
+      watchDog.checkin();
+      Serial.print("Sending reading... ");
+      sentReading = Particle.publish("Reading", messageBuffer, 60, PRIVATE, WITH_ACK);
+      Serial.print(".");
+    } while (!sentReading && --tries > 0);
 
-  Serial.printlnf(" %s!", sentReading ? "+" : "-");
+    Serial.printlnf(" %s!", sentReading ? "+" : "-");
+  }  
 
   Serial.printlnf("DIAGNOSTIC COUNT %d", settings.diagnositicCycles);
   digitalWrite(LED, LOW);
@@ -390,7 +392,7 @@ void loop()
   //Publish a message if the panel starts or stops charging the battery
   if (panel.read())
   {
-    bool charging = panel.current() >= CHARGE_CURRENT_LOW_THRESHOLD && panel.current() <= CHARGE_CURRENT_HIGH_THRESHOLD;
+    bool charging = panel.voltage() >= fuelGuage.getVCell();
     if (charging && !panelOn)
     {
       publishStatusMessage("PANEL ON");
@@ -430,6 +432,13 @@ void loop()
   Serial.flush();
 
   Particle.process();
+
+  //make sure that the device has run at least the MINIMUM_RUNTIME so that messages get to the server.
+  unsigned long runTime = millis() - duration;
+  if(runTime < MINIMUM_RUNTIME)
+  {
+    delay(MINIMUM_RUNTIME - runTime);
+  }
   
   sleepAction();
 }
