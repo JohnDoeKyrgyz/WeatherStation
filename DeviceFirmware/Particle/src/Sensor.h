@@ -134,7 +134,9 @@ public:
     {
         float speed;
         int direction;
-        return laCrosseTX23.read(speed, direction);
+        bool read = false;
+        for(int tries = 0; !read && tries < _maxTries && (read = laCrosseTX23.read(speed, direction)); tries++);
+        return read;
     }
 };
 

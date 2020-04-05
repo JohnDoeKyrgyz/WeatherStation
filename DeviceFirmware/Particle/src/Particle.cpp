@@ -23,7 +23,7 @@ void loop();
 #define RBG_NOTIFICATIONS_OFF
 #define FIRMWARE_VERSION "3.0"
 
-#define ANEMOMETER_TRIES 5
+#define ANEMOMETER_TRIES 10
 #define POWER_MONITOR_TRIES 3
 #define SEND_TRIES 30
 #define WATCHDOG_TIMEOUT 120000 //milliseconds
@@ -39,6 +39,10 @@ void loop();
 SYSTEM_THREAD(ENABLED);
 SYSTEM_MODE(MANUAL);
 
+#if PLATFORM_ID == 10 //ELECTRON
+STARTUP(System.enableFeature(FEATURE_RETAINED_MEMORY));
+#endif
+
 #include <Wire.h>
 #include "settings.h"
 #include "Sensor.h"
@@ -52,7 +56,7 @@ unsigned long duration;
 char messageBuffer[255];
 char statusBuffer[255];
 bool panelOn = true;
-bool firstLoop = true;
+retained bool setupComplete;
 
 CompassSensor compassSensor;
 BatteryPower battery;
@@ -138,16 +142,15 @@ void deepSleep(unsigned long seconds)
     System.sleep({}, RISING, SLEEP_NETWORK_STANDBY, seconds);
   }
   #elif PLATFORM_ID == 10 //ELECTRON
-  SystemSleepConfiguration config;
-  auto mode =
-    seconds > 360
-    ? SystemSleepMode::HIBERNATE
-    : SystemSleepMode::STOP;
-  config
-    .mode(mode)
-    .gpio(WKP, RISING)
-    .duration(seconds);    
-  System.sleep(config);
+
+  if(seconds > 900)
+  {
+    System.sleep(SLEEP_MODE_DEEP, seconds);
+  }
+  else
+  {
+    System.sleep(SLEEP_MODE_DEEP, seconds, SLEEP_NETWORK_STANDBY);
+  }
   #endif
 
   initializePowerSettings();
@@ -179,26 +182,34 @@ void onSettingsUpdate(const char *event, const char *data)
 
 void beep(int duration)
 {
-  pinMode(BUZZER, OUTPUT);
   digitalWrite(BUZZER, HIGH);
   delay(200);
   digitalWrite(BUZZER, LOW);
-  pinMode(BUZZER, INPUT);
 }
 
 void setup()
 {
-  pinMode(BUZZER, OUTPUT);
-  beep(200);
+  //if the user pressed reset, redo the setup
+  int resetReason = System.resetReason();
+  if(resetReason == RESET_REASON_PIN_RESET || resetReason == RESET_REASON_UPDATE){
+    setupComplete = false;
+  }
 
-  initializePowerSettings();  
-  
+  pinMode(BUZZER, OUTPUT);
+  if(!setupComplete){
+    beep(200);
+  }  
+
   fuelGuage.begin();
+
+  initializePowerSettings();
 
   Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
 
   Serial.begin(115200);
-  delay(10000);
+  if(!setupComplete){
+    delay(10000);
+  }  
 
   Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
 
@@ -211,15 +222,17 @@ void setup()
   pinMode(PERIPHERAL_POWER, OUTPUT);
   digitalWrite(PERIPHERAL_POWER, LOW);
 
-  beep(150);
-  delay(150);
-  beep(150);
+  if(!setupComplete){
+    beep(150);
+    delay(150);
+    beep(150);
+  }  
 }
 
 void checkBrownout()
 {
   Serial.print("Checking brownout...");  
-  float systemSoC = fuelGuage.getSoC();
+  float systemSoC = fuelGuage.getNormalizedSoC();
   bool brownout = settings.brownout && systemSoC < settings.brownoutPercentage;
   Serial.println("!");
   Serial.flush();
@@ -268,7 +281,10 @@ void connect()
 bool initializeSensors()
 {
   bool result = true;
-  for (auto sensor : sensors) result &= sensor->begin();
+  for (auto sensor : sensors) 
+  {
+    result &= sensor->begin();
+  }
   return result;
 }
 
@@ -326,12 +342,12 @@ void loop()
 
   bool selfTestSuccess = false;
   int sensorCount = sizeof(sensors) / sizeof(sensors[0]);
-  bool results[sensorCount];
-  bool initialized;
+  bool results[sensorCount];  
 
   digitalWrite(PERIPHERAL_POWER, HIGH);
-  initialized = initializeSensors();
-  selfTestSuccess = firstLoop && initialized && selfTest();
+  bool initialized = initializeSensors();
+
+  selfTestSuccess = setupComplete || (initialized && selfTest());
 
   if (initialized)
   {
@@ -360,9 +376,9 @@ void loop()
     }
   }
 
-  if(firstLoop)
+  if(!setupComplete)
   {
-    firstLoop = false;
+    setupComplete = true;
     if (selfTestSuccess)
     {
       publishStatusMessage("START");
