@@ -82,6 +82,8 @@ bool LaCrosse_TX23::read(float &speed, int &direction)
 
 	uint8_t csum = 0x0f & (dir + (spd&0x0f) + ((spd>>4)&0x0f) + ((spd>>8)&0x0f));
 
+	//Serial.printlnf("ctr %d, csum %d, sum %d, spd %d, nspd %d", ctr, csum, sum, spd, nspd);
+
 	if(ctr!=27) return false;
 	if(csum!=sum) return false;
 	if(spd!=nspd || dir!=ndir) return false;

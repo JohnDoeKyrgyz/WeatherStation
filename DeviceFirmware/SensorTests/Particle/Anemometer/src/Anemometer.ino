@@ -16,7 +16,11 @@ void setup() {
 void loop() {
   float windSpeed;
   int windDirection;
-  bool result = laCrosseTX23.read(windSpeed, windDirection);
+
+  bool result;
+  //SINGLE_THREADED_BLOCK() {
+    result = laCrosseTX23.read(windSpeed, windDirection);
+  //}
 
   Serial.printlnf("%d, %f, %d", result, windSpeed, windDirection);
 }

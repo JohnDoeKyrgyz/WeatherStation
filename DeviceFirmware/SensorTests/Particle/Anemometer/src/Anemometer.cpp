@@ -3,10 +3,10 @@
 /******************************************************/
 
 #include "Particle.h"
-#line 1 "c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronAnemometer/src/BoronAnemometer.ino"
+#line 1 "c:/working/WeatherStation/DeviceFirmware/SensorTests/Particle/Anemometer/src/Anemometer.ino"
 void setup();
 void loop();
-#line 1 "c:/working/WeatherStation/DeviceFirmware/SensorTests/ParticleBoron/BoronAnemometer/src/BoronAnemometer.ino"
+#line 1 "c:/working/WeatherStation/DeviceFirmware/SensorTests/Particle/Anemometer/src/Anemometer.ino"
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
 
@@ -25,7 +25,11 @@ void setup() {
 void loop() {
   float windSpeed;
   int windDirection;
-  bool result = laCrosseTX23.read(windSpeed, windDirection);
+
+  bool result;
+  //SINGLE_THREADED_BLOCK() {
+    result = laCrosseTX23.read(windSpeed, windDirection);
+  //}
 
   Serial.printlnf("%d, %f, %d", result, windSpeed, windDirection);
 }
