@@ -11,7 +11,7 @@ Settings DefaultSettings = {
     30, //sleepTime
     1, //diagnositicCycles
     true, //useDeepSleep
-    120 //panelOffMinutes
+    15 //panelOffMinutes
 };
 
 DynamicJsonDocument jsonBuffer(SERIALIZED_SETTINGS_SIZE);
