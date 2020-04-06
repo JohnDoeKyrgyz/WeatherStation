@@ -8,7 +8,6 @@
 void waitForConnection();
 void publishStatusMessage(const char *message);
 void onError(const char *message);
-void watchDogTimeout();
 void initializePowerSettings();
 void deepSleep(unsigned long seconds);
 void onSettingsUpdate(const char *event, const char *data);
@@ -27,7 +26,6 @@ void loop();
 #define ANEMOMETER_TRIES 10
 #define POWER_MONITOR_TRIES 3
 #define SEND_TRIES 30
-#define WATCHDOG_TIMEOUT 120000 //milliseconds
 #define MINIMUM_RUNTIME 5000 //milliseconds
 
 #define PERIPHERAL_POWER D2
@@ -66,7 +64,6 @@ Barometer barometer;
 Sensor *sensors[] = {&battery, &panel, &anemometer, &barometer};
 const int sensorCount = sizeof(sensors) / sizeof(sensors[0]);
 bool sensorReadResults[sensorCount];
-ApplicationWatchdog watchDog = ApplicationWatchdog(WATCHDOG_TIMEOUT, watchDogTimeout);
 
 void waitForConnection()
 {
@@ -103,13 +100,6 @@ void onError(const char *message)
 {
   RGB.color(255, 255, 0);
   publishStatusMessage(message);
-}
-
-void watchDogTimeout()
-{
-  publishStatusMessage("WATCHDOG_TIMEOUT");
-  Serial.flush();
-  System.reset();
 }
 
 void initializePowerSettings()
@@ -255,8 +245,6 @@ bool readSensors()
     {
       readSensors++;
     }
-    
-    watchDog.checkin();
   }
   return readSensors == sensorCount;
 }
@@ -355,7 +343,6 @@ void loop()
     {
       Sensor *sensor = sensors[i];
       sensorReadResults[i] = sensor->getReading(buffer);
-      watchDog.checkin();
     }    
   }
 
@@ -399,7 +386,6 @@ void loop()
     bool sentReading = false;
     do
     {
-      watchDog.checkin();
       Serial.print("Sending reading... ");
       sentReading = Particle.publish("Reading", messageBuffer, 60, PRIVATE, WITH_ACK);
       Serial.print(".");
@@ -461,7 +447,6 @@ void loop()
   {
     delay(MINIMUM_RUNTIME - runTime);
   }
-
   
   sleepAction();
 }
