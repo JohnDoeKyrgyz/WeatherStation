@@ -74,7 +74,7 @@ module Logic =
     }
 
     [<Literal>]
-    let ParticleSettingsJson = __SOURCE_DIRECTORY__ + "/../../../../DeviceFirmware/ParticleElectron/src/Settings.json"
+    let ParticleSettingsJson = __SOURCE_DIRECTORY__ + "/../../../../DeviceFirmware/Particle/src/Settings.json"
     type ParticleSettings = JsonProvider< ParticleSettingsJson >
 
     let updateParticleDeviceSettings (key : StationKey) (settings : StationSettings) =
