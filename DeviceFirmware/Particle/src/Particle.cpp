@@ -21,7 +21,7 @@ void setup();
 void loop();
 #line 2 "c:/working/WeatherStation/DeviceFirmware/Particle/src/Particle.ino"
 #define RBG_NOTIFICATIONS_OFF
-#define FIRMWARE_VERSION "3.0"
+#define FIRMWARE_VERSION "4.0"
 
 #define ANEMOMETER_TRIES 10
 #define POWER_MONITOR_TRIES 3
