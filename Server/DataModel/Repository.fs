@@ -1,11 +1,10 @@
 ﻿namespace WeatherStation
+open Microsoft.Azure.Cosmos.Table
 
 module Repository =
     open System
     open System.Linq
     open WeatherStation.Model
-    open FSharp.Azure.Storage.Table
-    open Microsoft.WindowsAzure.Storage.Table
 
     type IRepository<'TEntity> =
         abstract member GetAll : unit -> Async<'TEntity list>

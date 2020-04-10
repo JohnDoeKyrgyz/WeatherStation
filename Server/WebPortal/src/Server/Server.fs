@@ -1,4 +1,5 @@
 namespace WeatherStation
+open Microsoft.Extensions.Configuration
 
 module Server =
     open System
@@ -7,7 +8,6 @@ module Server =
 
     open Microsoft.Extensions.Logging
     open Microsoft.Extensions.DependencyInjection
-    open Microsoft.AspNetCore.Builder
     open Microsoft.AspNetCore.Http
 
     open Saturn
@@ -19,7 +19,6 @@ module Server =
     open WeatherStation.Data
     open WeatherStation.Shared
     open Logic
-    open Newtonsoft.Json.Linq
 
     let port = 8085us
 
@@ -27,17 +26,21 @@ module Server =
     Console.Beep()
     #endif
 
-    let connectionString = ConfigurationManager.ConnectionStrings.["WeatherStationStorage"].ConnectionString
+    let getConnectionString (ctx : HttpContext) =
+        let configuration = ctx.RequestServices.GetService<IConfiguration>()
+        let connectionString = configuration.GetConnectionString("DefaultConnection")
+        connectionString
 
     let read reader next ctx =
+        let connectionString = getConnectionString ctx
         task {
-            let! data = reader |> Async.StartAsTask
+            let! data = reader connectionString |> Async.StartAsTask
             match data with
             | Result.Ok data -> return! Successful.OK data next ctx
             | Result.Error error -> return! RequestErrors.NOT_FOUND (string error) next ctx
         }
 
-    let getStations = async {
+    let getStations connectionString = async {
         let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
         let! activeThreshold = SystemSettings.activeThreshold systemSettingsRepository.GetSettingWithDefault
         let! stations =
@@ -46,7 +49,7 @@ module Server =
         return Ok stations
     }
 
-    let getStationDetails (key : StationKey) = async {
+    let getStationDetails (key : StationKey) connectionString = async {
         let! systemSettingsRepository = AzureStorage.settingsRepository connectionString
         let! defaultPageSize = SystemSettings.defaultPageSize systemSettingsRepository.GetSettingWithDefault
         let! stationDetails =
@@ -57,15 +60,15 @@ module Server =
             | Some details -> Ok details
             | None -> Error (sprintf "No device %A" key) }
 
-    let getReadingsPage key fromDate toDate = async {
+    let getReadingsPage key fromDate toDate connectionString = async {
         let! readings = readings connectionString key fromDate toDate
         return Ok (readings |> List.map createReading) }
 
-    let getMessagesPage key fromDate toDate = async {
+    let getMessagesPage key fromDate toDate connectionString = async {
         let! messages = messages connectionString key fromDate toDate
         return Ok (messages |> List.map createStatusMessage) }
 
-    let getSettings key = async {
+    let getSettings key connectionString = async {
         let! settings = weatherStationSettings connectionString key
         return Ok settings
     }
@@ -76,6 +79,7 @@ module Server =
     }
 
     let setSettings (key : StationKey) settings next (ctx : HttpContext) = task {
+        let connectionString = getConnectionString ctx
         let! updatedSettings = updateWeatherStationSettings connectionString key settings
         match updatedSettings with
         | Some updatedSettings ->

@@ -12,11 +12,16 @@
     <Compile Include="Server.fs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="paket.references" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\DataModel\DataModel.fsproj" />
   </ItemGroup>
-  <Import Project="..\..\..\.paket\Paket.Restore.targets" />
-
+  <ItemGroup>
+    <PackageReference Include="Fable.JsonConverter" Version="1.0.8" />
+    <PackageReference Include="FSharp.Data" Version="3.3.3" />
+    <PackageReference Include="Giraffe" Version="4.0.1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.13.1" />
+    <PackageReference Include="Otp.NET" Version="1.2.2" />
+    <PackageReference Include="Particle.SDK" Version="0.1.0" />
+    <PackageReference Include="Saturn" Version="0.12.1" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" />
+  </ItemGroup>
 </Project>

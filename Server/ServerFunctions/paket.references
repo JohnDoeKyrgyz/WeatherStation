@@ -1,6 +1,0 @@
-group Functions
-FSharp.Core
-FSharp.Data
-FSharp.Azure.Storage
-Microsoft.Azure.WebJobs.Extensions.EventHubs
-Microsoft.NET.Sdk.Functions

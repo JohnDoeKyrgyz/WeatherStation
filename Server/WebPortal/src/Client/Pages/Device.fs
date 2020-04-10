@@ -70,7 +70,7 @@ module Device =
         let url = (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId)
         let extraCoders = Extra.empty |> Extra.withDecimal
         let json = Encode.Auto.toString<StationSettings>(0, settings, extra = extraCoders)
-        let jsonBody = Body ( BodyInit.Case2(json) )
+        let jsonBody = Body ( BodyInit.Case3 json )
         Cmd.OfPromise.either
             (fun _ -> promise {
                 let! result =
@@ -152,7 +152,7 @@ module Device =
     let chargePowerChart readings =
         let data = [|for reading in readings -> {time = date reading.ReadingTime; power = (reading.PanelVoltage * reading.PanelMilliamps) / 1000.0}|]
         readingsChart data [
-            "power", "orange"]            
+            "power", "orange"]
 
     type Temperature = {time: string; hydrometer: float option; barometer: float option}
 

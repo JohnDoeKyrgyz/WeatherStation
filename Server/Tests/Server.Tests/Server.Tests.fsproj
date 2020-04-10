@@ -6,7 +6,6 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="paket.references" />
     <Compile Include="LogicTests.fs" />
     <Compile Include="CacheTests.fs" />
     <Compile Include="ParticleConnectTests.fs" />
@@ -16,5 +15,7 @@
     <ProjectReference Include="..\..\DataModel\DataModel.fsproj" />
     <ProjectReference Include="..\..\WebPortal\src\Server\Server.fsproj" />
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="Expecto" Version="9.0.0" />
+  </ItemGroup>
 </Project>

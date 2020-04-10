@@ -5,7 +5,6 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="paket.references" />
     <Compile Include="DataSetup.fs" />
     <Compile Include="ReadingsTests.fs" />
     <Compile Include="SensorTests.fs" />
@@ -16,5 +15,7 @@
     <ProjectReference Include="..\..\DataModel\DataModel.fsproj" />
     <ProjectReference Include="..\..\ServerFunctions\WeatherStationFunctions.fsproj" />
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="Expecto" Version="9.0.0" />
+  </ItemGroup>
 </Project>

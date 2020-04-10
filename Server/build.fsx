@@ -1,9 +1,13 @@
-#r "paket: groupref build //"
+#r "paket: 
+nuget Fake.Core.Target
+nuget Fake.IO.Zip
+nuget Fake.DotNet.Cli
+nuget Fake.Core.Process
+nuget FSharp.Data
+"
 #load ".fake/build.fsx/intellisense.fsx"
-
 #if !FAKE
-#r "netstandard"
-#r "Facades/netstandard" // https://github.com/ionide/ionide-vscode-fsharp/issues/839#issuecomment-396296095
+  #r "Facades/netstandard"
 #endif
 
 open System
