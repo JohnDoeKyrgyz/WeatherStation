@@ -1,4 +1,4 @@
-RESTRICTION: == netstandard2.0
+RESTRICTION: == netcoreapp3.1
 
 GROUP Build
 STORAGE: NONE

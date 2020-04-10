@@ -1,4 +1,4 @@
-framework: netstandard2.0
+framework: netcoreapp3.1
 group Functions
 	storage: none
     source https://api.nuget.org/v3/index.json
