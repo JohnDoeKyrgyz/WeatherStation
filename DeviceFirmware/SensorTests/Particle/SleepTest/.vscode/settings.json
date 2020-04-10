@@ -1,0 +1,9 @@
+{
+    "cortex-debug.openocdPath": "${command:particle.getDebuggerOpenocdPath}",
+    "C_Cpp.default.configurationProvider": "particle.particle-vscode-core",
+    "particle.targetPlatform": "boron",
+    "particle.firmwareVersion": "1.5.0",
+    "files.associations": {
+        "chrono": "cpp"
+    }
+}
