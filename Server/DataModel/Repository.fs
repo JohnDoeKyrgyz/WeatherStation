@@ -1,9 +1,12 @@
 ﻿namespace WeatherStation
-open Microsoft.Azure.Cosmos.Table
 
 module Repository =
     open System
     open System.Linq
+
+    open Microsoft.Azure.Cosmos.Table    
+    open FSharp.Azure.Storage.Table
+
     open WeatherStation.Model
 
     type IRepository<'TEntity> =

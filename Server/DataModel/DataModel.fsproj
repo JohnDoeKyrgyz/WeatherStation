@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Cache.fs" />
@@ -14,6 +14,7 @@
     <None Include="DataQueryTest.fsx" />    
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.6" />
+    <ProjectReference Include="C:\working\Scratch\FSharp.Azure.Storage\src\FSharp.Azure.Storage\FSharp.Azure.Storage.fsproj"/>
+    <!--PackageReference Include="FSharp.Azure.Storage" Version="3.3.1" /-->
   </ItemGroup>
 </Project>
