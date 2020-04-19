@@ -37,10 +37,20 @@ type StatusMessage = {
     CreatedOn : DateTime
 }
 
+type DeviceType =
+    | Particle
+    | Test
+    with
+        static member Parse value =
+            match value with
+            | "Particle" -> Particle
+            | "Test" -> Test
+            | _ -> failwithf "%s is not a valid DeviceType" value
+
 [<CLIMutable>]
 type StationKey = {
     DeviceId : string
-    DeviceType : string
+    DeviceType : DeviceType
 }
 
 type StationDetails = {

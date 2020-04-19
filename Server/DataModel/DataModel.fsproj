@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Cache.fs" />
+    <Compile Include="..\WebPortal\src\Shared\Shared.fs" />
     <Compile Include="Model.fs" />
     <Compile Include="Readings.fs" />
     <Compile Include="Sensors.fs" />

@@ -12,6 +12,8 @@ module WundergroundForwarderTests =
     open WeatherStation.Functions.WundergroundForwarder    
     open ReadingsTests
 
+    type DeviceType = WeatherStation.Shared.DeviceType
+
     let buildLog onMessage = { 
         new ILogger with
             member this.BeginScope(state: 'TState): IDisposable = raise (System.NotImplementedException())
@@ -231,7 +233,7 @@ module WundergroundForwarderTests =
                 let weatherStation = {weatherStation with CreatedOn = weatherStation.CreatedOn.ToUniversalTime()}
                 do! weatherStationRepository.Save weatherStation
 
-                let! weatherStationReloaded = weatherStationRepository.Get Particle weatherStation.DeviceId
+                let! weatherStationReloaded = weatherStationRepository.Get DeviceType.Particle weatherStation.DeviceId
                 Expect.isSome "No WeatherStation found" weatherStationReloaded
                 Expect.equal "WeatherStations are not equal" weatherStation weatherStationReloaded.Value
             }

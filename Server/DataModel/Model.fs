@@ -4,6 +4,7 @@ module Model =
 
     open System    
     open FSharp.Azure.Storage.Table
+    open WeatherStation.Shared
 
     type SystemSetting = {
         [<PartitionKey>]
@@ -12,16 +13,6 @@ module Model =
         Key : string
         Value : string
     }
-
-    type DeviceType =
-        | Particle
-        | Test
-
-    let parseDeviceType value =
-        match value with 
-        | "Particle" -> Particle
-        | "Test" -> Test
-        | _ -> failwithf "%s is not a valid DeviceType" value
 
     type WeatherStation = {
         [<PartitionKey>]

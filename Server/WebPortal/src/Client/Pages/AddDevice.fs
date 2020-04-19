@@ -29,14 +29,14 @@ module AddDevice =
 
 
     let init : Model * Cmd<Msg> =
-        let initialModel = {SaveResult = NotLoading; Station = {DeviceId = null; DeviceType = null}}
+        let initialModel = {SaveResult = NotLoading; Station = {DeviceId = null; DeviceType = Particle}}
         initialModel, Cmd.none
 
     module P = Props
     module R = Helpers
 
     let createStation key =
-        let url = (sprintf "/api/stations/%s/%s" key.DeviceType key.DeviceId)
+        let url = (sprintf "/api/stations/%s/%s" (string key.DeviceType) key.DeviceId)
         Cmd.OfPromise.either
             (fetchAs url)
             [Method HttpMethod.POST]
@@ -76,9 +76,7 @@ module AddDevice =
 
             yield div [] [
                     formControl "Device Type"
-                        (textInput
-                            (Some model.Station.DeviceType)
-                            (updater (fun v -> {model.Station with DeviceType = v})))
+                        (Select.select [] [])
                         []
 
                     formControl "DeviceId"

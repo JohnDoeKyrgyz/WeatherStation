@@ -20,7 +20,7 @@ module Repository =
 
     type IWeatherStationsRepository =
         inherit IRepository<WeatherStation>
-        abstract member Get : deviceType:DeviceType -> deviceId:string -> Async<WeatherStation option>
+        abstract member Get : deviceType:Shared.DeviceType -> deviceId:string -> Async<WeatherStation option>
 
     type IReadingsRepository =
         inherit IRepository<Reading>

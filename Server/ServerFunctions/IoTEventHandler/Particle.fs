@@ -31,7 +31,7 @@ module Particle =
             StatusMessage {
                 DeviceId = particleReading.DeviceId
                 StatusMessage = particleReading.Data
-                DeviceType = string Model.DeviceType.Particle
+                DeviceType = string Shared.DeviceType.Particle
                 CreatedOn = particleReading.PublishedAt.UtcDateTime}
         | event ->
             failwithf "Unsupported Event %s" event            

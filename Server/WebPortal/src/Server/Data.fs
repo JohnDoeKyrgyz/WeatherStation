@@ -15,7 +15,7 @@ module Data =
 
     let weatherStationDetails connectionString pageSize (key : StationKey) = async {
         let! weatherStationRepository = weatherStationRepository connectionString
-        match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
+        match! weatherStationRepository.Get key.DeviceType key.DeviceId with
         | Some station ->
             let! readingsRepository = readingsRepository connectionString
             let lastReadingDate = defaultArg station.LastReading DateTime.Now
@@ -46,7 +46,7 @@ module Data =
 
     let weatherStationSettings connectionString key = async {
         let! weatherStationRepository = weatherStationRepository connectionString
-        match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
+        match! weatherStationRepository.Get key.DeviceType key.DeviceId with
         | Some station ->
             return
                 if isNull station.Settings
@@ -64,7 +64,7 @@ module Data =
 
     let updateWeatherStationSettings connectionString (key : StationKey) (settings : FirmwareSettings option) = async {
         let! weatherStationRepository = weatherStationRepository connectionString
-        match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
+        match! weatherStationRepository.Get key.DeviceType key.DeviceId with
         | Some station ->
             let updatedSettings, serializedSettings =
                 match settings with

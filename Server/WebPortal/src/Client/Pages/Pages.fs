@@ -15,14 +15,21 @@ module Pages =
         function
         | Page.Home -> "#home"
         | Page.AddDevice -> "#adddevice"
-        | Page.Device key -> sprintf "#device/%s/%s" key.DeviceType key.DeviceId
+        | Page.Device key -> sprintf "#device/%s/%s" (string key.DeviceType) key.DeviceId
+
+    let parseDeviceType =
+        custom "DeviceType" <| fun segment ->
+            match segment.ToLowerInvariant() with
+            | "particle" -> Ok Particle
+            | "test" -> Ok Test
+            | _ -> Error (sprintf "Could not parse DeviceType %s" segment)
 
     /// The URL is turned into a Result.
     let pageParser : Parser<Page -> Page,_> =
         oneOf [
             map Page.Home (s "home")
             map Page.AddDevice (s "adddevice")
-            map (fun deviceType deviceId -> Page.Device({DeviceType = deviceType; DeviceId = deviceId})) (s "device" </> str </> str)]
+            map (fun deviceType deviceId -> Page.Device({DeviceType = deviceType; DeviceId = deviceId})) (s "device" </> parseDeviceType </> str)]
 
     let urlParser location =
         let result = parsePath pageParser location

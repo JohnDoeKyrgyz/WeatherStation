@@ -8,11 +8,12 @@ module WundergroundForwarder =
     open Microsoft.Extensions.Logging
     open Microsoft.Azure.WebJobs 
 
-    open WeatherStation.Model
     open ProcessReadings
     open WundergroundPost
     open WeatherStation
-
+    open WeatherStation.Model
+    open WeatherStation.Shared
+    
     let tryParse parser content =
         try
             Choice1Of2 (parser content)
@@ -37,7 +38,7 @@ module WundergroundForwarder =
                     match! getWeatherStation deviceType deviceReading.DeviceId with
                     | None -> 
                         log.LogInformation(sprintf "%A %s not found. Searching for device %A %s in registry" deviceType deviceReading.DeviceId DeviceType.Test deviceReading.DeviceId)
-                        return! getWeatherStation DeviceType.Test deviceReading.DeviceId
+                        return! getWeatherStation Test deviceReading.DeviceId
                     | value -> return value
                 }                        
 
@@ -76,7 +77,7 @@ module WundergroundForwarder =
     let handleStatusMessage 
         (log: ILogger) 
         saveStatusMessage
-        (statusMessage : StatusMessage) =
+        (statusMessage : Model.StatusMessage) =
         async {
             log.LogInformation(sprintf "Saving StatusMessage %s for device %s" statusMessage.StatusMessage statusMessage.DeviceId)
             do! saveStatusMessage statusMessage
@@ -119,8 +120,8 @@ module WundergroundForwarder =
             [for parsedEvent in successfulAttempts do
                 yield
                     match parsedEvent with
-                    | Particle.ParticeEvent.Reading deviceReading -> handleDeviceReading DeviceType.Particle deviceReading
-                    | Particle.ParticeEvent.StatusMessage statusMessage -> handleStatusMessage statusMessage
+                    | Reading deviceReading -> handleDeviceReading DeviceType.Particle deviceReading
+                    | StatusMessage statusMessage -> handleStatusMessage statusMessage
                 ]
                 |> Async.Parallel
                 |> Async.Ignore        

@@ -24,7 +24,7 @@ module Logic =
                     let lastReadingAge = DateTime.Now.Subtract(stationLastReadingTime)
                     let status = if lastReadingAge < activeThreshold then Active else Offline
                     yield {
-                        Key = {DeviceId = station.DeviceId.Trim(); DeviceType = station.DeviceType.Trim()}
+                        Key = {DeviceId = station.DeviceId.Trim(); DeviceType = DeviceType.Parse station.DeviceType}
                         Name = station.DeviceId.Trim()
                         WundergroundId = station.WundergroundStationId |> toOption |> Option.map (fun v -> v.Trim())
                         Status = status
@@ -61,7 +61,7 @@ module Logic =
             let readings = readings |> List.sortByDescending (fun reading -> reading.ReadingTime)
             return
                 Some {
-                    Key = {DeviceId = station.DeviceId; DeviceType = station.DeviceType}
+                    Key = {DeviceId = station.DeviceId; DeviceType = DeviceType.Parse station.DeviceType}
                     Name = station.DeviceId
                     CreatedOn = station.CreatedOn
                     WundergroundId = toOption station.WundergroundStationId
@@ -94,7 +94,7 @@ module Logic =
     type ParticleSettings = JsonProvider< ParticleSettingsJson >
 
     let updateParticleDeviceSettings (key : StationKey) (settings : FirmwareSettings) =
-        if parseDeviceType key.DeviceType <> Particle then failwithf "DeviceType %s is not supported" key.DeviceType
+        if key.DeviceType <> Particle then failwithf "DeviceType %Acls is not supported" key.DeviceType
         task {
             let! particleCloud = ParticleConnect.connect |> Async.StartAsTask
             match particleCloud with

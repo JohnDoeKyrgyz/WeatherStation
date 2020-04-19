@@ -46,7 +46,7 @@ module Device =
         let url =
             let formattedFromDate = UrlDateTime.toUrlDate fromDate
             let formattedTooDate = UrlDateTime.toUrlDate tooDate
-            sprintf "/api/stations/%s/%s/readings/%s/%s" key.DeviceType key.DeviceId formattedTooDate formattedFromDate
+            sprintf "/api/stations/%s/%s/readings/%s/%s" (string key.DeviceType) key.DeviceId formattedTooDate formattedFromDate
         let result response = Readings (stationDetails, fromDate, response)
         Cmd.OfPromise.either
             (fetchAs url)
@@ -56,7 +56,7 @@ module Device =
 
     let loadStationCmd (key : StationKey) =
         Cmd.OfPromise.either
-            (fetchAs (sprintf "/api/stations/%s/%s" key.DeviceType key.DeviceId))
+            (fetchAs (sprintf "/api/stations/%s/%s" (string key.DeviceType) key.DeviceId))
             []
             (Ok >> Loaded >> Station)
             (Error >> Loaded >> Station)
@@ -67,7 +67,7 @@ module Device =
             https://github.com/fable-compiler/fable-fetch
             This code was commented out because it takes a dependancy on Thoth
         *)
-        let url = (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId)
+        let url = (sprintf "/api/stations/%s/%s/settings" (string key.DeviceType) key.DeviceId)
         let extraCoders = Extra.empty |> Extra.withDecimal
         let json = Encode.Auto.toString<FirmwareSettings>(0, settings, extra = extraCoders)
         let jsonBody = Body ( BodyInit.Case3 json )
@@ -88,7 +88,7 @@ module Device =
 
     let loadSettings key =
         Cmd.OfPromise.either
-            (fetchAs (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId))
+            (fetchAs (sprintf "/api/stations/%s/%s/settings" (string key.DeviceType) key.DeviceId))
             []
             (Ok >> Loaded >> Settings)
             (Error >> Loaded >> Settings)

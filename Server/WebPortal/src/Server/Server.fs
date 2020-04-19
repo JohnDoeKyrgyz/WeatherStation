@@ -101,7 +101,7 @@ module Server =
 
     [<CLIMutable>]
     type PageKey = {
-        DeviceType : string
+        DeviceType : DeviceType
         DeviceId : string
         FromDate : string
         TooDate : string

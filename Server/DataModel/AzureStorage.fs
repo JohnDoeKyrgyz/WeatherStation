@@ -13,7 +13,7 @@ module AzureStorage =
 
     let deviceTypes =
         let cases =
-            typedefof<Model.DeviceType>
+            typedefof<Shared.DeviceType>
             |> FSharp.Reflection.FSharpType.GetUnionCases
         [for case in cases -> case.Name]
 
