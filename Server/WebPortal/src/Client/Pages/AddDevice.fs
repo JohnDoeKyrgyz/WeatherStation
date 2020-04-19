@@ -9,18 +9,19 @@ module AddDevice =
     open Elmish
 
     open Fable
+    open Fable.React.Props
     open Fable.React
+    open Browser.Types
+    open Fable.Core.JsInterop
 
     open Fulma
-    open Thoth.Json
     open Fetch
 
     open Client
 
     type Model = {
         SaveResult : Loadable<StationKey>
-        Station : StationKey
-    }
+        Station : StationKey    }
 
     type Msg =
         | Save of Loadable<StationKey>
@@ -53,10 +54,23 @@ module AddDevice =
         | StationUpdate station -> {currentModel with Station = station}, Cmd.none
 
     let view dispatch model =
+
         let updater builder value =
             let newModel = builder value
             StationUpdate newModel
             |> dispatch
+
+        let deviceTypesSelector =
+            let deviceTypeOption v = option [Value v] [str (string v)]
+            let onSelect (event: Event) =
+                let value : DeviceType = event.target?value
+                StationUpdate {model.Station with DeviceType = value}
+                |> dispatch
+
+            (Select.select [] [
+                    select [Value model.Station.DeviceType; OnChange onSelect] [
+                        deviceTypeOption Particle
+                        deviceTypeOption Test]])
         [
             yield!
                 match model.SaveResult with
@@ -76,7 +90,7 @@ module AddDevice =
 
             yield div [] [
                     formControl "Device Type"
-                        (Select.select [] [])
+                        deviceTypesSelector
                         []
 
                     formControl "DeviceId"
