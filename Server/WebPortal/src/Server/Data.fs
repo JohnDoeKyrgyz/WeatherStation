@@ -52,12 +52,17 @@ module Data =
                 if isNull station.Settings
                 then None
                 else
-                    let settings = JsonConvert.DeserializeObject<StationSettings>(station.Settings)
+                    let settings = JsonConvert.DeserializeObject<FirmwareSettings>(station.Settings)
                     Some settings
         | None -> return None
     }
 
-    let updateWeatherStationSettings connectionString (key : StationKey) (settings : StationSettings option) = async {
+    let createStation connectionString (weatherStation: WeatherStation) = async {
+        let! weatherStationRepository = weatherStationRepository connectionString
+        do! weatherStationRepository.Save weatherStation
+    }
+
+    let updateWeatherStationSettings connectionString (key : StationKey) (settings : FirmwareSettings option) = async {
         let! weatherStationRepository = weatherStationRepository connectionString
         match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
         | Some station ->
@@ -67,7 +72,7 @@ module Data =
                     //increment the Version property
                     let settingsVersion =
                         if not (isNull station.Settings) then
-                            let existingSettings = JsonConvert.DeserializeObject<StationSettings>(station.Settings)
+                            let existingSettings = JsonConvert.DeserializeObject<FirmwareSettings>(station.Settings)
                             existingSettings.Version + 1
                         else 1
                     let settings = {settings with Version = settingsVersion}

@@ -73,9 +73,16 @@ module Server =
         return Ok settings
     }
 
+    let createStation (key : StationKey) next (ctx : HttpContext) = task {
+        let station = Logic.createStation key
+        let connectionString = getConnectionString ctx
+        do! Data.createStation connectionString station
+        return! Successful.OK key next ctx
+    }
+
     type SetSettingsResponse = {
         ParticleRespose : Result<bool, string>
-        UpdatedSettings : StationSettings
+        UpdatedSettings : FirmwareSettings
     }
 
     let setSettings (key : StationKey) settings next (ctx : HttpContext) = task {
@@ -104,6 +111,7 @@ module Server =
         choose [
             GET >=> route "/api/stations" >=> (read getStations)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}" (getStationDetails >> read)
+            POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}" (createStation)
             GET >=>
                 routeBind<PageKey>
                     "/api/stations/{DeviceType}/{DeviceId}/readings/{FromDate}/{TooDate}"

@@ -26,7 +26,7 @@ module Device =
         UpdateResult : Loadable<string>
         Key : StationKey
         Device : Loadable<StationDetails>
-        Settings : Loadable<StationSettings option>
+        Settings : Loadable<FirmwareSettings option>
         ActiveTab : Tab
         PageSize : TimeSpan
         CurrentPage : DateTime
@@ -35,11 +35,11 @@ module Device =
     type Msg =
         | Station of Loadable<StationDetails>
         | Readings of StationDetails * DateTime * Loadable<Reading list>
-        | Settings of Loadable<StationSettings option>
+        | Settings of Loadable<FirmwareSettings option>
         | SelectTab of Tab
         | UpdateSettings
         | SettingsUpdated of Loadable<string>
-        | SettingsChanged of StationSettings option
+        | SettingsChanged of FirmwareSettings option
         | ClearUpdateResult
 
     let loadReadingsCmd (key : StationKey) stationDetails fromDate tooDate =
@@ -69,7 +69,7 @@ module Device =
         *)
         let url = (sprintf "/api/stations/%s/%s/settings" key.DeviceType key.DeviceId)
         let extraCoders = Extra.empty |> Extra.withDecimal
-        let json = Encode.Auto.toString<StationSettings>(0, settings, extra = extraCoders)
+        let json = Encode.Auto.toString<FirmwareSettings>(0, settings, extra = extraCoders)
         let jsonBody = Body ( BodyInit.Case3 json )
         Cmd.OfPromise.either
             (fun _ -> promise {
@@ -250,7 +250,7 @@ module Device =
                 let setValue builder value =
                     match settings with
                     | Some settings -> Some (builder settings value)
-                    | None -> Some (builder StationSettings.Default value)
+                    | None -> Some (builder FirmwareSettings.Default value)
                     |> SettingsChanged
                     |> dispatch
                 div [] [

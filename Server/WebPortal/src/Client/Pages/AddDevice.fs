@@ -19,32 +19,36 @@ module AddDevice =
 
     type Model = {
         SaveResult : Loadable<StationKey>
-        Station : Station
+        Station : StationKey
     }
 
     type Msg =
         | Save of Loadable<StationKey>
         | ClearSaveResult
-        | StationUpdate of Station
+        | StationUpdate of StationKey
 
 
     let init : Model * Cmd<Msg> =
-        let initialStation = {
-            Key = {DeviceId = null; DeviceType = null}
-            Name = "Name"
-            WundergroundId = None
-            Location = {Latitude = 0.0m; Longitude = 0.0m}
-            Status  = Offline
-        }
-        let initialModel = {SaveResult = Loadable.NotLoading; Station = initialStation}
+        let initialModel = {SaveResult = NotLoading; Station = {DeviceId = null; DeviceType = null}}
         initialModel, Cmd.none
 
     module P = Props
     module R = Helpers
 
+    let createStation key =
+        let url = (sprintf "/api/stations/%s/%s" key.DeviceType key.DeviceId)
+        Cmd.OfPromise.either
+            (fetchAs url)
+            [Method HttpMethod.POST]
+            (Ok >> Loaded >> Save)
+            (Error >> Loaded >> Save)
+
     let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
         match msg with
-        | Save _ -> currentModel, Cmd.none
+        | Save Loading ->
+            {currentModel with SaveResult = Loading}, createStation currentModel.Station
+        | Save saveResult ->
+            {currentModel with SaveResult = saveResult}, Cmd.none
         | ClearSaveResult -> {currentModel with SaveResult = NotLoading}, Cmd.none
         | StationUpdate station -> {currentModel with Station = station}, Cmd.none
 
@@ -71,31 +75,16 @@ module AddDevice =
 
 
             yield div [] [
-                    formControl "Name"
+                    formControl "Device Type"
                         (textInput
-                            (Some model.Station.Name)
-                            (updater (fun v -> {model.Station with Name = v})))
+                            (Some model.Station.DeviceType)
+                            (updater (fun v -> {model.Station with DeviceType = v})))
                         []
 
-                    formControl "Latitude"
-                        (decimalInput
-                            (Some model.Station.Location.Latitude)
-                            (updater (fun v -> {model.Station with Location = {model.Station.Location with Latitude = v}})))
-                        []
-
-                    formControl "Longitude"
-                        (decimalInput
-                            (Some model.Station.Location.Longitude)
-                            (updater (fun v -> {model.Station with Location = {model.Station.Location with Longitude = v}})))
-                        []
-
-                    formControl "WundergroundId"
+                    formControl "DeviceId"
                         (textInput
-                            model.Station.WundergroundId
-                            (updater (fun v ->
-                                let value = if String.IsNullOrWhiteSpace(v) then None else Some v
-                                {model.Station with WundergroundId = value})))
+                            (Some model.Station.DeviceId)
+                            (updater (fun v -> {model.Station with DeviceId = v})))
                         []
-
 
                     fullButton "Save" (fun _ -> dispatch (Save Loading)) FontAwesome.Free.Fa.Solid.Save]]

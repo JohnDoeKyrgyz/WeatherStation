@@ -62,7 +62,7 @@ type Station = {
     Status : Status
 }
 
-type StationSettings = {
+type FirmwareSettings = {
     Version : int
     Brownout : bool
     BrownoutPercentage : decimal

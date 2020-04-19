@@ -15,8 +15,8 @@ module ParticleConnect =
     open WeatherStation.Cache
 
     [<Literal>]
-    let secretsFile = __SOURCE_DIRECTORY__ + @"\Secrets.json"
-    type Secrets = JsonProvider< secretsFile >
+    let SecretsFile = __SOURCE_DIRECTORY__ + @"\Secrets.json"
+    type Secrets = JsonProvider< SecretsFile >
 
     type MfaResponse = JsonProvider< """{"mfa_token":"b1abb537-7a9a-4bee-ba3a-10faef51a093","error":"mfa_required","error_description":"Multi-factor authentication required"}""">
     type TokenResponse = JsonProvider< """{"token_type": "bearer","access_token": "7ac571640bc5625b3d67afe01d245fecb7b70be9","expires_in": 7776000,"refresh_token": "77f45105ee6bdd111ea18cdd1cc479d70ebd3ece"}""">
@@ -122,8 +122,8 @@ module ParticleConnect =
             Debug.WriteLine(sprintf "Saved %s" savedTokenFile)
         }
 
-    let expiration (token : TokenResponse.Root) = new DateTimeOffset(DateTime.UtcNow.AddSeconds(float token.ExpiresIn))
-    let applyExpiration (token : TokenResponse.Root) = new Token.Root(token.TokenType, token.AccessToken, token.ExpiresIn, token.RefreshToken, expiration token)
+    let expiration (token : TokenResponse.Root) = DateTimeOffset(DateTime.UtcNow.AddSeconds(float token.ExpiresIn))
+    let applyExpiration (token : TokenResponse.Root) = Token.Root(token.TokenType, token.AccessToken, token.ExpiresIn, token.RefreshToken, expiration token)
 
     let tokenCache secrets otpGenerator =
 
@@ -148,5 +148,5 @@ module ParticleConnect =
         let getToken = tokenCache secrets (fun () -> generateOtp secrets.ParticleAccountSecret)
         async {
             let! token = getToken DateTime.Now
-            return token |> Result.map (fun token -> new ParticleCloud(token.AccessToken))
+            return token |> Result.map (fun token -> ParticleCloud(token.AccessToken))
         }

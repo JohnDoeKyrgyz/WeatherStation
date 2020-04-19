@@ -73,11 +73,27 @@ module Logic =
         | None -> return None
     }
 
+    let createStation (key : StationKey) =
+        let weatherStation = {
+            DeviceType = string key.DeviceType
+            DeviceId = key.DeviceId
+            CreatedOn = DateTime.Now
+            WundergroundStationId = null
+            WundergroundPassword = null
+            DirectionOffsetDegrees = None
+            Latitude = 0.0
+            Longitude = 0.0
+            LastReading = None
+            Settings = null
+            Sensors = 0
+        }
+        weatherStation
+
     [<Literal>]
     let ParticleSettingsJson = __SOURCE_DIRECTORY__ + "/../../../../DeviceFirmware/Particle/src/Settings.json"
     type ParticleSettings = JsonProvider< ParticleSettingsJson >
 
-    let updateParticleDeviceSettings (key : StationKey) (settings : StationSettings) =
+    let updateParticleDeviceSettings (key : StationKey) (settings : FirmwareSettings) =
         if parseDeviceType key.DeviceType <> Particle then failwithf "DeviceType %s is not supported" key.DeviceType
         task {
             let! particleCloud = ParticleConnect.connect |> Async.StartAsTask
