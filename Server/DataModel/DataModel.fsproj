@@ -14,7 +14,7 @@
     <None Include="DataQueryTest.fsx" />    
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="C:\working\Scratch\FSharp.Azure.Storage\src\FSharp.Azure.Storage\FSharp.Azure.Storage.fsproj"/>
-    <!--PackageReference Include="FSharp.Azure.Storage" Version="3.3.1" /-->
+    <PackageReference Include="FSharp.Azure.Storage" Version="4.0.0" />
+    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.7" />
   </ItemGroup>
 </Project>
