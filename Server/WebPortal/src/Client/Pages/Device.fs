@@ -293,7 +293,7 @@ module Device =
                         (setValue (fun settings value -> {settings with PanelOffMinutes = value}))
                     |> simpleFormControl "Panel Off Minutes"
 
-                    button "Save" (fun _ -> dispatch UpdateSettings) FontAwesome.Free.Fa.Solid.Save])]
+                    fullButton "Save" (fun _ -> dispatch UpdateSettings) FontAwesome.Free.Fa.Solid.Save])]
 
         [Client.tabs
             (SelectTab >> dispatch) [

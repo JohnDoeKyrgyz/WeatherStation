@@ -28,11 +28,16 @@ module Client =
             return Decode.Auto.unsafeFromString<'T>(text, extra = extraEncoders)
         }
 
-    let button txt onClick icon =
-        Button.button [ Button.IsFullWidth; Button.Color IsPrimary; Button.OnClick onClick ] [
+    let fullButtonOptions = [ Button.IsFullWidth; Button.Color IsPrimary; ]
+
+    let button options txt onClick icon =
+        let options = Button.OnClick onClick :: options
+        Button.button options [
             span [][str txt]
             span [Class "icon"][
                 Icon.icon [] [Fa.i [icon] []]]]
+
+    let fullButton = button fullButtonOptions
 
     let tableRow values = tr [] [for value in values -> td [] [str value]]
 
@@ -126,3 +131,13 @@ module Client =
         Checkbox.checkbox [] [Checkbox.input [Props [
             if value.IsSome then yield Props.Checked value.Value;
             yield OnChange (fun event -> onChange  event.Checked)]]]
+
+    let textInput value onChange =
+        Input.text [
+            match value with
+            | Some (value : 'T) ->
+                yield Input.Option.Value (value.ToString())
+            | None -> ()
+            yield Input.OnChange (fun event ->
+                let stringValue = event.Value
+                onChange stringValue)]

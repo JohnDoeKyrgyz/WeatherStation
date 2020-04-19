@@ -9,18 +9,21 @@ module Pages =
     type Page =
         | Home
         | Device of StationKey
+        | AddDevice
 
     let toPath =
         function
         | Page.Home -> "#home"
+        | Page.AddDevice -> "#adddevice"
         | Page.Device key -> sprintf "#device/%s/%s" key.DeviceType key.DeviceId
 
     /// The URL is turned into a Result.
     let pageParser : Parser<Page -> Page,_> =
-        oneOf [ 
+        oneOf [
             map Page.Home (s "home")
+            map Page.AddDevice (s "adddevice")
             map (fun deviceType deviceId -> Page.Device({DeviceType = deviceType; DeviceId = deviceId})) (s "device" </> str </> str)]
 
-    let urlParser location = 
+    let urlParser location =
         let result = parsePath pageParser location
         result
