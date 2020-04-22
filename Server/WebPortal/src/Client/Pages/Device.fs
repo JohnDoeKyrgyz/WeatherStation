@@ -19,6 +19,7 @@ module Device =
 
     type Tab =
         | Data
+        | Messages
         | Graph
         | Settings
 
@@ -215,6 +216,16 @@ module Device =
                         numberOptional reading.DirectionDegrees
                         numberOptional reading.TemperatureCelciusBarometer])]
 
+        let showStatusMessages deviceDetails =
+            div [] [
+                paginator deviceDetails
+                table
+                    ["Time"; "Message"]
+                    deviceDetails.StatusMessages
+                    (fun message -> [
+                        date (message.CreatedOn.ToLocalTime())
+                        message.Message])]
+
         let graphs data =
             div [] [
                 paginator data
@@ -295,9 +306,10 @@ module Device =
 
                     fullButton "Save" (fun _ -> dispatch UpdateSettings) FontAwesome.Free.Fa.Solid.Save])]
 
-        [Client.tabs
+        [tabs
             (SelectTab >> dispatch) [
                 {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Free.Fa.Solid.Table}
+                {Name = "Messages"; Key = Messages; Content = loader model.Device showStatusMessages; Icon = Some FontAwesome.Free.Fa.Solid.Bell}
                 {Name = "Graph"; Key = Graph; Content = loader model.Device graphs; Icon = Some FontAwesome.Free.Fa.Solid.ChartLine}
                 {Name = "Settings"; Key = Tab.Settings; Content = settings; Icon = Some FontAwesome.Free.Fa.Solid.Cog}
             ]

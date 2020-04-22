@@ -30,7 +30,7 @@ module Repository =
 
     type IStatusMessagesRepository =
         inherit IRepository<StatusMessage>
-        abstract member GetDeviceStatuses : deviceId:string -> fromDate:DateTime -> tooDate:DateTime -> Async<StatusMessage list>
+        abstract member GetDeviceStatuses : deviceType:Shared.DeviceType -> deviceId:string -> fromDate:DateTime -> tooDate:DateTime -> Async<StatusMessage list>
 
     let createTableIfNecessary (connection : CloudTableClient) tableName =
         let tableReference = connection.GetTableReference(tableName)
@@ -144,11 +144,11 @@ module Repository =
     type StatusMessageRepository(connection, tableName) =
         inherit AzureStorageRepository<StatusMessage>(connection, tableName)
         interface IStatusMessagesRepository with
-            member this.GetDeviceStatuses deviceId (fromDate: DateTime) (tooDate: DateTime) =                           
+            member this.GetDeviceStatuses deviceType deviceId (fromDate: DateTime) (tooDate: DateTime) =                           
                 async {
                     let! statuses =
                         Query.all<StatusMessage>
-                        |> Query.where <@ fun statusMessage key -> key.PartitionKey = deviceId && fromDate <= statusMessage.CreatedOn && statusMessage.CreatedOn <= tooDate @>
+                        |> Query.where <@ fun statusMessage key -> key.PartitionKey = string deviceType && key.RowKey = deviceId && fromDate <= statusMessage.CreatedOn && statusMessage.CreatedOn <= tooDate @>
                         |> runQuery connection tableName
                     return statuses
                 }

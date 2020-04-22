@@ -1,5 +1,4 @@
 ﻿open System
-open System.IO
 open System.Text
 open FSharp.Data
 
@@ -23,19 +22,19 @@ let connect (secrets : Secrets.Root) =
     DeviceClient.CreateFromConnectionString(connectionString, TransportType.Mqtt)
 
 let sensors = [
-    Sensors.bme280
-    Sensors.ina219
-    Sensors.internalBattery
-    Sensors.qmc5883l]
+    bme280
+    ina219
+    internalBattery
+    qmc5883l]
 
 let random = Random()
 let generateRandomSensorReading (sensor : Sensor) =
     [for (_, valueType) in sensor.SampleValues ->
         match valueType with
-        | ValueType.Float -> 
+        | Float -> 
             let value = random.NextDouble()
             string value
-        | ValueType.Int -> 
+        | Int -> 
             let value = random.Next()
             string value]
     |> String.concat ":"

@@ -62,6 +62,8 @@ type StationDetails = {
     CreatedOn : DateTime
     Readings : Reading list
     PageSizeHours : float
+    StatusMessages : StatusMessage list
+
 }
 
 type Station = {

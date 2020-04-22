@@ -17,5 +17,6 @@
   <ItemGroup>
     <PackageReference Include="FSharp.Azure.Storage" Version="4.0.0" />
     <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.7" />
+    <PackageReference Include="Unquote" Version="4.0.0" />
   </ItemGroup>
 </Project>

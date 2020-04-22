@@ -78,7 +78,7 @@ module AddDevice =
                 | Loaded result ->
                     let color, header, message =
                         match result with
-                        | Ok response -> IsSuccess, "Success", (sprintf "Creatd station with id %s" response.DeviceId)
+                        | Ok response -> IsSuccess, "Success", (sprintf "Created station with id %s" response.DeviceId)
                         | Error exn -> IsDanger, "Error", exn.Message
                     [Message.message [Message.Option.Color color][
                         Message.header [] [

@@ -57,8 +57,12 @@ module Logic =
 
     let getWeatherStationDetails pageSizeHours data = async {
         match! data with
-        | Some (station : WeatherStation, readings : Model.Reading list ) ->
+        | Some (station : WeatherStation, readings : Model.Reading list, statusMessages : Model.StatusMessage list ) ->
             let readings = readings |> List.sortByDescending (fun reading -> reading.ReadingTime)
+            let statusMessages =
+                statusMessages
+                |> List.sortByDescending (fun reading -> reading.CreatedOn)
+                |> List.map createStatusMessage
             return
                 Some {
                     Key = {DeviceId = station.DeviceId; DeviceType = DeviceType.Parse station.DeviceType}
@@ -69,6 +73,7 @@ module Logic =
                     LastReading = station.LastReading
                     Readings = readings |> List.map createReading
                     PageSizeHours = pageSizeHours
+                    StatusMessages = statusMessages
                 }
         | None -> return None
     }

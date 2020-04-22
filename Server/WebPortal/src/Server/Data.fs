@@ -21,7 +21,11 @@ module Data =
             let lastReadingDate = defaultArg station.LastReading DateTime.Now
             let cutOffDate = lastReadingDate - pageSize
             let! readings = readingsRepository.GetRecentReadings key.DeviceId cutOffDate
-            return Some (station, readings)
+
+            let! statusMessageRepository = statusMessageRepository connectionString
+            let! statusMessages = statusMessageRepository.GetDeviceStatuses key.DeviceType key.DeviceId cutOffDate DateTime.Now
+
+            return Some (station, readings, statusMessages)
         | None -> return None
     }
 
@@ -40,7 +44,7 @@ module Data =
     let messages connectionString key fromDate tooDate =
         async {
             let! repository = statusMessageRepository connectionString
-            return! repository.GetDeviceStatuses key.DeviceId fromDate tooDate
+            return! repository.GetDeviceStatuses key.DeviceType key.DeviceId fromDate tooDate
         }
         |> paged fromDate tooDate
 

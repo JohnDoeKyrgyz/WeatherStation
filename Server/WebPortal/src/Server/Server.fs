@@ -36,8 +36,8 @@ module Server =
         task {
             let! data = reader connectionString |> Async.StartAsTask
             match data with
-            | Result.Ok data -> return! Successful.OK data next ctx
-            | Result.Error error -> return! RequestErrors.NOT_FOUND (string error) next ctx
+            | Ok data -> return! Successful.OK data next ctx
+            | Error error -> return! RequestErrors.NOT_FOUND (string error) next ctx
         }
 
     let getStations connectionString = async {
