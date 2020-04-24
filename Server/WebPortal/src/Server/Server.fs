@@ -60,9 +60,15 @@ module Server =
             | Some details -> Ok details
             | None -> Error (sprintf "No device %A" key) }
 
-    let getReadingsPage key fromDate toDate connectionString = async {
-        let! readings = readings connectionString key fromDate toDate
-        return Ok (readings |> List.map createReading) }
+    let getDataPage key fromDate toDate connectionString = async {
+        let! readings = readings connectionString key fromDate toDate |> Async.StartChild
+        let! messages = messages connectionString key fromDate toDate |> Async.StartChild
+        let! readings = readings
+        let! messages = messages
+        let readings = readings |> List.map createReading
+        let messages = messages |> List.map createStatusMessage
+        let result = {Readings = readings; Messages = messages}
+        return Ok result }
 
     let getMessagesPage key fromDate toDate connectionString = async {
         let! messages = messages connectionString key fromDate toDate
@@ -114,12 +120,8 @@ module Server =
             POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}" (createStation)
             GET >=>
                 routeBind<PageKey>
-                    "/api/stations/{DeviceType}/{DeviceId}/readings/{FromDate}/{TooDate}"
-                    (fun key -> getReadingsPage {DeviceType = key.DeviceType; DeviceId = key.DeviceId} (UrlDateTime.fromUrlDate key.FromDate) (UrlDateTime.fromUrlDate key.TooDate) |> read)
-            GET >=>
-                routeBind<PageKey>
-                    "/api/stations/{DeviceType}/{DeviceId}/messages/{FromDate}/{TooDate}"
-                    (fun key -> getMessagesPage {DeviceType = key.DeviceType; DeviceId = key.DeviceId} (UrlDateTime.fromUrlDate key.FromDate) (UrlDateTime.fromUrlDate key.TooDate) |> read)
+                    "/api/stations/{DeviceType}/{DeviceId}/data/{FromDate}/{TooDate}"
+                    (fun key -> getDataPage {DeviceType = key.DeviceType; DeviceId = key.DeviceId} (UrlDateTime.fromUrlDate key.FromDate) (UrlDateTime.fromUrlDate key.TooDate) |> read)
             GET >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (getSettings >> read)
             POST >=> routeBind<StationKey> "/api/stations/{DeviceType}/{DeviceId}/settings" (setSettings >> bindJson)
         ]

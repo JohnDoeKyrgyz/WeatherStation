@@ -18,7 +18,7 @@ module Device =
     open Client
 
     type Tab =
-        | Data
+        | DataTable
         | Messages
         | Graph
         | Settings
@@ -35,7 +35,7 @@ module Device =
 
     type Msg =
         | Station of Loadable<StationDetails>
-        | Readings of StationDetails * DateTime * Loadable<Reading list>
+        | Data of StationDetails * DateTime * Loadable<DataPage>
         | Settings of Loadable<FirmwareSettings option>
         | SelectTab of Tab
         | UpdateSettings
@@ -43,12 +43,12 @@ module Device =
         | SettingsChanged of FirmwareSettings option
         | ClearUpdateResult
 
-    let loadReadingsCmd (key : StationKey) stationDetails fromDate tooDate =
+    let loadDataCmd (key : StationKey) stationDetails fromDate tooDate =
         let url =
             let formattedFromDate = UrlDateTime.toUrlDate fromDate
             let formattedTooDate = UrlDateTime.toUrlDate tooDate
-            sprintf "/api/stations/%s/%s/readings/%s/%s" (string key.DeviceType) key.DeviceId formattedTooDate formattedFromDate
-        let result response = Readings (stationDetails, fromDate, response)
+            sprintf "/api/stations/%s/%s/data/%s/%s" (string key.DeviceType) key.DeviceId formattedTooDate formattedFromDate
+        let result response = Data (stationDetails, fromDate, response)
         Cmd.OfPromise.either
             (fetchAs url)
             []
@@ -95,7 +95,7 @@ module Device =
             (Error >> Loaded >> Settings)
 
     let init key : Model * Cmd<Msg> =
-        let initialModel = {Device = Loading; Key = key; ActiveTab = Data; Settings = Loading; UpdateResult = NotLoading; PageSize = TimeSpan.FromDays 2.0; CurrentPage = DateTime.Now}
+        let initialModel = {Device = Loading; Key = key; ActiveTab = DataTable; Settings = Loading; UpdateResult = NotLoading; PageSize = TimeSpan.FromDays 2.0; CurrentPage = DateTime.Now}
         initialModel, loadStationCmd key
 
     module P = Props
@@ -116,14 +116,16 @@ module Device =
                 | Loaded (Ok stationDetails) -> defaultArg stationDetails.LastReading DateTime.Now, TimeSpan.FromHours stationDetails.PageSizeHours
                 | _ -> DateTime.Now, currentModel.PageSize
             { currentModel with Device = result; PageSize = pageSize; CurrentPage = currentPage}, Cmd.none
-        | Readings (stationDetails, fromDate, readings) ->
+        | Data (stationDetails, fromDate, readings) ->
             match readings with
             | Loading ->
                 let fromDate = fromDate.ToUniversalTime()
                 let tooDate = (fromDate - currentModel.PageSize).ToUniversalTime()
-                {currentModel with Device = Loading}, loadReadingsCmd currentModel.Key stationDetails fromDate tooDate
-            | Loaded (Ok readings) ->
-                let deviceInfo = {stationDetails with Readings = readings}
+                {currentModel with Device = Loading}, loadDataCmd currentModel.Key stationDetails fromDate tooDate
+            | Loaded (Ok data) ->
+                let readings = data.Readings
+                let messages = data.Messages
+                let deviceInfo = {stationDetails with Readings = readings; StatusMessages = messages}
                 {currentModel with Device = Loaded (Ok deviceInfo); CurrentPage = fromDate}, Cmd.none
             | _ -> currentModel, Cmd.none
         | Settings settings ->
@@ -180,7 +182,7 @@ module Device =
     let view dispatch model =
 
         let paginator data =
-            let onNavigate fromDate _ = dispatch (Readings (data, fromDate, Loading))
+            let onNavigate fromDate _ = dispatch (Data (data, fromDate, Loading))
             let firstPage = defaultArg data.LastReading DateTime.Now
             let previousDate = model.CurrentPage + model.PageSize
             let previousPage = if previousDate < firstPage then previousDate else firstPage
@@ -308,7 +310,7 @@ module Device =
 
         [tabs
             (SelectTab >> dispatch) [
-                {Name = "Data"; Key = Data; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Free.Fa.Solid.Table}
+                {Name = "Data"; Key = DataTable; Content = loader model.Device showDeviceDetails; Icon = Some FontAwesome.Free.Fa.Solid.Table}
                 {Name = "Messages"; Key = Messages; Content = loader model.Device showStatusMessages; Icon = Some FontAwesome.Free.Fa.Solid.Bell}
                 {Name = "Graph"; Key = Graph; Content = loader model.Device graphs; Icon = Some FontAwesome.Free.Fa.Solid.ChartLine}
                 {Name = "Settings"; Key = Tab.Settings; Content = settings; Icon = Some FontAwesome.Free.Fa.Solid.Cog}

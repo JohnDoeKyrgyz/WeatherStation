@@ -63,7 +63,6 @@ type StationDetails = {
     Readings : Reading list
     PageSizeHours : float
     StatusMessages : StatusMessage list
-
 }
 
 type Station = {
@@ -94,6 +93,11 @@ with
         UseDeepSleep = true
         Version = 1
         PanelOffMinutes = 120}
+
+type DataPage = {
+    Readings : list<Reading>
+    Messages : list<StatusMessage>
+}
 
 module UrlDateTime =
     open System.Globalization
