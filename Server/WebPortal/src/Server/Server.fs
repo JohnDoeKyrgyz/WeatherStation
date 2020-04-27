@@ -4,7 +4,6 @@ open Microsoft.Extensions.Configuration
 module Server =
     open System
     open System.IO
-    open System.Configuration
 
     open Microsoft.Extensions.Logging
     open Microsoft.Extensions.DependencyInjection
