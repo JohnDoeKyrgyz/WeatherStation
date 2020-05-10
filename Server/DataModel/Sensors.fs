@@ -8,6 +8,7 @@ module Sensors =
     type ValueType = 
         | Float
         | Int
+        | Enum
 
     type Sensor = {
         Id : byte
@@ -37,6 +38,7 @@ module Sensors =
             [
                 BatteryChargeVoltage 0.0m<volts>, ValueType.Float
                 BatteryPercentage 0.0m<percent>, ValueType.Float
+                BatteryState BatteryState.Disconnected, ValueType.Enum
             ] }
 
     let anemometer =  {
@@ -117,8 +119,10 @@ module Sensors =
     let parseReadingOfSensors (sensors : seq<Sensor>) reading =
         let valuePattern (sampleReading : ReadingValues, valueType) =
             let name = readingKey sampleReading
+            let intPattern = sprintf @"(?<%s>-?\d+)" name
             match valueType with
-            | Int -> sprintf @"(?<%s>-?\d+)" name
+            | Int -> intPattern
+            | Enum -> intPattern
             | Float -> sprintf @"(?<%s>-?\d+\.\d+)" name
 
         let sensorMatch sensor =

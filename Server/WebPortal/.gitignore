@@ -13,3 +13,5 @@ release.sh
 deploy
 *.user
 src/Server/appsettings.json
+.fake
+.ionide

@@ -12,6 +12,8 @@ module WundergroundForwarderTests =
     open WeatherStation.Functions.WundergroundForwarder    
     open ReadingsTests
 
+    type DeviceType = WeatherStation.Shared.DeviceType
+
     let buildLog onMessage = { 
         new ILogger with
             member this.BeginScope(state: 'TState): IDisposable = raise (System.NotImplementedException())
@@ -113,6 +115,7 @@ module WundergroundForwarderTests =
                 let expectedReading = {
                     BatteryPercentage = 85.0
                     PanelMilliamps = 30.0
+                    BatteryState = int BatteryState.Charging
                     X = Some 100.0
                     Y = Some 101.0
                     Z = Some 102.0
@@ -194,6 +197,7 @@ module WundergroundForwarderTests =
                         let expectedReading = {
                             BatteryPercentage = 85.0
                             PanelMilliamps = 30.0
+                            BatteryState = int BatteryState.Charging
                             X = Some 100.0
                             Y = Some 101.0
                             Z = Some 102.0
@@ -231,7 +235,7 @@ module WundergroundForwarderTests =
                 let weatherStation = {weatherStation with CreatedOn = weatherStation.CreatedOn.ToUniversalTime()}
                 do! weatherStationRepository.Save weatherStation
 
-                let! weatherStationReloaded = weatherStationRepository.Get Particle weatherStation.DeviceId
+                let! weatherStationReloaded = weatherStationRepository.Get DeviceType.Particle weatherStation.DeviceId
                 Expect.isSome "No WeatherStation found" weatherStationReloaded
                 Expect.equal "WeatherStations are not equal" weatherStation weatherStationReloaded.Value
             }
@@ -266,11 +270,12 @@ module WundergroundForwarderTests =
                 do! loadWeatherStations [weatherStation]
                 do! clearReadings
 
-                let message = buildParticleMessage "Reading" weatherStation readingTime "100f4.006250:85.0p16.98:100.0b1.0:2.0:3.0d10.800000:86.500000a1.700000:15"
+                let message = buildParticleMessage "Reading" weatherStation readingTime "100f4.006250:85.0:2p16.98:100.0b1.0:2.0:3.0d10.800000:86.500000a1.700000:15"
 
                 let expectedReadings = [
                     BatteryChargeVoltage 4.006250M<volts>            
                     BatteryPercentage 85.0M<percent>
+                    BatteryState BatteryState.Charging
                     PanelVoltage 16.98M<volts>
                     ChargeMilliamps 100.0m<milliamps>
                     SpeedMetersPerSecond 1.700000M<meters/seconds>

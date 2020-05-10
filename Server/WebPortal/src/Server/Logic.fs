@@ -24,7 +24,7 @@ module Logic =
                     let lastReadingAge = DateTime.Now.Subtract(stationLastReadingTime)
                     let status = if lastReadingAge < activeThreshold then Active else Offline
                     yield {
-                        Key = {DeviceId = station.DeviceId.Trim(); DeviceType = station.DeviceType.Trim()}
+                        Key = {DeviceId = station.DeviceId.Trim(); DeviceType = DeviceType.Parse station.DeviceType}
                         Name = station.DeviceId.Trim()
                         WundergroundId = station.WundergroundStationId |> toOption |> Option.map (fun v -> v.Trim())
                         Status = status
@@ -57,11 +57,15 @@ module Logic =
 
     let getWeatherStationDetails pageSizeHours data = async {
         match! data with
-        | Some (station : WeatherStation, readings : Model.Reading list ) ->
+        | Some (station : WeatherStation, readings : Model.Reading list, statusMessages : Model.StatusMessage list ) ->
             let readings = readings |> List.sortByDescending (fun reading -> reading.ReadingTime)
+            let statusMessages =
+                statusMessages
+                |> List.sortByDescending (fun reading -> reading.CreatedOn)
+                |> List.map createStatusMessage
             return
                 Some {
-                    Key = {DeviceId = station.DeviceId; DeviceType = station.DeviceType}
+                    Key = {DeviceId = station.DeviceId; DeviceType = DeviceType.Parse station.DeviceType}
                     Name = station.DeviceId
                     CreatedOn = station.CreatedOn
                     WundergroundId = toOption station.WundergroundStationId
@@ -69,16 +73,33 @@ module Logic =
                     LastReading = station.LastReading
                     Readings = readings |> List.map createReading
                     PageSizeHours = pageSizeHours
+                    StatusMessages = statusMessages
                 }
         | None -> return None
     }
+
+    let createStation (key : StationKey) =
+        let weatherStation = {
+            DeviceType = string key.DeviceType
+            DeviceId = key.DeviceId
+            CreatedOn = DateTime.Now
+            WundergroundStationId = null
+            WundergroundPassword = null
+            DirectionOffsetDegrees = None
+            Latitude = 0.0
+            Longitude = 0.0
+            LastReading = None
+            Settings = null
+            Sensors = 0
+        }
+        weatherStation
 
     [<Literal>]
     let ParticleSettingsJson = __SOURCE_DIRECTORY__ + "/../../../../DeviceFirmware/Particle/src/Settings.json"
     type ParticleSettings = JsonProvider< ParticleSettingsJson >
 
-    let updateParticleDeviceSettings (key : StationKey) (settings : StationSettings) =
-        if parseDeviceType key.DeviceType <> Particle then failwithf "DeviceType %s is not supported" key.DeviceType
+    let updateParticleDeviceSettings (key : StationKey) (settings : FirmwareSettings) =
+        if key.DeviceType <> Particle then failwithf "DeviceType %Acls is not supported" key.DeviceType
         task {
             let! particleCloud = ParticleConnect.connect |> Async.StartAsTask
             match particleCloud with

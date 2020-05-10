@@ -2,8 +2,7 @@ namespace WeatherStation
 
 module AzureStorage =
 
-    open Microsoft.WindowsAzure.Storage    
-    open Microsoft.WindowsAzure.Storage.Table
+    open Microsoft.Azure.Cosmos.Table    
 
     open WeatherStation.Cache
 
@@ -14,7 +13,7 @@ module AzureStorage =
 
     let deviceTypes =
         let cases =
-            typedefof<Model.DeviceType>
+            typedefof<Shared.DeviceType>
             |> FSharp.Reflection.FSharpType.GetUnionCases
         [for case in cases -> case.Name]
 

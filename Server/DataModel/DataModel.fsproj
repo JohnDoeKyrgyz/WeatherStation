@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Cache.fs" />
+    <Compile Include="..\WebPortal\src\Shared\Shared.fs" />
     <Compile Include="Model.fs" />
     <Compile Include="Readings.fs" />
     <Compile Include="Sensors.fs" />
@@ -14,7 +15,8 @@
     <None Include="DataQueryTest.fsx" />    
   </ItemGroup>
   <ItemGroup>
-    <None Include="paket.references" />
+    <PackageReference Include="FSharp.Azure.Storage" Version="4.0.0" />
+    <PackageReference Include="Microsoft.Azure.Cosmos.Table" Version="1.0.7" />
+    <PackageReference Include="Unquote" Version="4.0.0" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

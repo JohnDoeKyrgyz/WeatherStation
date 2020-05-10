@@ -13,7 +13,7 @@ module Home =
     open Client
 
     module Icons = Fable.FontAwesome.Free.Fa.Solid
-    
+
     type Model = {
         Stations : Loadable<Station list>
     }
@@ -21,6 +21,8 @@ module Home =
     type Msg =
         | Stations of Loadable<Station list>
         | Select of Station
+        | Add
+        | Settings
 
     let loadStationsCmd =
         Cmd.OfPromise.either
@@ -40,9 +42,8 @@ module Home =
         | Stations result ->
             let nextModel = { currentModel with Stations = result }
             nextModel, Cmd.none
-        | Select _ ->
-            //This message is actually handled by the parent Application
-            currentModel, Cmd.none
+        //These message is actually handled by the parent Application
+        | _ -> currentModel, Cmd.none
 
     let stationsList dispatch stations =
         Table.table [] [
@@ -50,7 +51,13 @@ module Home =
                 tr [] [
                     th [] [str "Name"]
                     th [] [str "Status"]
-                    th [] [button "Reload" (fun _ -> dispatch (Stations Loading)) Icons.Redo]]]
+                    th [] [
+                        div[Style [Float FloatOptions.Left; Width "50%"]][
+                            button [Button.IsFullWidth] "Add" (fun _ -> dispatch Add) Icons.Plus
+                        ]
+                        div [Style [MarginLeft "50%"]][
+                            fullButton "Reload" (fun _ -> dispatch (Stations Loading)) Icons.Redo]]]
+                        ]
             tbody []
                 [for station in stations do
                     let statusColor =
@@ -65,7 +72,7 @@ module Home =
                                 else yield str station.Name]
                             td [] [
                                 Tag.tag [Tag.Color statusColor] [str (string station.Status)]]
-                            td [] [button "Details" (fun _ -> dispatch (Select station)) Icons.Table]]]]
+                            td [] [fullButton "Details" (fun _ -> dispatch (Select station)) Icons.Table]]]]
 
     let view dispatch model = [
         yield! loader model.Stations (stationsList dispatch)]

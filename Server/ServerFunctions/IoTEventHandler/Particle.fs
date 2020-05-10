@@ -12,7 +12,7 @@ module Particle =
     let ParticleSample = __SOURCE_DIRECTORY__ + @"\ParticleStatusUpdate.json"
     type ParticlePayload = JsonProvider<ParticleSample, SampleIsList = true>
 
-    type ParticeEvent =
+    type ParticleEvent =
         | StatusMessage of Model.StatusMessage
         | Reading of Readings.DeviceReadings
 
@@ -31,7 +31,7 @@ module Particle =
             StatusMessage {
                 DeviceId = particleReading.DeviceId
                 StatusMessage = particleReading.Data
-                DeviceType = string Model.DeviceType.Particle
+                DeviceType = string Shared.DeviceType.Particle
                 CreatedOn = particleReading.PublishedAt.UtcDateTime}
         | event ->
             failwithf "Unsupported Event %s" event            

@@ -2,18 +2,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Secrets.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Secrets.Template.json" />
-    <None Include="paket.references" />
     <Compile Include="SimulatedDevice.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\DataModel\DataModel.fsproj" />
   </ItemGroup>
-  <Import Project="..\..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <PackageReference Include="FSharp.Data" Version="3.3.3" />
+    <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.25.0" />
+  </ItemGroup>
 </Project>

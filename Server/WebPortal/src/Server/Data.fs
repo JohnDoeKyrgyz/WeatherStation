@@ -15,13 +15,17 @@ module Data =
 
     let weatherStationDetails connectionString pageSize (key : StationKey) = async {
         let! weatherStationRepository = weatherStationRepository connectionString
-        match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
+        match! weatherStationRepository.Get key.DeviceType key.DeviceId with
         | Some station ->
             let! readingsRepository = readingsRepository connectionString
             let lastReadingDate = defaultArg station.LastReading DateTime.Now
             let cutOffDate = lastReadingDate - pageSize
             let! readings = readingsRepository.GetRecentReadings key.DeviceId cutOffDate
-            return Some (station, readings)
+
+            let! statusMessageRepository = statusMessageRepository connectionString
+            let! statusMessages = statusMessageRepository.GetDeviceStatuses key.DeviceType key.DeviceId cutOffDate DateTime.Now
+
+            return Some (station, readings, statusMessages)
         | None -> return None
     }
 
@@ -40,26 +44,31 @@ module Data =
     let messages connectionString key fromDate tooDate =
         async {
             let! repository = statusMessageRepository connectionString
-            return! repository.GetDeviceStatuses key.DeviceId fromDate tooDate
+            return! repository.GetDeviceStatuses key.DeviceType key.DeviceId fromDate tooDate
         }
         |> paged fromDate tooDate
 
     let weatherStationSettings connectionString key = async {
         let! weatherStationRepository = weatherStationRepository connectionString
-        match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
+        match! weatherStationRepository.Get key.DeviceType key.DeviceId with
         | Some station ->
             return
                 if isNull station.Settings
                 then None
                 else
-                    let settings = JsonConvert.DeserializeObject<StationSettings>(station.Settings)
+                    let settings = JsonConvert.DeserializeObject<FirmwareSettings>(station.Settings)
                     Some settings
         | None -> return None
     }
 
-    let updateWeatherStationSettings connectionString (key : StationKey) (settings : StationSettings option) = async {
+    let createStation connectionString (weatherStation: WeatherStation) = async {
         let! weatherStationRepository = weatherStationRepository connectionString
-        match! weatherStationRepository.Get (parseDeviceType key.DeviceType) key.DeviceId with
+        do! weatherStationRepository.Save weatherStation
+    }
+
+    let updateWeatherStationSettings connectionString (key : StationKey) (settings : FirmwareSettings option) = async {
+        let! weatherStationRepository = weatherStationRepository connectionString
+        match! weatherStationRepository.Get key.DeviceType key.DeviceId with
         | Some station ->
             let updatedSettings, serializedSettings =
                 match settings with
@@ -67,7 +76,7 @@ module Data =
                     //increment the Version property
                     let settingsVersion =
                         if not (isNull station.Settings) then
-                            let existingSettings = JsonConvert.DeserializeObject<StationSettings>(station.Settings)
+                            let existingSettings = JsonConvert.DeserializeObject<FirmwareSettings>(station.Settings)
                             existingSettings.Version + 1
                         else 1
                     let settings = {settings with Version = settingsVersion}

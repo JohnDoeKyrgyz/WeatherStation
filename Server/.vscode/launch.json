@@ -2,11 +2,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        },
+        {
             "name": "Debug Server",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "Build Server",
-            "program": "${workspaceFolder}/WebPortal/src/Server/bin/Debug/netcoreapp2.2/Server.dll",
+            "program": "${workspaceFolder}/WebPortal/src/Server/bin/Debug/netcoreapp3.1/Server.dll",
+            "cwd": "${workspaceFolder}/WebPortal/src/Server",
             "args": [],
             "logging": {
                 "moduleLoad": false
@@ -38,7 +45,7 @@
             "webRoot": "${workspaceFolder}/WebPortal/src/Client",
             "sourceMaps": true,
             "sourceMapPathOverrides": {
-                "webpack:///*": "${workspaceFolder}/*",
+                "webpack:///*": "${workspaceFolder}/WebPortal/*",
             }
         }
     ],

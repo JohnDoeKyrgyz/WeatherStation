@@ -1,9 +1,13 @@
-#r "paket: groupref build //"
+#r "paket: 
+nuget Fake.Core.Target
+nuget Fake.IO.Zip
+nuget Fake.DotNet.Cli
+nuget Fake.Core.Process
+nuget FSharp.Data
+"
 #load ".fake/build.fsx/intellisense.fsx"
-
 #if !FAKE
-#r "netstandard"
-#r "Facades/netstandard" // https://github.com/ionide/ionide-vscode-fsharp/issues/839#issuecomment-396296095
+  #r "Facades/netstandard"
 #endif
 
 open System
@@ -58,14 +62,20 @@ let runDotNet cmd workingDir =
         DotNet.exec (DotNet.Options.withWorkingDirectory workingDir) cmd ""
     if result.ExitCode <> 0 then failwithf "'dotnet %s' failed in %s" cmd workingDir
 
+let openBrowser url =
+    //https://github.com/dotnet/corefx/issues/10361
+    Command.ShellCommand url
+    |> CreateProcess.fromCommand
+    |> CreateProcess.ensureExitCodeWithMessage "opening browser failed"
+    |> Proc.run
+    |> ignore    
+
 Target.create "Clean" (fun _ ->
     Shell.cleanDirs [webDeployDir]
     runDotNet "clean" "."
 )
 
 Target.create "InstallClient" (fun _ ->
-    printfn "%s" webPath
-    printfn "%s" webClientPath
     printfn "Node version:"
     runTool nodeTool "--version" webPath
     printfn "Yarn version:"
@@ -81,7 +91,7 @@ Target.create "Bundle" (fun _ ->
 
 Target.create "Build" (fun _ ->
     runDotNet "build" webServerPath
-    runTool yarnTool "webpack-cli --config src/webpack.config.js -p" webClientPath
+    runTool yarnTool "webpack-cli -p" webClientPath
 )
 
 Target.create "BuildFunctions" (fun _ ->
@@ -111,11 +121,26 @@ Target.create "Run" (fun _ ->
     let server = async { runDotNet "watch run" webServerPath }    
     let serverTests = async { runDotNet "watch run" serverTestsPath }
     let client = async {
-        runTool yarnTool "webpack-dev-server --config src/webpack.config.js" webClientPath
+        runTool yarnTool "webpack-dev-server" webClientPath
     }
 
-    [ serverTests; server; client ]
-    //[ server; client ]
+    let browser = async {
+        do! Async.Sleep 5000
+        openBrowser "http://localhost:8080"
+    }
+
+    let vsCodeSession = Environment.hasEnvironVar "vsCodeSession"
+    let safeClientOnly = Environment.hasEnvironVar "safeClientOnly"
+
+    let tasks =
+        [ 
+            yield serverTests
+            if not safeClientOnly then yield server
+            yield client
+            if not vsCodeSession then yield browser 
+        ]
+
+    tasks
     |> Async.Parallel
     |> Async.RunSynchronously
     |> ignore

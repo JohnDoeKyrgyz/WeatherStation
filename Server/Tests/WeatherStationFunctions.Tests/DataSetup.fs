@@ -5,7 +5,7 @@ module DataSetup =
     open WeatherStation.Model
     open FSharp.Azure.Storage
     open FSharp.Azure.Storage.Table
-    open Microsoft.WindowsAzure.Storage.Table
+    open Microsoft.Azure.Cosmos.Table
 
     let connectionString = "UseDevelopmentStorage=true"
 

@@ -8,33 +8,33 @@ module ParticleConnect =
     open System.Diagnostics
 
     open FSharp.Data
-    
+
     open OtpNet
     open Particle.SDK
 
     open WeatherStation.Cache
 
     [<Literal>]
-    let secretsFile = __SOURCE_DIRECTORY__ + @"\Secrets.json"
-    type Secrets = JsonProvider< secretsFile >
+    let SecretsFile = __SOURCE_DIRECTORY__ + @"\Secrets.json"
+    type Secrets = JsonProvider< SecretsFile >
 
     type MfaResponse = JsonProvider< """{"mfa_token":"b1abb537-7a9a-4bee-ba3a-10faef51a093","error":"mfa_required","error_description":"Multi-factor authentication required"}""">
     type TokenResponse = JsonProvider< """{"token_type": "bearer","access_token": "7ac571640bc5625b3d67afe01d245fecb7b70be9","expires_in": 7776000,"refresh_token": "77f45105ee6bdd111ea18cdd1cc479d70ebd3ece"}""">
     type Token = JsonProvider< """{"token_type": "bearer","access_token": "7ac571640bc5625b3d67afe01d245fecb7b70be9","expires_in": 7776000,"refresh_token": "77f45105ee6bdd111ea18cdd1cc479d70ebd3ece", "expires": "2018-10-01T21:12:20.492Z"}""">
 
-    type GetTokenResult = 
+    type GetTokenResult =
         | Token of TokenResponse.Root
         | RequireOneTimePassword of MfaResponse.Root
 
     let private particleTokenRequest (secrets : Secrets.Root) formValues =
         Http.AsyncRequestStream(
-            "https://api.particle.io/oauth/token",  
+            "https://api.particle.io/oauth/token",
             httpMethod = "POST",
             body = FormValues formValues,
             headers = [
                 HttpRequestHeaders.BasicAuth secrets.Client.Id secrets.Client.Secret
                 HttpRequestHeaders.ContentType HttpContentTypes.FormValues])
-    
+
 
     let getToken (secrets : Secrets.Root) =
         async {
@@ -44,11 +44,11 @@ module ParticleConnect =
                         secrets [
                         "grant_type", "password"
                         "username", secrets.Username
-                        "password", secrets.Password]           
+                        "password", secrets.Password]
                 let tokenResponse = TokenResponse.Load response.ResponseStream
                 return Token tokenResponse
             with
-            | :? WebException as ex -> 
+            | :? WebException as ex ->
                 let responseBodyStream = ex.Response.GetResponseStream()
                 let mfaResponse = MfaResponse.Load responseBodyStream
                 return RequireOneTimePassword mfaResponse
@@ -95,7 +95,7 @@ module ParticleConnect =
                 printfn "Could not refresh token: %s" error.Message
                 return! getTokenWithMfa secrets (otpGenerator()) }
 
-    let getTokenWithDefaultMfa =        
+    let getTokenWithDefaultMfa =
         let secrets = Secrets.GetSample()
         getTokenWithMfa secrets (generateOtp secrets.ParticleAccountSecret)
 
@@ -109,9 +109,9 @@ module ParticleConnect =
                     let! token = Token.AsyncLoad savedTokenFile
                     return Some token
                 }
-                
+
             else async { return None }
-        }        
+        }
 
     let saveToken (token : Token.Root) =
         async {
@@ -122,8 +122,8 @@ module ParticleConnect =
             Debug.WriteLine(sprintf "Saved %s" savedTokenFile)
         }
 
-    let expiration (token : TokenResponse.Root) = new DateTimeOffset(DateTime.UtcNow.AddSeconds(float token.ExpiresIn))
-    let applyExpiration (token : TokenResponse.Root) = new Token.Root(token.TokenType, token.AccessToken, token.ExpiresIn, token.RefreshToken, expiration token)
+    let expiration (token : TokenResponse.Root) = DateTimeOffset(DateTime.UtcNow.AddSeconds(float token.ExpiresIn))
+    let applyExpiration (token : TokenResponse.Root) = Token.Root(token.TokenType, token.AccessToken, token.ExpiresIn, token.RefreshToken, expiration token)
 
     let tokenCache secrets otpGenerator =
 
@@ -148,5 +148,5 @@ module ParticleConnect =
         let getToken = tokenCache secrets (fun () -> generateOtp secrets.ParticleAccountSecret)
         async {
             let! token = getToken DateTime.Now
-            return token |> Result.map (fun token -> new ParticleCloud(token.AccessToken))
+            return token |> Result.map (fun token -> ParticleCloud(token.AccessToken))
         }

@@ -37,10 +37,20 @@ type StatusMessage = {
     CreatedOn : DateTime
 }
 
+type DeviceType =
+    | Particle
+    | Test
+    with
+        static member Parse value =
+            match value with
+            | "Particle" -> Particle
+            | "Test" -> Test
+            | _ -> failwithf "%s is not a valid DeviceType" value
+
 [<CLIMutable>]
 type StationKey = {
     DeviceId : string
-    DeviceType : string
+    DeviceType : DeviceType
 }
 
 type StationDetails = {
@@ -52,6 +62,7 @@ type StationDetails = {
     CreatedOn : DateTime
     Readings : Reading list
     PageSizeHours : float
+    StatusMessages : StatusMessage list
 }
 
 type Station = {
@@ -62,7 +73,7 @@ type Station = {
     Status : Status
 }
 
-type StationSettings = {
+type FirmwareSettings = {
     Version : int
     Brownout : bool
     BrownoutPercentage : decimal
@@ -82,6 +93,11 @@ with
         UseDeepSleep = true
         Version = 1
         PanelOffMinutes = 120}
+
+type DataPage = {
+    Readings : list<Reading>
+    Messages : list<StatusMessage>
+}
 
 module UrlDateTime =
     open System.Globalization
