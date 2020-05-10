@@ -23,7 +23,7 @@ STARTUP(System.enableFeature(FEATURE_RETAINED_MEMORY));
 #include "settings.h"
 #include "Sensor.h"
 
-PMIC pmic;
+SystemPowerConfiguration conf;
 FuelGauge fuelGuage;
 
 Settings settings;
@@ -43,6 +43,8 @@ Barometer barometer;
 Sensor *sensors[] = {&battery, &panel, &anemometer, &barometer};
 const int sensorCount = sizeof(sensors) / sizeof(sensors[0]);
 bool sensorReadResults[sensorCount];
+
+STARTUP( initializePowerSettings() );
 
 void waitForConnection()
 {
@@ -83,13 +85,17 @@ void onError(const char *message)
 
 void initializePowerSettings()
 {
-  //Allow the PMIC to charge the battery from a solar panel
-  pmic.begin();
-  pmic.setInputVoltageLimit(5080);         //  for 6V Solar Panels
-  pmic.setInputCurrentLimit(2000);         // 2000 mA, higher than req'd
-  pmic.setChargeVoltage(4208);             //  Set Li-Po charge termination voltage to 4.21V,  Monitor the Enclosure Temps
-  pmic.setChargeCurrent(0, 0, 1, 1, 1, 0); // 1408 mA [0+0+512mA+256mA+128mA+0] + 512 Offset
-  pmic.enableDPDM();  
+  conf
+    .powerSourceMaxCurrent(2000)
+    .powerSourceMinVoltage(5080)
+    .batteryChargeCurrent(1024)
+    .batteryChargeVoltage(4208)
+    .feature(SystemPowerFeature::PMIC_DETECTION)
+    //.feature(SystemPowerFeature::USE_VIN_SETTINGS_WITH_USB_HOST) 
+    ;
+  System.setPowerConfiguration(conf);
+
+  fuelGuage.begin();
 }
 
 void deepSleep(unsigned long seconds)
@@ -153,7 +159,7 @@ void onSettingsUpdate(const char *event, const char *data)
 void beep(int duration)
 {
   digitalWrite(BUZZER, HIGH);
-  delay(200);
+  delay(duration);
   digitalWrite(BUZZER, LOW);
 }
 
@@ -170,18 +176,7 @@ void checkBrownout()
     Serial.printlnf("Brownout threshold %f exceeded by system battery percentage %f", settings.brownoutPercentage, systemSoC);
 
     //long beep
-    beep(3000);
-
-    //signal the LED red and white
-    RGB.control(true);
-    for (int i = 0; i < 4; i++)
-    {
-      RGB.color(255, 0, 0); //red
-      delay(100);
-      RGB.color(255, 255, 255); //white
-      delay(100);
-    }
-    RGB.control(false);
+    beep(5000);
 
     deepSleep(settings.brownoutMinutes * 60);
   }
@@ -232,28 +227,11 @@ bool selfTest()
 {
   Serial.println("Self Test...");
   bool result = readSensors();
-
-  if (result)
-  {
-    beep(500);
-  }
-  else
-  {
-    //three short beeps
-    for (int i = 0; i < 3; i++)
-    {
-      beep(250);
-      delay(250);
-    }
-  }
   return result;
 }
 
 void setup()
-{
-  fuelGuage.begin();
-  initializePowerSettings();
-  
+{  
   Serial.begin(115200);
 
   //Turn off the peripherals to start
@@ -268,12 +246,12 @@ void setup()
 
   Particle.subscribe("Settings", onSettingsUpdate, MY_DEVICES);
 
-  //short beep to indicate startup
+  //beep to indicate startup
   pinMode(BUZZER, OUTPUT);
   if(!setupComplete){
-    beep(200);
+    beep(500);
     delay(5000);
-  }  
+  }
 
   Serial.printlnf("WeatherStation %s", FIRMWARE_VERSION);
 
@@ -281,12 +259,6 @@ void setup()
   Serial.print("Loaded settings...");
   settings = loadSettings();
   Serial.println("!");
-
-  if(!setupComplete){
-    beep(150);
-    delay(150);
-    beep(150);
-  }  
 }
 
 void loop()
@@ -312,6 +284,15 @@ void loop()
 
   bool selfTestSuccess = false;
   selfTestSuccess = setupComplete || (initialized && selfTest());
+  if (!selfTestSuccess)
+  {
+    //three short beeps
+    for (int i = 0; i < 3; i++)
+    {
+      beep(250);
+      delay(250);
+    }
+  }
 
   if (initialized)
   {

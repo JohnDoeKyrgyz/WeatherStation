@@ -50,7 +50,8 @@ public:
     {
         float batteryVoltage = fuelGuage.getVCell();
         float batteryPercentage = fuelGuage.getNormalizedSoC();
-        reading += sprintf(reading, "f%f:%f", batteryVoltage, batteryPercentage);
+        int batteryState = System.batteryState();        
+        reading += sprintf(reading, "f%f:%f:%d", batteryVoltage, batteryPercentage, batteryState);
         return true;
     }
     bool begin()
