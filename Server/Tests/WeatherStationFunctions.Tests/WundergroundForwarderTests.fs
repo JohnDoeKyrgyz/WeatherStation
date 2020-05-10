@@ -1,22 +1,26 @@
 ﻿namespace WeatherStation.Tests.Functions
+
+open NUnit.Framework
+open WeatherStation
+
+[<TestFixture>]
 module WundergroundForwarderTests =
-    open Expecto
-    open Expecto.Flip
     open System
-    open System.Diagnostics  
+    open System.Diagnostics
+    open System.Threading.Tasks
+    
     open Microsoft.Extensions.Logging    
-    open WeatherStation
     open WeatherStation.Model
-    open WeatherStation.Readings    
-    open WeatherStation.Tests.Functions.DataSetup
-    open WeatherStation.Functions.WundergroundForwarder    
+    open WeatherStation.Functions.WundergroundForwarder
+    
     open ReadingsTests
+    open Readings
 
     type DeviceType = WeatherStation.Shared.DeviceType
 
     let buildLog onMessage = { 
         new ILogger with
-            member this.BeginScope(state: 'TState): IDisposable = raise (System.NotImplementedException())
+            member this.BeginScope(state: 'TState): IDisposable = raise (NotImplementedException())
             member this.IsEnabled(logLevel: LogLevel): bool = true
             member this.Log<'TState>(logLevel: LogLevel, eventId: EventId, state: 'TState, exToLog: exn, formatter: Func<'TState,exn,string>): unit = 
                 let message = formatter.Invoke(state, exToLog)
@@ -50,68 +54,166 @@ module WundergroundForwarderTests =
             printfn "%A" (actualLevel, actualMessage)
             let index = !messageIndex
             let level, messageCompare = index |> Array.get expectedMessages
-            Expect.equal "Unexpected log level" level actualLevel 
+            Assert.That(actualLevel, Is.EqualTo(level), "Unexpected log level") 
             match messageCompare with
-            | Exact message -> Expect.equal "Unexpected message" message actualMessage
-            | Test test -> Expect.isTrue "Unexpected message" (test actualMessage)
+            | Exact message -> Assert.That(actualMessage, Is.EqualTo(message), "Unexpected message")
+            | Test test -> Assert.That(test actualMessage, "Unexpected message")
             | Ignore -> ()
             messageIndex := index + 1 )
 
-    [<Tests>]
-    let errorHandlingTests =
+    let processFaultyEventHubMessage log weatherStation readings eventHubMessage =
+        let save _ = async { return () }
+        processEventHubMessage 
+            log 
+            (fun _ _ _ _ -> async { failwith "Should not have posted to wunderground" })
+            (fun _ _ -> async { return weatherStation} )
+            save
+            save
+            (fun _ _ -> async { return readings })
+            (async { return (fun _ _ -> failwith "Did not expect settings retrieval")})
+            (fun _ -> failwith "Did not expect save StatusMessage")
+            eventHubMessage
+        |> Async.StartAsTask
+        :> Task
 
-        let processEventHubMessage log weatherStation readings =
-            let save _ = async { return () }
-            processEventHubMessage 
-                log 
-                (fun _ _ _ _ -> async { failwith "Should not have posted to wunderground" })
-                (fun _ _ -> async { return weatherStation} )
-                save
-                save
-                (fun _ _ -> async { return readings })
-                (async { return (fun _ _ -> failwith "Did not expect settings retrieval")})
-                (fun _ -> failwith "Did not expect save StatusMessage")
-
-        testList "Error Handling" [
-            testCaseAsync "Empty message" (processEventHubMessage log None [] "")
+    [<Test>]
+    let EmptyMessage() = (processFaultyEventHubMessage log None [] "")
             
-            testAsync "Missing particle device" {
-                let message =
-                    """
-                    {
-                        "data": "100:4.006250:3864|d10.800000:86.500000a1.700000:15",
-                        "device_id": "1e0037000751363130333334",
-                        "event": "Reading",
-                        "published_at": "2018-06-04T23:35:04.892Z"
-                    }
-                    """
-
-                let log = logExpectations [|
-                    LogLevel.Information, Exact message
-                    LogLevel.Information, Exact "Parsed particle reading for device 1e0037000751363130333334"
-                    LogLevel.Information, Ignore
-                    LogLevel.Information, Exact "Searching for device Particle 1e0037000751363130333334 in registry"
-                    LogLevel.Information, Exact "Particle 1e0037000751363130333334 not found. Searching for device Test 1e0037000751363130333334 in registry"
-                    LogLevel.Error, Exact "Device [1e0037000751363130333334] is not provisioned"|]
-                
-                do!
-                    processEventHubMessage log None [] message
+    [<Test>]            
+    let MissingParticleDevice() =
+        let message =
+            """
+            {
+                "data": "100:4.006250:3864|d10.800000:86.500000a1.700000:15",
+                "device_id": "1e0037000751363130333334",
+                "event": "Reading",
+                "published_at": "2018-06-04T23:35:04.892Z"
             }
-        ]
+            """
+
+        let log = logExpectations [|
+            LogLevel.Information, Exact message
+            LogLevel.Information, Exact "Parsed particle reading for device 1e0037000751363130333334"
+            LogLevel.Information, Ignore
+            LogLevel.Information, Exact "Searching for device Particle 1e0037000751363130333334 in registry"
+            LogLevel.Information, Exact "Particle 1e0037000751363130333334 not found. Searching for device Test 1e0037000751363130333334 in registry"
+            LogLevel.Error, Exact "Device [1e0037000751363130333334] is not provisioned"|]
+        
+        processFaultyEventHubMessage log None [] message
 
     let readingTime = DateTime(2018,1,1,1,1,0)
 
-    [<Tests>]
-    let readingTests =
-        testList "Reading Static Unit Tests" [
-            testAsync "Empty particle data" {
-                let message = buildParticleMessage "Reading" weatherStation readingTime String.Empty
-                let! reading = readingTest log [] readingTime weatherStation message [ReadingTime readingTime]
-                Expect.equal "WindSpeed should be blank" reading.SpeedMetersPerSecond None
-                Expect.equal "BatteryCharge should be blank" reading.BatteryChargeVoltage 0.0
-                Expect.equal "Unexpected DeviceTime" reading.DeviceTime readingTime
-            }            
-            testAsync "Basic reading" {
+    [<Test>]
+    let EmptyParticleData() =
+        async {
+            
+            let message = buildParticleMessage "Reading" weatherStation readingTime String.Empty
+            let! reading = readingTest log [] readingTime weatherStation message [ReadingTime readingTime]
+            Assert.That(reading.SpeedMetersPerSecond.IsNone, "WindSpeed should be blank")
+            Assert.That(reading.BatteryChargeVoltage, Is.EqualTo(0.0), "BatteryCharge should be blank")
+            Assert.That(reading.DeviceTime, Is.EqualTo(readingTime), "Unexpected DeviceTime")
+        }
+        |> Async.StartAsTask
+        :> Task
+    
+    [<Test>]
+    let BasicReading() =
+        let expectedReading = {
+            BatteryPercentage = 85.0
+            PanelMilliamps = 30.0
+            BatteryState = int BatteryState.Charging
+            X = Some 100.0
+            Y = Some 101.0
+            Z = Some 102.0
+            DeviceTime = readingTime
+            ReadingTime = readingTime
+            BatteryChargeVoltage = 4.0
+            PanelVoltage = 16.0
+            TemperatureCelciusHydrometer = Some 10.8
+            TemperatureCelciusBarometer = Some 1.0
+            HumidityPercentHydrometer = Some 86.5
+            HumidityPercentBarometer = Some 3.0
+            PressurePascal = Some 2.0
+            GustMetersPerSecond = Some 10.0
+            SpeedMetersPerSecond = Some 10.0
+            DirectionDegrees = Some (10.0 * double degreesPerSixteenth)
+            SourceDevice = weatherStation.DeviceId
+            RowKey = String.Empty
+            Message = String.Empty
+        }
+        
+        particleDeviceReadingTest log expectedReading weatherStation readingTime "100:f4.00:85.0:2p16.0:30.0b1.0:2.0:3.0d10.800000:86.500000a10.00:10"        
+        |> Async.StartAsTask
+        :> Task
+        
+    [<Test>]
+    let NoWundergroundId() =
+        let weatherStation = {weatherStation with WundergroundStationId = null}
+        let data = "100:4.00:3640|b1.0:2.0:3.0d10.800000:86.500000a10.00:10"
+        let message = buildParticleMessage "Reading" weatherStation readingTime data
+        let wundergroundParameters = ref None
+        let weatherStationSave = ref None
+        let readingSave = ref None
+        
+        async {            
+            do!
+                processEventHubMessage
+                    log
+                    (fun stationId password values traceWriter -> 
+                        async { wundergroundParameters := Some {StationId = stationId; Password = password; Values = values |> Seq.toList} })
+                    (fun _ _ -> async{ return Some weatherStation})
+                    (fun saveWeatherStation -> async {weatherStationSave := Some saveWeatherStation})
+                    (fun saveReading -> async {readingSave := Some saveReading})
+                    (fun _ _ -> async { return [] })
+                    (async {return fun key defaultValue -> async {return {Key = key; Value = defaultValue; Group = ""}}})
+                    (fun _ -> failwith "Did not expect save StatusMessage")
+                    message
+                    
+            Assert.That( (!wundergroundParameters).IsNone, "Wunderground should not have been called" )
+            Assert.That( (!weatherStationSave).IsSome, "WeatherStation should have been saved" ) 
+            Assert.That( (!readingSave).IsSome, "A reading should have been saved")
+        }
+        |> Async.StartAsTask
+        :> Task
+        
+    [<Test>]        
+    let StatusMessage() =
+        async {           
+            let weatherStation = {weatherStation with WundergroundStationId = null}
+            let data = "Brownout"
+            let message = buildParticleMessage "Status" weatherStation readingTime data
+            let statusMessageSave = ref None
+            do!
+                processEventHubMessage
+                    log
+                    (fun _ _ _ _ -> failwith "Not Expected")
+                    (fun _ _ -> async{ return Some weatherStation})
+                    (fun _ -> failwith "Not Expected")
+                    (fun _ -> failwith "Not Expected")
+                    (fun _ _  -> failwith "Not Expected")
+                    (async {return fun key defaultValue -> async {return {Key = key; Value = defaultValue; Group = ""}}})
+                    (fun statusMessage -> async{ statusMessageSave := Some statusMessage })
+                    message
+
+            Assert.That((!statusMessageSave).IsSome, "Status Message should have been saved")
+            Assert.That((!statusMessageSave).Value.StatusMessage, Is.EqualTo(data), (sprintf "Message should be %s" data))
+            Assert.That(weatherStation.DeviceId, Is.EqualTo((!statusMessageSave).Value.DeviceId), "DeviceId")
+            Assert.That(weatherStation.DeviceType, Is.EqualTo((!statusMessageSave).Value.DeviceType), "DeviceType")
+        }
+        |> Async.StartAsTask
+        :> Task
+            
+
+            
+    [<Test>]
+    let RotationTests() =
+        async {
+            for rotation in [0.0 .. 15.0] do
+            for windDirection in [0.0 .. 15.0] do
+                let rotationDegrees = rotation * float degreesPerSixteenth
+                let expectedWindDirection = (windDirection - rotation)
+                let expectedWindDirection = if expectedWindDirection < 0.0 then 16.0 + expectedWindDirection else expectedWindDirection
+                
                 let expectedReading = {
                     BatteryPercentage = 85.0
                     PanelMilliamps = 30.0
@@ -130,188 +232,128 @@ module WundergroundForwarderTests =
                     PressurePascal = Some 2.0
                     GustMetersPerSecond = Some 10.0
                     SpeedMetersPerSecond = Some 10.0
-                    DirectionDegrees = Some (10.0 * double degreesPerSixteenth)
+                    DirectionDegrees = Some (expectedWindDirection * float degreesPerSixteenth)
                     SourceDevice = weatherStation.DeviceId
                     RowKey = String.Empty
                     Message = String.Empty
                 }
-                do! particleDeviceReadingTest log expectedReading weatherStation readingTime "100:f4.00:85.0p16.0:30.0b1.0:2.0:3.0d10.800000:86.500000a10.00:10"
-            }
-            testAsync "No WundergroundId" {
-                let weatherStation = {weatherStation with WundergroundStationId = null}
-                let data = "100:4.00:3640|b1.0:2.0:3.0d10.800000:86.500000a10.00:10"
-                let message = buildParticleMessage "Reading" weatherStation readingTime data
-                let wundergroundParameters = ref None
-                let weatherStationSave = ref None
-                let readingSave = ref None
-                do!
-                    processEventHubMessage
-                        log
-                        (fun stationId password values traceWriter -> 
-                            async { wundergroundParameters := Some {StationId = stationId; Password = password; Values = values |> Seq.toList} })
-                        (fun _ _ -> async{ return Some weatherStation})
-                        (fun saveWeatherStation -> async {weatherStationSave := Some saveWeatherStation})
-                        (fun saveReading -> async {readingSave := Some saveReading})
-                        (fun _ _ -> async { return [] })
-                        (async {return fun key defaultValue -> async {return {Key = key; Value = defaultValue; Group = ""}}})
-                        (fun _ -> failwith "Did not expect save StatusMessage")
-                        message
+                
+                let data = sprintf "100f4.00:85.0:2p16.0:30.0b1.0:2.0:3.0d10.800000:86.500000a10.0:%d" (int windDirection)
+                let weatherStation = {weatherStation with DirectionOffsetDegrees = Some (int rotationDegrees)}
+                do! particleDeviceReadingTest quietLog expectedReading weatherStation readingTime data
 
-                Expect.isNone "Wunderground should not have been called" !wundergroundParameters
-                Expect.isSome "WeatherStation should have been saved" !weatherStationSave
-                Expect.isSome "A reading should have been saved" !readingSave
-            }
-            testAsync "Status Message" {
-                let weatherStation = {weatherStation with WundergroundStationId = null}
-                let data = "Brownout"
-                let message = buildParticleMessage "Status" weatherStation readingTime data
-                let statusMessageSave = ref None
-                do!
-                    processEventHubMessage
-                        log
-                        (fun _ _ _ _ -> failwith "Not Expected")
-                        (fun _ _ -> async{ return Some weatherStation})
-                        (fun _ -> failwith "Not Expected")
-                        (fun _ -> failwith "Not Expected")
-                        (fun _ _  -> failwith "Not Expected")
-                        (async {return fun key defaultValue -> async {return {Key = key; Value = defaultValue; Group = ""}}})
-                        (fun statusMessage -> async{ statusMessageSave := Some statusMessage })
-                        message
+                Console.ForegroundColor <- ConsoleColor.Blue
+                printfn "WindDirection - Rotation %f, Direction %f" rotationDegrees (degreesPerSixteenth * windDirection)
+                printfn "Rotation %f, ReportedDirection %f, ActualDirection %f" rotationDegrees (windDirection * 22.5) (expectedWindDirection * 22.5)
+                Console.ResetColor()    
+        }
+        |> Async.StartAsTask
+        :> Task
+        
+    open DataSetup        
 
-                Expect.isSome "Status Message should have been saved" !statusMessageSave
-                Expect.equal (sprintf "Message should be %s" data) data (!statusMessageSave).Value.StatusMessage
-                Expect.equal "DeviceId" weatherStation.DeviceId (!statusMessageSave).Value.DeviceId
-                Expect.equal "DeviceType" weatherStation.DeviceType (!statusMessageSave).Value.DeviceType
-            }]
+    [<Test>]
+    [<Category("Integration")>]
+    let InsertSampleRecord() =
+        async {
+            let! weatherStationRepository = AzureStorage.weatherStationRepository connectionString
+
+            let weatherStation = {weatherStation with CreatedOn = weatherStation.CreatedOn.ToUniversalTime()}
+            do! weatherStationRepository.Save weatherStation
+
+            let! weatherStationReloaded = weatherStationRepository.Get DeviceType.Particle weatherStation.DeviceId
+            Assert.That(weatherStationReloaded.IsSome,"No WeatherStation found")
+            Assert.That(weatherStationReloaded.Value, Is.EqualTo(weatherStation), "WeatherStations are not equal") 
+        }
+        |> Async.StartAsTask
+        :> Task
             
-    [<Tests>]
-    let rotationTests =
-        testList "Rotation Tests" [            
-            for rotation in [0.0 .. 15.0] do
-                for windDirection in [0.0 .. 15.0] do
-                    let rotationDegrees = rotation * float degreesPerSixteenth
-                    let testName = sprintf "WindDirection - Rotation %f, Direction %f" rotationDegrees (degreesPerSixteenth * windDirection)
-                    let expectedWindDirection = (windDirection - rotation)
-                    let expectedWindDirection = if expectedWindDirection < 0.0 then 16.0 + expectedWindDirection else expectedWindDirection
-                    yield testAsync testName {
-                        let expectedReading = {
-                            BatteryPercentage = 85.0
-                            PanelMilliamps = 30.0
-                            BatteryState = int BatteryState.Charging
-                            X = Some 100.0
-                            Y = Some 101.0
-                            Z = Some 102.0
-                            DeviceTime = readingTime
-                            ReadingTime = readingTime
-                            BatteryChargeVoltage = 4.0
-                            PanelVoltage = 16.0
-                            TemperatureCelciusHydrometer = Some 10.8
-                            TemperatureCelciusBarometer = Some 1.0
-                            HumidityPercentHydrometer = Some 86.5
-                            HumidityPercentBarometer = Some 3.0
-                            PressurePascal = Some 2.0
-                            GustMetersPerSecond = Some 10.0
-                            SpeedMetersPerSecond = Some 10.0
-                            DirectionDegrees = Some (expectedWindDirection * float degreesPerSixteenth)
-                            SourceDevice = weatherStation.DeviceId
-                            RowKey = String.Empty
-                            Message = String.Empty
-                        }
-                        let data = sprintf "100f4.00:85.0p16.0:30.0b1.0:2.0:3.0d10.800000:86.500000a10.0:%d" (int windDirection)
-                        let weatherStation = {weatherStation with DirectionOffsetDegrees = Some (int rotationDegrees)}
-                        do! particleDeviceReadingTest quietLog expectedReading weatherStation readingTime data
+    [<Test>]
+    [<Category("Integration")>]
+    let StatusMessageIntegrationTest() =
+        DataSetup.initialize()
+        async {
+            do! loadWeatherStations [weatherStation]                
+            let status = "Brownout"
+            let messageTime = DateTime.Now
+            let message = buildParticleMessage "Status" weatherStation messageTime status
 
-                        Console.ForegroundColor <- ConsoleColor.Blue
-                        printfn "Rotation %f, ReportedDirection %f, ActualDirection %f" rotationDegrees (windDirection * 22.5) (expectedWindDirection * 22.5)
-                        Console.ResetColor()
-                }]
+            let wundergroundParameters = ref None
+            do!                    
+                processEventHubMessageWithAzureStorage (fun stationId password values _ -> async {
+                    wundergroundParameters := Some {StationId = stationId; Password = password; Values = values |> Seq.toList}
+                }) log message
+            
+            let wundergroundParameters = !wundergroundParameters
+            Assert.That(wundergroundParameters.IsNone, "No call to wunderground")
 
-    [<Tests>]
-    let validTests = 
-        testList "Regression Tests" [
-            testAsync "Insert sample record" {
-                let! weatherStationRepository = AzureStorage.weatherStationRepository connectionString
+            let! statusMessageRepository = AzureStorage.statusMessageRepository connectionString
+            let! statusMessages = statusMessageRepository.GetAll()
 
-                let weatherStation = {weatherStation with CreatedOn = weatherStation.CreatedOn.ToUniversalTime()}
-                do! weatherStationRepository.Save weatherStation
+            Assert.That(statusMessages.Length, Is.EqualTo(1), "There should only be one status message")
 
-                let! weatherStationReloaded = weatherStationRepository.Get DeviceType.Particle weatherStation.DeviceId
-                Expect.isSome "No WeatherStation found" weatherStationReloaded
-                Expect.equal "WeatherStations are not equal" weatherStation weatherStationReloaded.Value
-            }
-            testAsync "Status Message" {
-                do! loadWeatherStations [weatherStation]                
-                let status = "Brownout"
-                let messageTime = DateTime.Now
-                let message = buildParticleMessage "Status" weatherStation messageTime status
+            let statusMessage = statusMessages.[0]
+            Assert.That(statusMessage.StatusMessage, Is.EqualTo(status), (sprintf "Message should be %s" status))
+            Assert.That((string statusMessage.CreatedOn), Is.EqualTo(string messageTime), "Message time should be the CreatedOn time")
 
-                let wundergroundParameters = ref None
-                do!                    
-                    processEventHubMessageWithAzureStorage (fun stationId password values _ -> async {
-                        wundergroundParameters := Some {StationId = stationId; Password = password; Values = values |> Seq.toList}
-                    }) log message
-                
-                let wundergroundParameters = !wundergroundParameters
-                Expect.isNone "No call to wunderground" wundergroundParameters
+            do! clearStatusMessages
+            do! clearWeatherStations
+        }
+        |> Async.StartAsTask
+        :> Task
+            
+    [<Test>]
+    [<Category("Integration")>]
+    let ReadingForBasicDevice() =
+        DataSetup.initialize()
+        async {        
+            do! loadWeatherStations [weatherStation]
+            do! clearReadings
 
-                let! statusMessageRepository = AzureStorage.statusMessageRepository connectionString
-                let! statusMessages = statusMessageRepository.GetAll()
+            let message = buildParticleMessage "Reading" weatherStation readingTime "100f4.006250:85.0:2p16.98:100.0b1.0:2.0:3.0d10.800000:86.500000a1.700000:15"
 
-                Expect.equal "There should only be one status message" 1 statusMessages.Length
+            let expectedReadings = [
+                BatteryChargeVoltage 4.006250M<volts>            
+                BatteryPercentage 85.0M<percent>
+                BatteryState BatteryState.Charging
+                PanelVoltage 16.98M<volts>
+                ChargeMilliamps 100.0m<milliamps>
+                SpeedMetersPerSecond 1.700000M<meters/seconds>
+                DirectionSixteenths 15<sixteenths>
+                TemperatureCelciusBarometer 1.0M<celcius>
+                PressurePascal 2.0m<pascal>
+                HumidityPercentBarometer 3.0m<percent>                    
+                TemperatureCelciusHydrometer 10.800000M<celcius>
+                HumidityPercentHydrometer 86.500000M<percent>                    
+                ReadingTime readingTime
+                GustMetersPerSecond 1.700000M<meters/seconds>]
+            
+            let wundergroundParameters = ref None
+            do!                    
+                processEventHubMessageWithAzureStorage (fun stationId password values _ -> async {
+                    wundergroundParameters := Some {StationId = stationId; Password = password; Values = values |> Seq.toList}
+                }) log message
+            
+            let wundergroundParameters = !wundergroundParameters
+            Assert.That(wundergroundParameters.IsSome, "No call to wunderground")
 
-                let statusMessage = statusMessages.[0]
-                Expect.equal (sprintf "Message should be %s" status) status statusMessage.StatusMessage
-                Expect.equal "Message time should be the CreatedOn time" (string messageTime) (string statusMessage.CreatedOn)
+            let wundergroundParameters = wundergroundParameters.Value
+            Assert.That( wundergroundParameters.StationId, Is.EqualTo(weatherStation.WundergroundStationId), "Unexpected StationId")
+            Assert.That( wundergroundParameters.Password, Is.EqualTo(weatherStation.WundergroundPassword), "Unexpected Password")
+            Assert.That( wundergroundParameters.Values, Is.EqualTo(expectedReadings), "Unexpected readings")
 
-                do! clearStatusMessages
-                do! clearWeatherStations
-            }
-            testAsync "Reading for basic device" {
-                do! loadWeatherStations [weatherStation]
-                do! clearReadings
+            let! readingsRepository = AzureStorage.readingsRepository connectionString
+            let! readings = readingsRepository.GetAll()
 
-                let message = buildParticleMessage "Reading" weatherStation readingTime "100f4.006250:85.0:2p16.98:100.0b1.0:2.0:3.0d10.800000:86.500000a1.700000:15"
+            match readings with
+            | [reading] ->
+                Assert.That(reading.SourceDevice, Is.EqualTo(weatherStation.DeviceId), "Unexpected DeviceId")
+                Assert.That(reading.ReadingTime, Is.GreaterThanOrEqualTo(readingTime), "Unexpected ReadingTime")
+                Assert.That(reading.SpeedMetersPerSecond, Is.EqualTo(Some 1.70), "Unexpected SpeedMetersPerSecond")
+            | _ -> failwith "Unexpected readings"
 
-                let expectedReadings = [
-                    BatteryChargeVoltage 4.006250M<volts>            
-                    BatteryPercentage 85.0M<percent>
-                    BatteryState BatteryState.Charging
-                    PanelVoltage 16.98M<volts>
-                    ChargeMilliamps 100.0m<milliamps>
-                    SpeedMetersPerSecond 1.700000M<meters/seconds>
-                    DirectionSixteenths 15<sixteenths>
-                    TemperatureCelciusBarometer 1.0M<celcius>
-                    PressurePascal 2.0m<pascal>
-                    HumidityPercentBarometer 3.0m<percent>                    
-                    TemperatureCelciusHydrometer 10.800000M<celcius>
-                    HumidityPercentHydrometer 86.500000M<percent>                    
-                    ReadingTime readingTime
-                    GustMetersPerSecond 1.700000M<meters/seconds>]
-                
-                let wundergroundParameters = ref None
-                do!                    
-                    processEventHubMessageWithAzureStorage (fun stationId password values _ -> async {
-                        wundergroundParameters := Some {StationId = stationId; Password = password; Values = values |> Seq.toList}
-                    }) log message
-                
-                let wundergroundParameters = !wundergroundParameters
-                Expect.isSome "No call to wunderground" wundergroundParameters
-
-                let wundergroundParameters = wundergroundParameters.Value
-                Expect.equal "Unexpected StationId" wundergroundParameters.StationId weatherStation.WundergroundStationId
-                Expect.equal "Unexpected Password" wundergroundParameters.Password weatherStation.WundergroundPassword
-                Expect.equal "Unexpected readings" wundergroundParameters.Values expectedReadings
-
-                let! readingsRepository = AzureStorage.readingsRepository connectionString
-                let! readings = readingsRepository.GetAll()
-
-                match readings with
-                | [reading] ->
-                    Expect.equal "Unexpected DeviceId" reading.SourceDevice weatherStation.DeviceId
-                    Expect.isGreaterThanOrEqual "Unexpected ReadingTime" (reading.ReadingTime, readingTime)
-                    Expect.equal "Unexpected SpeedMetersPerSecond" reading.SpeedMetersPerSecond (Some 1.70)
-                | _ -> failwith "Unexpected readings"
-
-                do! clearWeatherStations
-                do! clearReadings
-            }]
+            do! clearWeatherStations
+            do! clearReadings
+        }
+        |> Async.StartAsTask
+        :> Task

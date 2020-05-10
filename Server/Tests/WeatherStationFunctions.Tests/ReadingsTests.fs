@@ -1,7 +1,7 @@
 ﻿namespace WeatherStation.Tests.Functions
 module ReadingsTests =
     open System
-    open Expecto    
+    open NUnit.Framework    
     open WeatherStation.Readings
     open WeatherStation.Model
     open WeatherStation.Functions.WundergroundForwarder
@@ -47,30 +47,30 @@ module ReadingsTests =
                     message
                 
             let wundergroundParameters = !wundergroundParameters
-            Expect.isSome wundergroundParameters "No call to wunderground"
+            Assert.That(wundergroundParameters.IsSome, "No call to wunderground")
 
             let wundergroundParameters = wundergroundParameters.Value
-            Expect.equal wundergroundParameters.StationId weatherStation.WundergroundStationId "Unexpected StationId"
-            Expect.equal wundergroundParameters.Password weatherStation.WundergroundPassword "Unexpected Password"
+            Assert.That(wundergroundParameters.StationId, Is.EqualTo(weatherStation.WundergroundStationId), "Unexpected StationId")
+            Assert.That(wundergroundParameters.Password, Is.EqualTo(weatherStation.WundergroundPassword), "Unexpected Password")
             
             let wundergroundParametersCompare = set wundergroundParameters.Values
             let expectedReadingsCompare = set expectedReadings
 
-            Expect.equal wundergroundParametersCompare.Count expectedReadingsCompare.Count "Unexpected number of readings"
-            for reading in expectedReadingsCompare do Expect.isTrue (wundergroundParametersCompare.Contains reading) (sprintf "Missing reading %A" reading)
-            Expect.equal (set wundergroundParameters.Values) (set expectedReadings) "Unexpected readings"
+            Assert.That(wundergroundParametersCompare.Count, Is.EqualTo(expectedReadingsCompare.Count), "Unexpected number of readings")
+            for reading in expectedReadingsCompare do Assert.That( wundergroundParametersCompare.Contains reading, sprintf "Missing reading %A" reading)
+            Assert.That( (set wundergroundParameters.Values), Is.EqualTo( (set expectedReadings) ), "Unexpected readings")
 
             let readings = !readingSave
-            Expect.isSome readings "No readings saved"
+            Assert.That(readings.IsSome, "No readings saved")
 
             let reading = readings.Value
-            Expect.equal reading.SourceDevice weatherStation.DeviceId "Unexpected DeviceId"
-            Expect.isGreaterThanOrEqual reading.ReadingTime readingTime "Unexpected ReadingTime"
+            Assert.That( reading.SourceDevice, Is.EqualTo( weatherStation.DeviceId ), "Unexpected DeviceId")
+            Assert.That( reading.ReadingTime, Is.GreaterThanOrEqualTo( readingTime ), "Unexpected ReadingTime")
 
             let weatherStationSave = !weatherStationSave
-            Expect.isSome weatherStationSave "WeatherStation not saved"
+            Assert.That( weatherStationSave.IsSome, "WeatherStation not saved" )
             let weatherStationSave = weatherStationSave.Value
-            Expect.equal weatherStationSave {weatherStation with LastReading = Some readingTime} "Unexpected weatherStation state"
+            Assert.That( weatherStationSave, Is.EqualTo({weatherStation with LastReading = Some readingTime}), "Unexpected weatherStation state")
 
             return reading
         }
@@ -92,6 +92,7 @@ module ReadingsTests =
                         ReadingTime readingTime
                         BatteryChargeVoltage (toVolts expectedReading.BatteryChargeVoltage)
                         BatteryPercentage (toPercent expectedReading.BatteryPercentage)
+                        BatteryState (parseBatteryState expectedReading.BatteryState)
                         ChargeMilliamps (toMilliamps expectedReading.PanelMilliamps)
                         PanelVoltage (toVolts expectedReading.PanelVoltage)
                         TemperatureCelciusHydrometer (toCelcius expectedReading.TemperatureCelciusHydrometer.Value)
@@ -103,18 +104,17 @@ module ReadingsTests =
                         GustMetersPerSecond (toSpeed expectedReading.GustMetersPerSecond.Value)
                         DirectionSixteenths (toDirection (expectedReading.DirectionDegrees.Value / (360.0 / 16.0)))
                     ]
-                
-            Expect.equal reading.DeviceTime expectedReading.DeviceTime "Unexpected value"
-            Expect.equal reading.ReadingTime expectedReading.ReadingTime "Unexpected value"
-            Expect.equal reading.BatteryChargeVoltage expectedReading.BatteryChargeVoltage "Unexpected value"
-            Expect.floatClose Accuracy.medium (float reading.PanelVoltage) (float expectedReading.PanelVoltage) "Unexpected value"
-            Expect.equal reading.TemperatureCelciusHydrometer expectedReading.TemperatureCelciusHydrometer "Unexpected value"
-            Expect.equal reading.TemperatureCelciusBarometer expectedReading.TemperatureCelciusBarometer "Unexpected value"
-            Expect.equal reading.HumidityPercentHydrometer expectedReading.HumidityPercentHydrometer "Unexpected value"
-            Expect.equal reading.HumidityPercentBarometer expectedReading.HumidityPercentBarometer "Unexpected value"
-            Expect.equal reading.PressurePascal expectedReading.PressurePascal "Unexpected value"
-            Expect.equal reading.GustMetersPerSecond expectedReading.GustMetersPerSecond "Unexpected value"
-            Expect.equal reading.SpeedMetersPerSecond expectedReading.SpeedMetersPerSecond "Unexpected value"
-            Expect.equal reading.DirectionDegrees expectedReading.DirectionDegrees "Unexpected value"
-            Expect.equal reading.SourceDevice expectedReading.SourceDevice "Unexpected value"
+            Assert.That( reading.DeviceTime, Is.EqualTo(expectedReading.DeviceTime), "Unexpected value")
+            Assert.That( reading.ReadingTime, Is.EqualTo(expectedReading.ReadingTime), "Unexpected value")
+            Assert.That( reading.BatteryChargeVoltage, Is.EqualTo(expectedReading.BatteryChargeVoltage), "Unexpected value")
+            Assert.That( (float reading.PanelVoltage), Is.EqualTo(float expectedReading.PanelVoltage).Within(0.01), "Unexpected value")
+            Assert.That( reading.TemperatureCelciusHydrometer, Is.EqualTo(expectedReading.TemperatureCelciusHydrometer), "Unexpected value")
+            Assert.That( reading.TemperatureCelciusBarometer, Is.EqualTo(expectedReading.TemperatureCelciusBarometer), "Unexpected value")
+            Assert.That( reading.HumidityPercentHydrometer, Is.EqualTo(expectedReading.HumidityPercentHydrometer), "Unexpected value")
+            Assert.That( reading.HumidityPercentBarometer, Is.EqualTo(expectedReading.HumidityPercentBarometer), "Unexpected value")
+            Assert.That( reading.PressurePascal, Is.EqualTo(expectedReading.PressurePascal), "Unexpected value")
+            Assert.That( reading.GustMetersPerSecond, Is.EqualTo(expectedReading.GustMetersPerSecond), "Unexpected value")
+            Assert.That( reading.SpeedMetersPerSecond, Is.EqualTo(expectedReading.SpeedMetersPerSecond) ,"Unexpected value")
+            Assert.That( reading.DirectionDegrees, Is.EqualTo(expectedReading.DirectionDegrees), "Unexpected value")
+            Assert.That( reading.SourceDevice, Is.EqualTo(expectedReading.SourceDevice), "Unexpected value")
         }

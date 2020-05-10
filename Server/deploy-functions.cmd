@@ -1,1 +1,1 @@
-fake build --target FunctionsDeploy
+dotnet fake build --target FunctionsDeploy

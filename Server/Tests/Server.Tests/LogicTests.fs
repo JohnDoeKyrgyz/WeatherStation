@@ -1,7 +1,11 @@
 ﻿namespace WeatherStation.Tests.Server
+
+open NUnit.Framework
+
+[<TestFixture>]
 module LogicTests =
     open System
-    open Expecto
+    open System.Threading.Tasks
 
     open WeatherStation.Model
     open WeatherStation.Shared
@@ -21,47 +25,57 @@ module LogicTests =
         Sensors = 0xFFFF
     }   
 
-    [<Tests>]
-    let tests =
-        
-        testList "Logic Tests" [
-            testAsync "Get WeatherStations" {
-                let activeStation = {weatherStation with LastReading = Some (DateTime.Now); WundergroundStationId = "0"}
-                let inactiveStation = {weatherStation with LastReading = Some (DateTime.Now.AddDays(-3.0)); WundergroundStationId = "1" }
-                let stations = async { return [activeStation; inactiveStation]}
-                let activeThreshold = TimeSpan.FromHours(1.0)
-                let! stations = getWeatherStations activeThreshold stations
+    [<Test>]
+    let GetWeatherStations() =
+        async {
+            let activeStation = {weatherStation with LastReading = Some (DateTime.Now); WundergroundStationId = "0"}
+            let inactiveStation = {weatherStation with LastReading = Some (DateTime.Now.AddDays(-3.0)); WundergroundStationId = "1" }
+            let stations = async { return [activeStation; inactiveStation]}
+            let activeThreshold = TimeSpan.FromHours(1.0)
+            let! stations = getWeatherStations activeThreshold stations
 
-                Expect.equal stations.Length 2 "Should be two stations"
-                Expect.equal stations.[0].Status Status.Active "First station should be active"
-                Expect.equal stations.[0].WundergroundId (Some "0") "Unexpected station"
+            Assert.That(stations.Length, Is.EqualTo(2), "Should be two stations")
+            Assert.That(stations.[0].Status, Is.EqualTo(Status.Active), "First station should be active")
+            Assert.That(stations.[0].WundergroundId, Is.EqualTo(Some "0"), "Unexpected station")
 
-                Expect.equal stations.[1].Status Status.Offline "Second station should not be active"
-                Expect.equal stations.[1].WundergroundId (Some "1") "Unexpected station"
-            }
-            testAsync "Get WeatherStations Trimming" {
-                let activeStation = {
-                    weatherStation with 
-                        DeviceId = weatherStation.DeviceId + Environment.NewLine
-                        WundergroundStationId = weatherStation.WundergroundStationId + Environment.NewLine}
-                let stations = async { return [activeStation]}
-                let activeThreshold = TimeSpan.FromHours(1.0)
-                let! stations = getWeatherStations activeThreshold stations
+            Assert.That(stations.[1].Status, Is.EqualTo(Status.Offline), "Second station should not be active")
+            Assert.That(stations.[1].WundergroundId, Is.EqualTo(Some "1"), "Unexpected station")
+        }
+        |> Async.StartAsTask
+        :> Task            
+            
+    [<Test>]
+    let GetWeatherStationsTrimming() =
+        async {
+            let activeStation = {
+                weatherStation with 
+                    DeviceId = weatherStation.DeviceId + Environment.NewLine
+                    WundergroundStationId = weatherStation.WundergroundStationId + Environment.NewLine}
+            let stations = async { return [activeStation]}
+            let activeThreshold = TimeSpan.FromHours(1.0)
+            let! stations = getWeatherStations activeThreshold stations
 
-                Expect.equal stations.Length 1 "Should be two stations"
-                Expect.equal stations.[0].WundergroundId (Some weatherStation.WundergroundStationId) "Unexpected station"
-                Expect.equal stations.[0].Key.DeviceId weatherStation.DeviceId "Unexpected device id"
-            }
-            testAsync "Optional WundergroundId" {
-                let activeStation = {
-                    weatherStation with 
-                        DeviceId = weatherStation.DeviceId + Environment.NewLine
-                        WundergroundStationId = null}
-                let stations = async { return [activeStation]}
-                let activeThreshold = TimeSpan.FromHours(1.0)
-                let! stations = getWeatherStations activeThreshold stations
+            Assert.That(stations.Length, Is.EqualTo(1), "Should be two stations")
+            Assert.That(stations.[0].WundergroundId, Is.EqualTo(Some weatherStation.WundergroundStationId), "Unexpected station")
+            Assert.That(stations.[0].Key.DeviceId, Is.EqualTo(weatherStation.DeviceId), "Unexpected device id")
+        }
+        |> Async.StartAsTask
+        :> Task
+            
+    [<Test>]
+    let OptionalWundergroundId() =
+        async {            
+            let activeStation = {
+                weatherStation with 
+                    DeviceId = weatherStation.DeviceId + Environment.NewLine
+                    WundergroundStationId = null}
+            let stations = async { return [activeStation]}
+            let activeThreshold = TimeSpan.FromHours(1.0)
+            let! stations = getWeatherStations activeThreshold stations
 
-                Expect.equal stations.Length 1 "Should be two stations"
-                Expect.isNone stations.[0].WundergroundId "Unexpected station"
-                Expect.equal stations.[0].Key.DeviceId weatherStation.DeviceId "Unexpected device id"}
-            ]
+            Assert.That(stations.Length, Is.EqualTo(1), "Should be two stations")
+            Assert.That(stations.[0].WundergroundId.IsNone, "Unexpected station")
+            Assert.That(stations.[0].Key.DeviceId, Is.EqualTo(weatherStation.DeviceId), "Unexpected device id")
+        }        
+        |> Async.StartAsTask
+        :> Task
