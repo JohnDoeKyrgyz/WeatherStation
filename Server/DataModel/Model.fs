@@ -44,6 +44,7 @@ module Model =
         ReadingTime : DateTime
         BatteryChargeVoltage : double
         BatteryPercentage : double
+        BatteryState : int
         PanelMilliamps : double
         PanelVoltage : double
         TemperatureCelciusHydrometer : double option
@@ -69,6 +70,7 @@ module Model =
             ReadingTime = DateTime.MinValue
             BatteryPercentage = 0.0
             BatteryChargeVoltage = 0.0
+            BatteryState = 0
             PanelVoltage = 0.0
             PanelMilliamps = 0.0
             TemperatureCelciusHydrometer = None

@@ -37,6 +37,26 @@ module Readings =
     let sixteenthsToDegrees (value : int<sixteenths>) = 
         let directionDegrees = ((float value) * 1.0<sixteenths>)
         directionDegrees * degreesPerSixteenth
+        
+    type BatteryState =        
+        | Unknown = 0
+        | NotCharging = 1
+        | Charging = 2
+        | Charged = 3
+        | Discharging = 4
+        | Faulted = 5
+        | Disconnected = 6
+        
+    let parseBatteryState value =
+        match value with
+        | 0 -> BatteryState.Unknown
+        | 1 -> BatteryState.NotCharging
+        | 2 -> BatteryState.Charging
+        | 3 -> BatteryState.Charged
+        | 4 -> BatteryState.Discharging
+        | 5 -> BatteryState.Faulted
+        | 6 -> BatteryState.Disconnected
+        | _ -> invalidArg "value" (sprintf "Unrecognized BatteryState value %d" value)
 
     type ReadingValues =
         | ReadingTime of DateTime
@@ -44,6 +64,7 @@ module Readings =
         //FuelGauge
         | BatteryChargeVoltage of decimal<volts>
         | BatteryPercentage of decimal<percent>
+        | BatteryState of BatteryState
         //INA219
         | PanelVoltage of decimal<volts>
         | ChargeMilliamps of decimal<milliamps>
@@ -72,6 +93,7 @@ module Readings =
         //FuelGuage
         | BatteryChargeVoltage _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> BatteryChargeVoltage
         | BatteryPercentage _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> BatteryPercentage
+        | BatteryState _ -> value |> int |> parseBatteryState |> BatteryState
         //INA219
         | PanelVoltage _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> PanelVoltage
         | ChargeMilliamps  _ -> value |> decimal |> LanguagePrimitives.DecimalWithMeasure |> ChargeMilliamps
@@ -108,6 +130,7 @@ module Readings =
         match value with
         | BatteryChargeVoltage voltage -> {reading with BatteryChargeVoltage = toDouble(voltage)}
         | BatteryPercentage percentage -> {reading with BatteryPercentage = toDouble(percentage)}
+        | BatteryState value -> {reading with BatteryState = int value}
         | ChargeMilliamps milliamps -> {reading with PanelMilliamps = toDouble(milliamps)}
         | DeviceTime time -> {reading with DeviceTime = time}
         | DirectionSixteenths direction -> {reading with DirectionDegrees = sixteenthsToDegrees direction |> double |> Some}

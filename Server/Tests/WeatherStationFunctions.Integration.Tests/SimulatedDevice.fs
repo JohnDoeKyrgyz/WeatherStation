@@ -6,6 +6,7 @@ open Microsoft.Azure.Devices.Client
 
 open WeatherStation
 open WeatherStation.Model
+open WeatherStation.Shared
 open WeatherStation.Sensors
 open WeatherStation.Repository
 
@@ -35,6 +36,9 @@ let generateRandomSensorReading (sensor : Sensor) =
             let value = random.NextDouble()
             string value
         | Int -> 
+            let value = random.Next()
+            string value
+        | Enum ->
             let value = random.Next()
             string value]
     |> String.concat ":"

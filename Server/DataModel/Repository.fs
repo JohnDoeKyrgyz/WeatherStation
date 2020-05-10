@@ -102,7 +102,7 @@ module Repository =
                 async {
                     let! weatherStations =
                         Query.all<WeatherStation>
-                        |> Query.where <@ fun station key -> key.PartitionKey = string deviceType && key.RowKey = deviceId @>
+                        |> Query.where <@ fun _ key -> key.PartitionKey = string deviceType && key.RowKey = deviceId @>
                         |> Query.take 1
                         |> runQuery connection tableName
                     let result = weatherStations.SingleOrDefault()
