@@ -11,7 +11,6 @@
     <Content Include="local.settings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Include="paket.references" />
     <Content Include="IoTEventHandler\HologramStatusUpdate.json" />
     <Content Include="IoTEventHandler\ParticleStatusUpdate.json" />
     <Compile Include="IoTEventHandler\Particle.fs" />
