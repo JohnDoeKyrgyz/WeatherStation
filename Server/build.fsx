@@ -95,7 +95,10 @@ Target.create "Build" (fun _ ->
 )
 
 Target.create "BuildFunctions" (fun _ ->
-    runDotNet (sprintf "build %s" functionsSolutionName) functionsPath
+    let runFunctionsProjectDotnetCommand command = runDotNet (sprintf "%s %s" command functionsSolutionName) functionsPath
+    runFunctionsProjectDotnetCommand "clean"
+    runFunctionsProjectDotnetCommand "restore"
+    runFunctionsProjectDotnetCommand "build"
 )
 
 let deploy zipFile deployDir appName appPassword =
@@ -112,10 +115,9 @@ Target.create "WebAppDeploy" (fun _ ->
 )
 
 Target.create "FunctionsDeploy" (fun _ ->
-    let deployDir = Path.combine functionsPath @"bin\Debug\netstandard2.0"
-    runTool funcTool (sprintf "azure functionapp publish %s" deploymentSettings.Value.FunctionApp.Name) deployDir
-)
-    
+    let deployDir = Path.combine functionsPath @"bin\Debug\netcoreapp3.1"
+    runTool funcTool "azure functionapp publish WeatherStationFunctions" deployDir
+)    
 
 Target.create "Run" (fun _ ->
     let server = async { runDotNet "watch run" webServerPath }    
