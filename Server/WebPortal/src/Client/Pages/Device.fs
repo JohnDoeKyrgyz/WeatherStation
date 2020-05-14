@@ -207,11 +207,12 @@ module Device =
             div [] [
                 paginator deviceDetails
                 table
-                    ["Time"; "Battery"; "Panel"; "Charge Current"; "Speed"; "Direction"; "Temp"]
+                    ["Time"; "Battery"; "Battery State"; "Panel"; "Charge Current"; "Speed"; "Direction"; "Temp"]
                     deviceDetails.Readings
                     (fun reading -> [
                         date (reading.ReadingTime.ToLocalTime())
                         number reading.BatteryChargeVoltage
+                        string reading.BatteryState
                         number reading.PanelVoltage
                         number reading.PanelMilliamps
                         numberOptional reading.SpeedMetersPerSecond
@@ -278,6 +279,13 @@ module Device =
                             (readValue (fun settings -> settings.BrownoutPercentage))
                             (setValue (fun settings value -> {settings with BrownoutPercentage = value})))[
                             Help.help [][str "Percentage of Charge (0 - 100)"]]
+
+                    formControl
+                        "Resume Percentage"
+                        (decimalInput
+                            (readValue (fun settings -> settings.ResumePercentage))
+                            (setValue (fun settings value -> {settings with ResumePercentage = value})))[
+                            Help.help [][str "Percentage of Charge (0 - 100) at which to resume operation after brownout"]]
 
                     intInput
                         (readValue (fun settings -> settings.BrownoutMinutes))

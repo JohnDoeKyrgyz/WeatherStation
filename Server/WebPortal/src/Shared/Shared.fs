@@ -16,6 +16,15 @@ type Status =
             | Active -> "Active"
             | Offline -> "Offline"
 
+type BatteryState =
+    | Unknown = 0
+    | NotCharging = 1
+    | Charging = 2
+    | Charged = 3
+    | Discharging = 4
+    | Faulted = 5
+    | Disconnected = 6
+
 type Reading = {
     DeviceTime : DateTime
     ReadingTime : DateTime
@@ -30,6 +39,8 @@ type Reading = {
     GustMetersPerSecond : double option
     SpeedMetersPerSecond : double option
     DirectionDegrees : double option
+    BatteryState : BatteryState
+
 }
 
 type StatusMessage = {
@@ -77,6 +88,7 @@ type FirmwareSettings = {
     Version : int
     Brownout : bool
     BrownoutPercentage : decimal
+    ResumePercentage : decimal
     BrownoutMinutes : int
     SleepTime : int
     DiagnosticCycles : int
@@ -87,6 +99,7 @@ with
     static member Default = {
         Brownout = true
         BrownoutPercentage = 0.2m
+        ResumePercentage = 0.8m
         BrownoutMinutes = 2880
         SleepTime = 360
         DiagnosticCycles = 0

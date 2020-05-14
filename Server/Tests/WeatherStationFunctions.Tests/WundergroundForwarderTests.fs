@@ -121,7 +121,7 @@ module WundergroundForwarderTests =
         let expectedReading = {
             BatteryPercentage = 85.0
             PanelMilliamps = 30.0
-            BatteryState = int BatteryState.Charging
+            BatteryState = int Shared.BatteryState.Charging
             X = Some 100.0
             Y = Some 101.0
             Z = Some 102.0
@@ -217,7 +217,7 @@ module WundergroundForwarderTests =
                 let expectedReading = {
                     BatteryPercentage = 85.0
                     PanelMilliamps = 30.0
-                    BatteryState = int BatteryState.Charging
+                    BatteryState = int Shared.BatteryState.Charging
                     X = Some 100.0
                     Y = Some 101.0
                     Z = Some 102.0
@@ -315,7 +315,7 @@ module WundergroundForwarderTests =
             let expectedReadings = [
                 BatteryChargeVoltage 4.006250M<volts>            
                 BatteryPercentage 85.0M<percent>
-                BatteryState BatteryState.Charging
+                BatteryState Shared.BatteryState.Charging
                 PanelVoltage 16.98M<volts>
                 ChargeMilliamps 100.0m<milliamps>
                 SpeedMetersPerSecond 1.700000M<meters/seconds>
