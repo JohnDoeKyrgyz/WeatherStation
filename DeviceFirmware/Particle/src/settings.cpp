@@ -1,12 +1,13 @@
 #include "settings.h"
 #include "Particle.h"
 
-#define SERIALIZED_SETTINGS_SIZE JSON_OBJECT_SIZE(8) + 110
+#define SERIALIZED_SETTINGS_SIZE JSON_OBJECT_SIZE(9) + 110
 
 Settings DefaultSettings = {
     0, //version
     false, //brownout
     0.2, //brownoutPercentage
+    0.8, //resumePercentage
     0, //brownoutMinutes
     30, //sleepTime
     1, //diagnositicCycles
@@ -21,6 +22,7 @@ DynamicJsonDocument& serialize(Settings& settings)
     jsonBuffer["version"] = settings.version;
     jsonBuffer["brownout"] = settings.brownout;
     jsonBuffer["brownoutPercentage"] = settings.brownoutPercentage;
+    jsonBuffer["resumePercentage"] = settings.resumePercentage;
     jsonBuffer["brownoutMinutes"] = settings.brownoutMinutes;
     jsonBuffer["sleepTime"] = settings.sleepTime;
     jsonBuffer["diagnositicCycles"] = settings.diagnositicCycles;
@@ -41,6 +43,7 @@ const Settings& deserialize(const char* json)
     result->version = jsonBuffer["version"];
     result->brownout = jsonBuffer["brownout"];
     result->brownoutPercentage = jsonBuffer["brownoutPercentage"];
+    result->resumePercentage = jsonBuffer["resumePercentage"];
     result->brownoutMinutes = jsonBuffer["brownoutMinutes"];
     result->sleepTime = jsonBuffer["sleepTime"];
     result->diagnositicCycles = jsonBuffer["diagnositicCycles"];

@@ -8,6 +8,7 @@ typedef struct Settings
     unsigned int version;
     bool brownout;
     float brownoutPercentage;
+    float resumePercentage;
     unsigned int brownoutMinutes;
     unsigned long sleepTime;
     unsigned int diagnositicCycles;

@@ -1,6 +1,7 @@
 {
 "version": 1,
 "brownoutPercentage": 0.2,
+"resumePercentage": 0.8,
 "brownout": true,
 "brownoutMinutes": 1,
 "sleepTime": 160,

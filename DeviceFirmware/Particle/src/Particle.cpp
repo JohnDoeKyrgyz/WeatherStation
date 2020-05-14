@@ -13,6 +13,7 @@ void deepSleep(unsigned long seconds);
 void onSettingsUpdate(const char *event, const char *data);
 void beep(int duration);
 void checkBrownout();
+void enterBrownout();
 void connect();
 bool initializeSensors();
 bool readSensors();
@@ -54,6 +55,7 @@ char messageBuffer[255];
 char statusBuffer[255];
 bool panelOn = true;
 retained bool setupComplete;
+retained bool inBrownout;
 
 CompassSensor compassSensor;
 BatteryPower battery;
@@ -117,6 +119,15 @@ void initializePowerSettings()
   System.setPowerConfiguration(conf);
 
   fuelGuage.begin();
+
+  if(inBrownout)
+  {
+    settings = loadSettings();
+    if(fuelGuage.getNormalizedSoC() < settings.resumePercentage)
+    {
+      enterBrownout();
+    }
+  }
 }
 
 void deepSleep(unsigned long seconds)
@@ -194,13 +205,19 @@ void checkBrownout()
 
   if (brownout)
   {
+    inBrownout = true;
     Serial.printlnf("Brownout threshold %f exceeded by system battery percentage %f", settings.brownoutPercentage, systemSoC);
 
     //long beep
     beep(5000);
 
-    deepSleep(settings.brownoutMinutes * 60);
+    enterBrownout();
   }
+}
+
+void enterBrownout()
+{
+  deepSleep(settings.brownoutMinutes * 60);
 }
 
 void connect()
