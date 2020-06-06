@@ -11,6 +11,7 @@ module Logic =
 
     open WeatherStation.Model
     open WeatherStation.Shared
+    open WeatherStation.Readings
     open WeatherStation
 
     let toOption value = if isNull value then None else Some value
@@ -48,6 +49,7 @@ module Logic =
         GustMetersPerSecond = reading.GustMetersPerSecond
         SpeedMetersPerSecond = reading.SpeedMetersPerSecond
         DirectionDegrees = reading.DirectionDegrees
+        BatteryState = parseBatteryState reading.BatteryState
     }
 
     let createStatusMessage (message : Model.StatusMessage) = {
@@ -108,6 +110,7 @@ module Logic =
                     ParticleSettings.Root(
                         settings.Version,
                         settings.BrownoutPercentage,
+                        settings.ResumePercentage,
                         settings.Brownout,
                         settings.BrownoutMinutes,
                         settings.SleepTime,

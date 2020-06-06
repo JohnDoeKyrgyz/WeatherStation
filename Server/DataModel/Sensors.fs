@@ -38,7 +38,7 @@ module Sensors =
             [
                 BatteryChargeVoltage 0.0m<volts>, ValueType.Float
                 BatteryPercentage 0.0m<percent>, ValueType.Float
-                BatteryState BatteryState.Disconnected, ValueType.Enum
+                BatteryState Shared.BatteryState.Disconnected, ValueType.Enum
             ] }
 
     let anemometer =  {

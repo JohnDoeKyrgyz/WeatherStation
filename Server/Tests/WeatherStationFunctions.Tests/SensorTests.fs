@@ -91,7 +91,7 @@ module SensorTests =
                 [
                     ReadingValues.BatteryChargeVoltage 3.908750m<volts>
                     ReadingValues.BatteryPercentage 69.296875m<percent>
-                    ReadingValues.BatteryState BatteryState.Charging
+                    ReadingValues.BatteryState Shared.BatteryState.Charging
                     ReadingValues.PanelVoltage 4.656000m<volts>
                     ReadingValues.ChargeMilliamps -22.200001m<milliamps>                        
                     ReadingValues.TemperatureCelciusBarometer 22.570000m<celcius>

@@ -3,6 +3,7 @@ namespace WeatherStation
 module Readings =
 
     open System
+    
     open Model
 
     [<Measure>]
@@ -38,33 +39,24 @@ module Readings =
         let directionDegrees = ((float value) * 1.0<sixteenths>)
         directionDegrees * degreesPerSixteenth
         
-    type BatteryState =        
-        | Unknown = 0
-        | NotCharging = 1
-        | Charging = 2
-        | Charged = 3
-        | Discharging = 4
-        | Faulted = 5
-        | Disconnected = 6
-        
     let parseBatteryState value =
         match value with
-        | 0 -> BatteryState.Unknown
-        | 1 -> BatteryState.NotCharging
-        | 2 -> BatteryState.Charging
-        | 3 -> BatteryState.Charged
-        | 4 -> BatteryState.Discharging
-        | 5 -> BatteryState.Faulted
-        | 6 -> BatteryState.Disconnected
-        | _ -> invalidArg "value" (sprintf "Unrecognized BatteryState value %d" value)
-
+        | 0 -> Shared.BatteryState.Unknown
+        | 1 -> Shared.BatteryState.NotCharging
+        | 2 -> Shared.BatteryState.Charging
+        | 3 -> Shared.BatteryState.Charged
+        | 4 -> Shared.BatteryState.Discharging
+        | 5 -> Shared.BatteryState.Faulted
+        | 6 -> Shared.BatteryState.Disconnected
+        | _ -> invalidArg "value" (sprintf "Unrecognized BatteryState value %d" value)        
+        
     type ReadingValues =
         | ReadingTime of DateTime
         | DeviceTime of DateTime
         //FuelGauge
         | BatteryChargeVoltage of decimal<volts>
         | BatteryPercentage of decimal<percent>
-        | BatteryState of BatteryState
+        | BatteryState of Shared.BatteryState
         //INA219
         | PanelVoltage of decimal<volts>
         | ChargeMilliamps of decimal<milliamps>
