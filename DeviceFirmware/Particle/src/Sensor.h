@@ -93,7 +93,7 @@ public:
 };
 
 #include <assert.h>
-class Anemometer : public Sensor
+class LaCrosseAnemometer : public Sensor
 {
 private:
     LaCrosse_TX23 laCrosseTX23;
@@ -101,7 +101,7 @@ private:
     int _samples;
 
 public:
-    Anemometer(const int pin, const int samples, const int maxTries) : Sensor("anemometer"), laCrosseTX23(pin)
+    LaCrosseAnemometer(const int pin, const int samples, const int maxTries) : Sensor("anemometer"), laCrosseTX23(pin)
     {
         assert(maxTries > samples);
 
@@ -138,6 +138,88 @@ public:
         bool read = false;
         for(int tries = 0; !read && tries < _maxTries && (read = laCrosseTX23.read(speed, direction)); tries++);
         return read;
+    }
+};
+
+//Code inspired by:
+// https://github.com/sparkfun/Wimp_Weather_Station/blob/master/Wimp_Weather_Station.ino
+class SparkFunAnemometer : public Sensor
+{
+private:
+    int _pinWindSpeed;
+    int _pinWindDirection;
+    volatile static int anemometerTicks;
+    volatile static long lastWindTime;
+    static void onAnemometerTick() 
+    {
+        //Ignore switch - bounce glitches less than 10 ms
+        long time = millis();
+        if(time - lastWindTime > 10)
+        {
+            lastWindTime = time;
+            anemometerTicks++;
+        }  
+    }
+
+public:
+    SparkFunAnemometer(const int pinWindSpeed, const int pinWindDirection) : Sensor("anemometer")
+    {
+        _pinWindSpeed = pinWindSpeed;
+        _pinWindDirection = pinWindDirection;    
+    }
+    bool getReading(char*& reading)
+    {   
+        //Get the wind direction
+        byte numberOfReadings = 8;
+	    unsigned int adc = 0;
+
+	    for(int x = 0 ; x < numberOfReadings ; x++) adc += analogRead(_pinWindDirection);
+	    adc /= numberOfReadings;
+
+        int windDirection = -1;
+        if (adc < 380) windDirection = 113;
+        else if (adc < 393) windDirection = 68;
+        else if (adc < 414) windDirection = 90;
+        else if (adc < 456) windDirection = 158;
+        else if (adc < 508) windDirection = 135;
+        else if (adc < 551) windDirection = 203;
+        else if (adc < 615) windDirection = 180;
+        else if (adc < 680) windDirection = 23;
+        else if (adc < 746) windDirection = 45;
+        else if (adc < 801) windDirection = 248;
+        else if (adc < 833) windDirection = 225;
+        else if (adc < 878) windDirection = 338;
+        else if (adc < 913) windDirection = 0;
+        else if (adc < 940) windDirection = 293;
+        else if (adc < 967) windDirection = 315;
+        else if (adc < 990) windDirection = 270;
+
+        float deltaTime = millis() - lastWindTime;
+	    deltaTime /= 1000.0; //Covert to seconds
+
+	    float windSpeed = (float)anemometerTicks / deltaTime; //3 / 0.750s = 4
+
+	    anemometerTicks = 0; //Reset and start watching for new wind
+	    lastWindTime = millis();
+	    windSpeed *= 0.66698368; //convert to meters per second
+        
+        bool read = windDirection != -1 && lastWindTime > 0;
+        if(read)
+        {
+            reading += sprintf(reading, "a%f:%d", windSpeed, windDirection);
+        }
+        
+        return read;
+    }
+    bool begin()
+    {
+        pinMode(_pinWindSpeed, INPUT_PULLUP);
+        pinMode(_pinWindDirection, INPUT);
+
+        anemometerTicks = 0;
+        lastWindTime = 0;
+        attachInterrupt(_pinWindSpeed, onAnemometerTick, FALLING);
+        return true;
     }
 };
 
