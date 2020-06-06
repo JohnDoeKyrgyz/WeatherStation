@@ -22,7 +22,7 @@ void setup();
 void loop();
 #line 2 "c:/working/WeatherStation/DeviceFirmware/Particle/src/Particle.ino"
 #define RBG_NOTIFICATIONS_OFF
-#define FIRMWARE_VERSION "4.0"
+#define FIRMWARE_VERSION "4.3"
 
 #define ANEMOMETER_TRIES 10
 #define POWER_MONITOR_TRIES 3
@@ -60,7 +60,7 @@ retained bool inBrownout;
 CompassSensor compassSensor;
 BatteryPower battery;
 PanelPower panel;
-Anemometer anemometer(ANEMOMETER, 2, ANEMOMETER_TRIES);
+LaCrosseAnemometer anemometer(ANEMOMETER, 2, ANEMOMETER_TRIES);
 Barometer barometer;
 //Sensor *sensors[] = {&panel, &barometer, &anemometer, &battery, &compassSensor};
 Sensor *sensors[] = {&battery, &panel, &anemometer, &barometer};
@@ -108,6 +108,7 @@ void onError(const char *message)
 
 void initializePowerSettings()
 {
+  /*
   conf
     .powerSourceMaxCurrent(2000)
     .powerSourceMinVoltage(5080)
@@ -117,7 +118,7 @@ void initializePowerSettings()
     //.feature(SystemPowerFeature::USE_VIN_SETTINGS_WITH_USB_HOST) 
     ;
   System.setPowerConfiguration(conf);
-
+*/
   fuelGuage.begin();
 
   if(inBrownout)
@@ -263,8 +264,10 @@ bool readSensors()
 
 bool selfTest()
 {
-  Serial.println("Self Test...");
-  bool result = readSensors();
+  Serial.print("Self Test");
+  bool result;
+  for(int i = 0; !(result = readSensors()) && i < 10; i++) Serial.print(".");
+  Serial.println();
   return result;
 }
 
